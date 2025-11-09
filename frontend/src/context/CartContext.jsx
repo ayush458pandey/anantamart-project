@@ -19,7 +19,6 @@ export const CartProvider = ({ children }) => {
       setCart(data || { items: [], total_items: 0, total_price: 0 });
     } catch (error) {
       console.error('Error fetching cart:', error);
-      // Set empty cart if error
       setCart({ items: [], total_items: 0, total_price: 0 });
     } finally {
       setLoading(false);

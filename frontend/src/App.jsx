@@ -69,59 +69,84 @@ function AppContent() {
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
       {/* HEADER */}
-      <header className="sticky top-0 bg-white shadow-md z-40">
-        <div className="max-w-7xl mx-auto px-4 py-4">
-          {/* Logo & Search */}
-          <div className="flex items-center gap-4 mb-4">
-            <div className="flex-1">
-              <h1 className="text-2xl font-bold text-emerald-600">Anantamart</h1>
-              <p className="text-xs text-gray-500">B2B Wholesale Platform</p>
-            </div>
-            
-            {/* Search Bar */}
-            <div className="flex-1 flex items-center bg-gray-100 rounded-lg px-3 py-2">
-              <Search className="w-5 h-5 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Search products or SKU..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="flex-1 ml-2 bg-transparent outline-none text-sm"
-              />
-            </div>
-          </div>
-
-          {/* CATEGORIES - HORIZONTAL SCROLL */}
-          <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-            <button
-              onClick={() => setSelectedCategory('all')}
-              className={`px-4 py-2 rounded-lg font-medium text-sm whitespace-nowrap transition-all ${
-                selectedCategory === 'all'
-                  ? 'bg-emerald-600 text-white'
-                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-              }`}
-            >
-              All Products
-            </button>
-            
-            {categories && categories.map((category) => (
-              <button
-                key={category.id}
-                onClick={() => setSelectedCategory(category.id)}
-                className={`px-4 py-2 rounded-lg font-medium text-sm whitespace-nowrap transition-all ${
-                  selectedCategory === category.id
-                    ? 'bg-emerald-600 text-white'
-                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                }`}
-              >
-                {category.name}
-              </button>
-            ))}
-          </div>
+      {/* HEADER */}
+<header className="sticky top-0 bg-white shadow-md z-40">
+  <div className="max-w-7xl mx-auto px-4 py-4">
+    {/* Top Row: Logo, Search, Cart, Profile */}
+    <div className="flex items-center gap-4 mb-4">
+      {/* Logo - Bigger with Icon */}
+      <div className="flex items-center gap-2 flex-shrink-0">
+        <Package className="w-8 h-8 text-emerald-600" />
+        <div>
+          <h1 className="text-2xl font-bold text-emerald-600">Anantamart</h1>
+          <p className="text-xs text-gray-500">B2B Wholesale Platform</p>
         </div>
-      </header>
+      </div>
+      
+      {/* Search Bar - Beside Logo */}
+      <div className="flex-1 max-w-2xl">
+        <div className="flex items-center bg-gray-100 rounded-lg px-3 py-2">
+          <Search className="w-5 h-5 text-gray-400" />
+          <input
+            type="text"
+            placeholder="Search products or SKU..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="flex-1 ml-2 bg-transparent outline-none text-sm"
+          />
+        </div>
+      </div>
 
-      {/* Main Content */}
+      {/* Cart Icon with Badge */}
+      <button 
+        onClick={() => setCurrentView('estimate')}
+        className="relative p-2 hover:bg-gray-100 rounded-lg transition-colors"
+      >
+        <ShoppingCart className="w-6 h-6 text-gray-700" />
+        {cart?.items?.length > 0 && (
+          <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
+            {cart.items.length}
+          </span>
+        )}
+      </button>
+
+      {/* Profile Icon */}
+      <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+        <User className="w-6 h-6 text-gray-700" />
+      </button>
+    </div>
+
+    {/* CATEGORIES - HORIZONTAL SCROLL (unchanged) */}
+    <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+      <button
+        onClick={() => setSelectedCategory('all')}
+        className={`px-4 py-2 rounded-lg font-medium text-sm whitespace-nowrap transition-all ${
+          selectedCategory === 'all'
+            ? 'bg-emerald-600 text-white'
+            : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+        }`}
+      >
+        All Products
+      </button>
+      
+      {categories && categories.map((category) => (
+        <button
+          key={category.id}
+          onClick={() => setSelectedCategory(category.id)}
+          className={`px-4 py-2 rounded-lg font-medium text-sm whitespace-nowrap transition-all ${
+            selectedCategory === category.id
+              ? 'bg-emerald-600 text-white'
+              : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+          }`}
+        >
+          {category.name}
+        </button>
+      ))}
+    </div>
+  </div>
+</header>
+
+       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 py-4">
         {currentView === 'catalog' && (
           <>
@@ -448,7 +473,7 @@ function EstimateView({ cart, removeFromCart, updateQuantity, subtotal, cgst, sg
               <div className="text-right">
                 <p className="font-bold text-lg">₹{parseFloat(item.total_price).toFixed(2)}</p>
                 <button
-                  onClick={() => removeFromCart(item.product.id)}
+                  onClick={() => removeFromCart(item.id)}
                   className="text-red-600 text-xs hover:underline mt-1 font-medium"
                 >
                   Remove
