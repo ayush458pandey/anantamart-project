@@ -1,12 +1,11 @@
-// src/hooks/useProducts.js - UPDATED
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 
 const API_BASE_URL = 'http://localhost:8000/api';
 
 export const useProducts = () => {
-  const [products, setProducts] = useState([]);
-  const [categories, setCategories] = useState([]);
+  const [products, setProducts] = useState([]);  // Initialize as empty array
+  const [categories, setCategories] = useState([]);  // Initialize as empty array
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -17,30 +16,35 @@ export const useProducts = () => {
 
         // Fetch categories
         const categoriesRes = await axios.get(`${API_BASE_URL}/categories/`);
-        console.log('📦 Categories Response:', categoriesRes.data);
+        console.log('📦 Full Categories Response:', categoriesRes.data);
         
         // Handle both array and paginated response
         const categoriesData = Array.isArray(categoriesRes.data) 
           ? categoriesRes.data 
           : (categoriesRes.data.results || []);
         
+        console.log('✅ Categories Array:', categoriesData);
         setCategories(categoriesData);
 
         // Fetch products
         const productsRes = await axios.get(`${API_BASE_URL}/products/`);
-        console.log('📦 Products Response:', productsRes.data);
+        console.log('📦 Full Products Response:', productsRes.data);
         
         // Handle both array and paginated response
         const productsData = Array.isArray(productsRes.data) 
           ? productsRes.data 
           : (productsRes.data.results || []);
         
+        console.log('✅ Products Array:', productsData);
         setProducts(productsData);
 
         setError(null);
       } catch (err) {
         console.error('❌ Error:', err.message);
-        setError('Failed to fetch data');
+        setError('Failed to fetch data. Make sure backend is running.');
+        // Set empty arrays on error
+        setProducts([]);
+        setCategories([]);
       } finally {
         setLoading(false);
       }
