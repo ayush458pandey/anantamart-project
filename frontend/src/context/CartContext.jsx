@@ -15,10 +15,12 @@ export const CartProvider = ({ children }) => {
   const fetchCart = async () => {
     try {
       setLoading(true);
+      // getCart now handles errors gracefully and always returns a cart object
       const data = await cartService.getCart();
       setCart(data || { items: [], total_items: 0, total_price: 0 });
     } catch (error) {
-      console.error('Error fetching cart:', error);
+      // This should rarely happen now since getCart handles most errors
+      console.error('Unexpected error fetching cart:', error);
       setCart({ items: [], total_items: 0, total_price: 0 });
     } finally {
       setLoading(false);

@@ -31,9 +31,21 @@ export const useProducts = () => {
         console.log('📦 Full Products Response:', productsRes.data);
         
         // Handle both array and paginated response
-        const productsData = Array.isArray(productsRes.data) 
+        let productsData = Array.isArray(productsRes.data) 
           ? productsRes.data 
           : (productsRes.data.results || []);
+        
+        // Ensure image URLs are properly formatted
+        productsData = productsData.map(product => {
+          // Use image_url if available, otherwise use image, otherwise null
+          if (product.image_url) {
+            product.image = product.image_url;
+          } else if (product.image && !product.image.startsWith('http')) {
+            // If image is a relative path, make it absolute
+            product.image = `http://localhost:8000${product.image}`;
+          }
+          return product;
+        });
         
         console.log('✅ Products Array:', productsData);
         setProducts(productsData);

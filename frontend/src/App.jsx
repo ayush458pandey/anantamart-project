@@ -1,7 +1,10 @@
 import { useState } from 'react';
 import { 
   ShoppingCart, Search, Plus, Minus, Package, 
-  Coffee, Eye, FileText, User, X, CheckCircle, GitCompare 
+  Coffee, Eye, FileText, User, X, CheckCircle, GitCompare,
+  Utensils, Droplet, Briefcase, Shirt, Home, Store, 
+  ShoppingBag, Box, Tag, Grid, Layers, Mail, Phone, 
+  MapPin, Building, Edit, LogOut, Settings
 } from 'lucide-react';
 import { useProducts } from './hooks/useProducts';
 import { useCart } from './context/CartContext';
@@ -11,7 +14,51 @@ import ProductDetail from './components/ProductDetail';
 import AdvancedCheckout from './components/AdvancedCheckout';
 import OrdersList from './components/OrdersList';
 
+
 import './index.css';
+
+// Helper function to get icon for category
+const getCategoryIcon = (category) => {
+  if (!category) return Package;
+  
+  // If category has icon field from backend, try to map it
+  const iconName = category.icon?.toLowerCase() || '';
+  const categoryName = category.name?.toLowerCase() || '';
+  
+  // Map common icon names and category names to Lucide icons
+  const iconMap = {
+    'package': Package,
+    'box': Box,
+    'coffee': Coffee,
+    'food': Coffee,
+    'beverage': Coffee,
+    'utensils': Utensils,
+    'restaurant': Utensils,
+    'droplet': Droplet,
+    'cleaning': Droplet,
+    'briefcase': Briefcase,
+    'office': Briefcase,
+    'shirt': Shirt,
+    'apparel': Shirt,
+    'home': Home,
+    'store': Store,
+    'shopping': ShoppingBag,
+    'bag': ShoppingBag,
+    'tag': Tag,
+    'grid': Grid,
+    'layers': Layers,
+  };
+  
+  // Try to find icon by icon name first, then by category name
+  for (const [key, icon] of Object.entries(iconMap)) {
+    if (iconName.includes(key) || categoryName.includes(key)) {
+      return icon;
+    }
+  }
+  
+  // Default fallback
+  return Package;
+};
 
 function AppContent() {
   const [currentView, setCurrentView] = useState('catalog');
@@ -23,7 +70,7 @@ function AppContent() {
 
   const { products, categories, loading, error } = useProducts();
   const { cart, addToCart, removeFromCart, updateQuantity } = useCart();
-  const { compareProducts } = useComparison();
+  const { compareList } = useComparison();
 
   // Filter products
   const filteredProducts = products.filter(product => {
@@ -42,10 +89,10 @@ function AppContent() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-emerald-600 mx-auto mb-4"></div>
-          <p className="text-gray-600 text-lg">Loading Anantamart...</p>
+          <div className="animate-spin rounded-full h-12 w-12 sm:h-16 sm:w-16 border-b-4 border-emerald-600 mx-auto mb-4"></div>
+          <p className="text-gray-600 text-base sm:text-lg">Loading Anantamart...</p>
         </div>
       </div>
     );
@@ -53,13 +100,13 @@ function AppContent() {
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="bg-red-50 border-2 border-red-200 rounded-xl p-8 max-w-md">
-          <h2 className="text-xl font-bold text-red-600 mb-2">Connection Error</h2>
-          <p className="text-red-700 mb-4">{error}</p>
-          <p className="text-sm text-gray-600">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+        <div className="bg-red-50 border-2 border-red-200 rounded-lg sm:rounded-xl p-6 sm:p-8 max-w-md w-full">
+          <h2 className="text-lg sm:text-xl font-bold text-red-600 mb-2">Connection Error</h2>
+          <p className="text-sm sm:text-base text-red-700 mb-4">{error}</p>
+          <p className="text-xs sm:text-sm text-gray-600">
             Make sure Django backend is running at:{' '}
-            <code className="bg-red-100 px-2 py-1 rounded">http://localhost:8000</code>
+            <code className="bg-red-100 px-2 py-1 rounded text-xs sm:text-sm break-all">http://localhost:8000</code>
           </p>
         </div>
       </div>
@@ -67,94 +114,121 @@ function AppContent() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-20">
+    <div className="min-h-screen bg-gray-50 pb-24 sm:pb-20">
       {/* HEADER */}
-      {/* HEADER */}
-<header className="sticky top-0 bg-white shadow-md z-40">
-  <div className="max-w-7xl mx-auto px-4 py-4">
-    {/* Top Row: Logo, Search, Cart, Profile */}
-    <div className="flex items-center gap-4 mb-4">
-      {/* Logo - Bigger with Icon */}
-      <div className="flex items-center gap-2 flex-shrink-0">
-        <Package className="w-8 h-8 text-emerald-600" />
-        <div>
-          <h1 className="text-2xl font-bold text-emerald-600">Anantamart</h1>
-          <p className="text-xs text-gray-500">B2B Wholesale Platform</p>
+      <header className="sticky top-0 bg-white shadow-md z-40">
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 py-3 sm:py-4">
+          {/* Top Row: Logo, Cart, Profile - Mobile: Logo only, Desktop: All */}
+          <div className="flex items-center justify-between sm:justify-start gap-2 sm:gap-4 mb-3 sm:mb-4">
+            {/* Logo - Responsive sizing */}
+            <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
+              <Package className="w-6 h-6 sm:w-8 sm:h-8 text-emerald-600" />
+              <div className="hidden sm:block">
+                <h1 className="text-xl sm:text-2xl font-bold text-emerald-600">Anantamart</h1>
+                <p className="text-xs text-gray-500">B2B Wholesale Platform</p>
+              </div>
+              <div className="sm:hidden">
+                <h1 className="text-lg font-bold text-emerald-600">Anantamart</h1>
+              </div>
+            </div>
+            
+            {/* Search Bar - Desktop: Beside Logo, Mobile: Below */}
+            <div className="hidden sm:flex flex-1 max-w-2xl min-w-0">
+              <div className="flex items-center bg-gray-100 rounded-lg px-3 py-2 w-full">
+                <Search className="w-5 h-5 text-gray-400 flex-shrink-0" />
+                <input
+                  type="text"
+                  placeholder="Search products..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="flex-1 ml-2 bg-transparent outline-none text-base min-w-0"
+                />
+              </div>
+            </div>
+
+            {/* Cart Icon with Badge - Better touch target */}
+            <button 
+              onClick={() => setCurrentView('estimate')}
+              className="relative p-2 sm:p-2.5 hover:bg-gray-100 active:bg-gray-200 rounded-lg transition-colors touch-manipulation min-w-[44px] min-h-[44px] flex items-center justify-center"
+              aria-label="View cart"
+            >
+              <ShoppingCart className="w-5 h-5 sm:w-6 sm:h-6 text-gray-700" />
+              {cart?.items?.length > 0 && (
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] sm:text-xs rounded-full w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center font-bold">
+                  {cart.items.length > 99 ? '99+' : cart.items.length}
+                </span>
+              )}
+            </button>
+
+            {/* Profile Icon - Better touch target */}
+            <button 
+              onClick={() => setCurrentView('profile')}
+              className="p-2 sm:p-2.5 hover:bg-gray-100 active:bg-gray-200 rounded-lg transition-colors touch-manipulation min-w-[44px] min-h-[44px] flex items-center justify-center"
+              aria-label="Profile"
+            >
+              <User className="w-5 h-5 sm:w-6 sm:h-6 text-gray-700" />
+            </button>
+          </div>
+
+          {/* Search Bar - Mobile: Below Anantamart */}
+          <div className="sm:hidden mb-3">
+            <div className="flex items-center bg-gray-100 rounded-lg px-3 py-2.5">
+              <Search className="w-5 h-5 text-gray-400 flex-shrink-0" />
+              <input
+                type="text"
+                placeholder="Search products..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="flex-1 ml-2 bg-transparent outline-none text-base min-w-0"
+              />
+            </div>
+          </div>
+
+          {/* CATEGORIES - HORIZONTAL SCROLL with icons */}
+          <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide -mx-3 sm:mx-0 px-3 sm:px-0">
+            <button
+              onClick={() => setSelectedCategory('all')}
+              className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 rounded-lg font-medium text-xs sm:text-sm whitespace-nowrap transition-all touch-manipulation ${
+                selectedCategory === 'all'
+                  ? 'bg-emerald-600 text-white shadow-md'
+                  : 'bg-gray-200 text-gray-700 active:bg-gray-300'
+              }`}
+            >
+              <Package className={`w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0 ${selectedCategory === 'all' ? 'text-white' : 'text-emerald-600'}`} />
+              <span>All Products</span>
+            </button>
+            
+            {categories && categories.map((category) => {
+              const CategoryIcon = getCategoryIcon(category);
+              const isActive = selectedCategory === category.id;
+              return (
+                <button
+                  key={category.id}
+                  onClick={() => setSelectedCategory(category.id)}
+                  className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 rounded-lg font-medium text-xs sm:text-sm whitespace-nowrap transition-all touch-manipulation ${
+                    isActive
+                      ? 'bg-emerald-600 text-white shadow-md'
+                      : 'bg-gray-200 text-gray-700 active:bg-gray-300'
+                  }`}
+                >
+                  <CategoryIcon className={`w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0 ${isActive ? 'text-white' : 'text-emerald-600'}`} />
+                  <span>{category.name}</span>
+                </button>
+              );
+            })}
+          </div>
         </div>
-      </div>
-      
-      {/* Search Bar - Beside Logo */}
-      <div className="flex-1 max-w-2xl">
-        <div className="flex items-center bg-gray-100 rounded-lg px-3 py-2">
-          <Search className="w-5 h-5 text-gray-400" />
-          <input
-            type="text"
-            placeholder="Search products or SKU..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="flex-1 ml-2 bg-transparent outline-none text-sm"
-          />
-        </div>
-      </div>
-
-      {/* Cart Icon with Badge */}
-      <button 
-        onClick={() => setCurrentView('estimate')}
-        className="relative p-2 hover:bg-gray-100 rounded-lg transition-colors"
-      >
-        <ShoppingCart className="w-6 h-6 text-gray-700" />
-        {cart?.items?.length > 0 && (
-          <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
-            {cart.items.length}
-          </span>
-        )}
-      </button>
-
-      {/* Profile Icon */}
-      <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-        <User className="w-6 h-6 text-gray-700" />
-      </button>
-    </div>
-
-    {/* CATEGORIES - HORIZONTAL SCROLL (unchanged) */}
-    <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-      <button
-        onClick={() => setSelectedCategory('all')}
-        className={`px-4 py-2 rounded-lg font-medium text-sm whitespace-nowrap transition-all ${
-          selectedCategory === 'all'
-            ? 'bg-emerald-600 text-white'
-            : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-        }`}
-      >
-        All Products
-      </button>
-      
-      {categories && categories.map((category) => (
-        <button
-          key={category.id}
-          onClick={() => setSelectedCategory(category.id)}
-          className={`px-4 py-2 rounded-lg font-medium text-sm whitespace-nowrap transition-all ${
-            selectedCategory === category.id
-              ? 'bg-emerald-600 text-white'
-              : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-          }`}
-        >
-          {category.name}
-        </button>
-      ))}
-    </div>
-  </div>
-</header>
+      </header>
 
        {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 py-4">
+      <main className="max-w-7xl mx-auto px-3 sm:px-4 py-4">
         {currentView === 'catalog' && (
           <>
-            <h2 className="text-lg font-bold text-gray-800 mb-4">
+            <h2 className="text-base sm:text-lg font-bold text-gray-800 mb-3 sm:mb-4 px-1">
               {selectedCategory === 'all' ? 'All Products' : categories.find(c => c.id === selectedCategory)?.name}
             </h2>
-            {/* Horizontal Scrolling Products */}
-            <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
+            {/* Product Grid - Responsive */}
+            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2.5 sm:gap-3 md:gap-4 pb-4">
               {filteredProducts.map((product) => (
                 <ProductCard
                   key={product.id}
@@ -165,9 +239,12 @@ function AppContent() {
               ))}
             </div>
             {filteredProducts.length === 0 && (
-              <div className="text-center py-12">
-                <Package className="w-16 h-16 text-gray-300 mx-auto mb-3" />
-                <p className="text-gray-500">No products found</p>
+              <div className="text-center py-12 sm:py-16">
+                <Package className="w-12 h-12 sm:w-16 sm:h-16 text-gray-300 mx-auto mb-3" />
+                <p className="text-sm sm:text-base text-gray-500">No products found</p>
+                {searchQuery && (
+                  <p className="text-xs sm:text-sm text-gray-400 mt-2">Try a different search term</p>
+                )}
               </div>
             )}
           </>
@@ -187,12 +264,14 @@ function AppContent() {
         )}
 
         {currentView === 'orders' && <OrdersList />}
+
+        {currentView === 'profile' && <ProfileView />}
       </main>
 
-      {/* Bottom Navigation */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="flex justify-around py-2">
+      {/* Bottom Navigation - Mobile Optimized */}
+      <nav className="fixed bottom-0 left-0 right-0 bg-white border-t-2 border-gray-200 z-50 safe-area-inset-bottom">
+        <div className="max-w-7xl mx-auto px-2 sm:px-4">
+          <div className="flex justify-around py-1.5 sm:py-2">
             <NavButton
               icon={Package}
               label="Catalog"
@@ -211,7 +290,7 @@ function AppContent() {
               label="Compare"
               active={showComparison}
               onClick={() => setShowComparison(true)}
-              badge={compareProducts?.length || 0}
+              badge={compareList?.length || 0}
             />
             <NavButton
               icon={ShoppingCart}
@@ -262,6 +341,16 @@ function AppContent() {
 function ProductCard({ product, onAddToCart, onViewDetails }) {
   const [quantity, setQuantity] = useState(product.moq || 1);
   const [isInCart, setIsInCart] = useState(false);
+  const { addToCompare, removeFromCompare, compareList } = useComparison();
+  const isInCompareList = compareList.some(p => p.id === product.id);
+
+  const handleCompareToggle = () => {
+    if (isInCompareList) {
+      removeFromCompare(product.id);
+    } else {
+      addToCompare(product);
+    }
+  };
 
   const handleAdd = () => {
     onAddToCart(product.id, quantity);
@@ -280,121 +369,162 @@ function ProductCard({ product, onAddToCart, onViewDetails }) {
     if (newQty === product.moq) {
       setIsInCart(false);
     }
-    onAddToCart(product.id, newQty);
   };
 
-  const discount = Math.round(((product.mrp - product.base_price) / product.mrp) * 100);
+  const discountPercent = Math.round(((product.mrp - product.base_price) / product.mrp) * 100);
 
   return (
-    <div className="flex-shrink-0 w-72 bg-white rounded-xl shadow-md hover:shadow-xl transition-all">
-      {/* Product Image */}
-      <div className="relative bg-gradient-to-br from-emerald-50 to-emerald-100 h-48 rounded-t-xl overflow-hidden">
-        {product.image ? (
-          <img src={product.image} alt={product.name} className="w-full h-full object-contain p-4" />
-        ) : (
-          <div className="flex items-center justify-center h-full">
-            <Package className="w-20 h-20 text-emerald-300" />
-          </div>
-        )}
-
+    <div className="w-full bg-white rounded-lg sm:rounded-xl shadow-sm hover:shadow-md active:shadow-sm transition-all overflow-hidden touch-manipulation">
+      {/* Image Section - Fixed Aspect Ratio */}
+      <div
+        className="relative bg-gradient-to-br from-gray-50 to-gray-100 cursor-pointer"
+        style={{ aspectRatio: '4 / 3' }}
+        onClick={onViewDetails}
+      >
         {/* Stock Badge - Top Left */}
-        <div className="absolute top-2 left-2">
-          <span className={`text-xs font-bold px-2 py-1 rounded-full ${
-            product.stock_status === 'in-stock' ? 'bg-green-500' : 'bg-orange-500'
-          } text-white`}>
-            {product.stock_status === 'in-stock' ? 'In Stock' : 'Low Stock'}
+        <div className="absolute top-1.5 left-1.5 sm:top-2 sm:left-2 z-10">
+          <span className={`text-[9px] sm:text-[10px] font-bold px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full ${
+            product.stock_status === 'in-stock' 
+              ? 'bg-green-600 text-white' 
+              : 'bg-orange-500 text-white'
+          }`}>
+            {product.stock_status === 'in-stock' ? 'In Stock' : 'Out of Stock'}
           </span>
         </div>
 
-        {/* Discount Badge - Top Right */}
-        {discount > 0 && (
-          <div className="absolute top-2 right-2">
-            <span className="bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full">
-              {discount}% OFF
-            </span>
+        {/* Product Image */}
+        {product.image ? (
+          <img
+            src={product.image}
+            alt={product.name}
+            className="absolute inset-0 w-full h-full object-contain p-2 sm:p-4"
+            loading="lazy"
+          />
+        ) : (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <Package className="w-8 h-8 sm:w-12 sm:h-12 text-gray-300" />
           </div>
         )}
 
-        {/* Compare Button - Bottom Left */}
+        {/* Compare Button - Bottom Left - Better mobile sizing */}
         <button
           onClick={(e) => {
             e.stopPropagation();
+            handleCompareToggle();
           }}
-          className="absolute bottom-2 left-2 bg-white p-2 rounded-full shadow-md hover:bg-gray-50 transition-all"
-          title="Add to Compare"
+          className={`absolute bottom-1.5 left-1.5 sm:bottom-2 sm:left-2 p-1.5 sm:p-2 rounded-full shadow-md hover:bg-gray-50 active:scale-95 transition-all z-10 touch-manipulation min-w-[36px] min-h-[36px] flex items-center justify-center ${
+            isInCompareList 
+              ? 'bg-emerald-100 border-2 border-emerald-600' 
+              : 'bg-white'
+          }`}
+          aria-label={isInCompareList ? "Remove from Compare" : "Add to Compare"}
+          title={isInCompareList ? "Remove from Compare" : "Add to Compare"}
         >
-          <GitCompare className="w-4 h-4 text-gray-600" />
+          <GitCompare className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${isInCompareList ? 'text-emerald-600' : 'text-gray-600'}`} />
         </button>
 
-        {/* ADD Button / Quantity Controls - Bottom Right */}
-        <div className="absolute bottom-2 right-2">
+        {/* ADD Button / Quantity Controls - Bottom Right - Better mobile sizing */}
+        <div className="absolute bottom-1.5 right-1.5 sm:bottom-2 sm:right-2 z-10">
           {!isInCart ? (
             <button
-              onClick={handleAdd}
-              className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-6 py-2 rounded-lg shadow-lg transition-all flex items-center gap-2"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleAdd();
+              }}
+              className="bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-bold px-3 sm:px-5 py-1.5 sm:py-2 rounded-lg shadow-lg active:scale-95 transition-all text-xs sm:text-sm touch-manipulation"
             >
-              <Plus className="w-4 h-4" />
-              ADD
+              + ADD
             </button>
           ) : (
             <div className="flex items-center bg-white rounded-lg shadow-lg border-2 border-emerald-600">
               <button
-                onClick={handleDecrement}
-                className="p-2 hover:bg-gray-50 transition-colors"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleDecrement();
+                }}
+                className="p-1.5 sm:p-2 hover:bg-gray-50 active:bg-gray-100 transition-colors touch-manipulation min-w-[36px] min-h-[36px] flex items-center justify-center"
               >
-                <Minus className="w-4 h-4 text-emerald-600" />
+                <Minus className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-600" />
               </button>
-              <span className="px-3 font-bold text-emerald-600 min-w-[40px] text-center">
+              <span className="px-2 sm:px-3 font-bold text-emerald-600 min-w-[32px] sm:min-w-[36px] text-center text-xs sm:text-sm">
                 {quantity}
               </span>
               <button
-                onClick={handleIncrement}
-                className="p-2 hover:bg-gray-50 transition-colors"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleIncrement();
+                }}
+                className="p-1.5 sm:p-2 hover:bg-gray-50 active:bg-gray-100 transition-colors touch-manipulation min-w-[36px] min-h-[36px] flex items-center justify-center"
               >
-                <Plus className="w-4 h-4 text-emerald-600" />
+                <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-600" />
               </button>
             </div>
           )}
         </div>
       </div>
 
-      {/* Product Info */}
-      <div className="p-4">
-        <h3 
-          onClick={onViewDetails}
-          className="font-bold text-sm text-gray-800 mb-1 line-clamp-2 min-h-[2.5rem] cursor-pointer hover:text-emerald-600 transition-colors"
-        >
-          {product.name}
-        </h3>
-        
-        <p className="text-xs text-gray-500 mb-2">SKU: {product.sku}</p>
-
-        <div className="flex items-baseline gap-2 mb-2">
-          <span className="text-xl font-bold text-emerald-600">
-            ₹{parseFloat(product.base_price).toFixed(2)}
-          </span>
-          <span className="text-xs text-gray-400 line-through">
-            ₹{parseFloat(product.mrp).toFixed(2)}
+      {/* Product Details */}
+      <div className="p-2 sm:p-3">
+        {/* Price Row */}
+        <div className="flex items-center gap-1.5 sm:gap-2 mb-1">
+          <div className="bg-emerald-600 text-white px-2 sm:px-2.5 py-0.5 sm:py-1 rounded">
+            <span className="text-xs sm:text-sm font-bold">₹{Math.round(product.base_price)}</span>
+          </div>
+          <span className="text-gray-400 line-through text-[10px] sm:text-xs">
+            ₹{Math.round(product.mrp)}
           </span>
         </div>
 
-        <p className="text-xs text-gray-600">
-          MOQ: <span className="font-semibold text-emerald-600">{product.moq}</span> • 
-          Case: {product.case_size}
+        {/* Discount Badge */}
+        {discountPercent > 0 && (
+          <div className="text-[10px] sm:text-[11px] text-gray-600 mb-1.5 sm:mb-2 font-semibold">
+            {discountPercent}% OFF
+          </div>
+        )}
+
+        {/* Product Name */}
+        <h3
+          onClick={onViewDetails}
+          className="text-xs sm:text-sm font-semibold text-gray-900 line-clamp-2 min-h-[32px] sm:min-h-[36px] mb-1 cursor-pointer hover:text-emerald-600 active:text-emerald-700 transition-colors"
+        >
+          {product.name}
+        </h3>
+
+        {/* SKU */}
+        <p className="text-[10px] sm:text-[11px] text-gray-500 mb-0.5 sm:mb-1">
+          SKU: <span className="font-medium text-gray-700">{product.sku}</span>
+        </p>
+
+        {/* Pack Info */}
+        <p className="text-[10px] sm:text-[11px] text-gray-600 mb-0.5 sm:mb-1">
+          1 pack ({product.moq} {product.unit || 'ml'})
+        </p>
+
+        {/* MOQ & Case */}
+        <p className="text-[10px] sm:text-[11px] text-gray-600">
+          <span className="font-semibold text-emerald-600">MOQ: {product.moq}</span>
+          {' • '}
+          <span>Case: {product.case_size}</span>
         </p>
       </div>
     </div>
   );
 }
 
+
+
+
+
+
+
 // Estimate View
 function EstimateView({ cart, removeFromCart, updateQuantity, subtotal, cgst, sgst, total, onCheckout }) {
   if (!cart || cart.items.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-20">
-        <FileText className="w-20 h-20 text-gray-300 mb-4" />
-        <h3 className="text-xl font-bold text-gray-600 mb-2">No Items in Estimate</h3>
-        <p className="text-gray-500">Add products to create an estimate</p>
+      <div className="flex flex-col items-center justify-center py-16 sm:py-20 px-4">
+        <FileText className="w-16 h-16 sm:w-20 sm:h-20 text-gray-300 mb-4" />
+        <h3 className="text-lg sm:text-xl font-bold text-gray-600 mb-2">No Items in Estimate</h3>
+        <p className="text-sm sm:text-base text-gray-500 text-center">Add products to create an estimate</p>
       </div>
     );
   }
@@ -412,81 +542,79 @@ function EstimateView({ cart, removeFromCart, updateQuantity, subtotal, cgst, sg
   };
 
   return (
-    <div className="max-w-4xl mx-auto">
-      <h2 className="text-2xl font-bold text-gray-800 mb-6">Price Estimate</h2>
+    <div className="max-w-4xl mx-auto px-3 sm:px-4">
+      <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-4 sm:mb-6">Price Estimate</h2>
 
-      <div className="bg-white rounded-xl shadow-md mb-6">
+      <div className="bg-white rounded-lg sm:rounded-xl shadow-md mb-4 sm:mb-6 overflow-hidden">
         {cart.items.map((item, idx) => {
-          console.log(`Item ${idx}:`, item.product.name, 'Image:', item.product.image);
-          
           return (
-            <div key={item.id} className={`p-4 flex items-center gap-4 ${idx !== cart.items.length - 1 ? 'border-b' : ''}`}>
-              {/* Product Image */}
-              <div className="w-20 h-20 bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden">
-                {item.product?.image ? (
-                  <img 
-                    src={item.product.image} 
-                    alt={item.product.name}
-                    className="w-full h-full object-contain"
-                    style={{ padding: '0.5rem' }}
-                    onLoad={() => console.log('✅ Image loaded:', item.product.image)}
-                    onError={(e) => {
-                      console.error('❌ Image failed:', item.product.image);
-                      e.target.style.display = 'none';
-                      e.target.parentElement.innerHTML = '<svg class="w-10 h-10 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>';
-                    }}
-                  />
-                ) : (
-                  <Package className="w-10 h-10 text-emerald-400" />
-                )}
+            <div key={item.id} className={`p-3 sm:p-4 flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 ${idx !== cart.items.length - 1 ? 'border-b border-gray-200' : ''}`}>
+              {/* Product Image and Info */}
+              <div className="flex items-center gap-3 sm:gap-4 flex-1 w-full sm:w-auto">
+                <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden">
+                  {item.product?.image ? (
+                    <img 
+                      src={item.product.image} 
+                      alt={item.product.name}
+                      className="w-full h-full object-contain p-2 sm:p-3"
+                      loading="lazy"
+                    />
+                  ) : (
+                    <Package className="w-8 h-8 sm:w-10 sm:h-10 text-emerald-400" />
+                  )}
+                </div>
+
+                <div className="flex-1 min-w-0">
+                  <h4 className="font-bold text-sm sm:text-base line-clamp-2">{item.product.name}</h4>
+                  <p className="text-xs sm:text-sm text-gray-500">SKU: {item.product.sku}</p>
+                  <p className="text-xs sm:text-sm text-gray-600 mt-0.5 sm:mt-1">MOQ: {item.product.moq} units</p>
+                  <p className="font-bold text-emerald-600 mt-1 text-sm sm:text-base">
+                    ₹{parseFloat(item.product.base_price).toFixed(2)}
+                  </p>
+                </div>
               </div>
 
-              <div className="flex-1">
-                <h4 className="font-bold text-sm">{item.product.name}</h4>
-                <p className="text-xs text-gray-500">SKU: {item.product.sku}</p>
-                <p className="text-xs text-gray-600 mt-1">MOQ: {item.product.moq} units</p>
-                <p className="font-bold text-emerald-600 mt-1">
-                  ₹{parseFloat(item.product.base_price).toFixed(2)}
-                </p>
-              </div>
+              {/* Quantity Controls - Mobile friendly */}
+              <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto justify-between sm:justify-start">
+                <div className="flex items-center gap-2 bg-gray-50 rounded-lg p-1">
+                  <button
+                    onClick={() => handleDecrease(item.product, item.quantity)}
+                    className="p-2 hover:bg-gray-100 active:bg-gray-200 rounded-lg transition-colors touch-manipulation min-w-[40px] min-h-[40px] flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+                    disabled={item.quantity <= item.product.moq}
+                    aria-label="Decrease quantity"
+                  >
+                    <Minus className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600" />
+                  </button>
+                  <span className="w-12 sm:w-16 text-center font-bold text-emerald-600 text-sm sm:text-base">
+                    {item.quantity}
+                  </span>
+                  <button
+                    onClick={() => handleIncrease(item.product, item.quantity)}
+                    className="p-2 hover:bg-gray-100 active:bg-gray-200 rounded-lg transition-colors touch-manipulation min-w-[40px] min-h-[40px] flex items-center justify-center"
+                    aria-label="Increase quantity"
+                  >
+                    <Plus className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600" />
+                  </button>
+                </div>
 
-              {/* Quantity Controls */}
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => handleDecrease(item.product, item.quantity)}
-                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                  disabled={item.quantity <= item.product.moq}
-                >
-                  <Minus className="w-4 h-4 text-gray-600" />
-                </button>
-                <span className="w-16 text-center font-bold text-emerald-600">
-                  {item.quantity}
-                </span>
-                <button
-                  onClick={() => handleIncrease(item.product, item.quantity)}
-                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                >
-                  <Plus className="w-4 h-4 text-gray-600" />
-                </button>
-              </div>
-
-              <div className="text-right">
-                <p className="font-bold text-lg">₹{parseFloat(item.total_price).toFixed(2)}</p>
-                <button
-                  onClick={() => removeFromCart(item.id)}
-                  className="text-red-600 text-xs hover:underline mt-1 font-medium"
-                >
-                  Remove
-                </button>
+                <div className="text-right sm:text-left">
+                  <p className="font-bold text-base sm:text-lg">₹{parseFloat(item.total_price).toFixed(2)}</p>
+                  <button
+                    onClick={() => removeFromCart(item.id)}
+                    className="text-red-600 text-xs sm:text-sm hover:underline active:text-red-700 mt-1 font-medium touch-manipulation"
+                  >
+                    Remove
+                  </button>
+                </div>
               </div>
             </div>
           );
         })}
       </div>
 
-      <div className="bg-white rounded-xl shadow-md p-6 mb-6">
-        <h3 className="font-bold text-lg mb-4">Price Summary</h3>
-        <div className="space-y-2 text-sm">
+      <div className="bg-white rounded-lg sm:rounded-xl shadow-md p-4 sm:p-6 mb-4 sm:mb-6">
+        <h3 className="font-bold text-base sm:text-lg mb-3 sm:mb-4">Price Summary</h3>
+        <div className="space-y-2 sm:space-y-2.5 text-sm sm:text-base">
           <div className="flex justify-between">
             <span className="text-gray-600">Subtotal:</span>
             <span className="font-bold">₹{subtotal.toFixed(2)}</span>
@@ -499,7 +627,7 @@ function EstimateView({ cart, removeFromCart, updateQuantity, subtotal, cgst, sg
             <span className="text-gray-600">SGST (9%):</span>
             <span className="font-bold">₹{sgst.toFixed(2)}</span>
           </div>
-          <div className="flex justify-between text-lg font-bold text-emerald-600 border-t pt-2">
+          <div className="flex justify-between text-base sm:text-lg font-bold text-emerald-600 border-t border-gray-200 pt-2 sm:pt-3 mt-2 sm:mt-3">
             <span>Total Amount:</span>
             <span>₹{total.toFixed(2)}</span>
           </div>
@@ -508,7 +636,7 @@ function EstimateView({ cart, removeFromCart, updateQuantity, subtotal, cgst, sg
 
       <button
         onClick={onCheckout}
-        className="w-full bg-emerald-600 text-white font-bold py-3 rounded-lg hover:bg-emerald-700 transition-colors flex items-center justify-center gap-2"
+        className="w-full bg-emerald-600 text-white font-bold py-3 sm:py-3.5 rounded-lg hover:bg-emerald-700 active:bg-emerald-800 transition-colors flex items-center justify-center gap-2 touch-manipulation text-sm sm:text-base shadow-lg"
       >
         <ShoppingCart className="w-5 h-5" />
         Proceed to Checkout
@@ -517,22 +645,137 @@ function EstimateView({ cart, removeFromCart, updateQuantity, subtotal, cgst, sg
   );
 }
 
-// Bottom Nav Button
+// Profile View Component
+function ProfileView() {
+  return (
+    <div className="max-w-4xl mx-auto">
+      <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-4 sm:mb-6">Profile</h2>
+      
+      <div className="bg-white rounded-lg sm:rounded-xl shadow-md overflow-hidden">
+        {/* Profile Header */}
+        <div className="bg-gradient-to-r from-emerald-500 to-emerald-600 p-6 sm:p-8">
+          <div className="flex items-center gap-4 sm:gap-6">
+            <div className="w-16 h-16 sm:w-20 sm:h-20 bg-white rounded-full flex items-center justify-center shadow-lg">
+              <User className="w-8 h-8 sm:w-10 sm:h-10 text-emerald-600" />
+            </div>
+            <div className="flex-1 text-white">
+              <h3 className="text-xl sm:text-2xl font-bold mb-1">Business Account</h3>
+              <p className="text-emerald-100 text-sm sm:text-base">B2B Wholesale Customer</p>
+            </div>
+            <button className="p-2 sm:p-3 bg-white bg-opacity-20 hover:bg-opacity-30 rounded-lg transition-colors touch-manipulation">
+              <Edit className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+            </button>
+          </div>
+        </div>
+
+        {/* Profile Details */}
+        <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
+          {/* Business Information */}
+          <div>
+            <h4 className="text-base sm:text-lg font-bold text-gray-800 mb-3 sm:mb-4 flex items-center gap-2">
+              <Building className="w-5 h-5 text-emerald-600" />
+              Business Information
+            </h4>
+            <div className="space-y-3 sm:space-y-4">
+              <div className="flex items-start gap-3 sm:gap-4">
+                <Building className="w-5 h-5 text-gray-400 flex-shrink-0 mt-0.5" />
+                <div className="flex-1">
+                  <p className="text-xs sm:text-sm text-gray-500 mb-1">Business Name</p>
+                  <p className="text-sm sm:text-base font-medium text-gray-800">Your Business Name</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3 sm:gap-4">
+                <Mail className="w-5 h-5 text-gray-400 flex-shrink-0 mt-0.5" />
+                <div className="flex-1">
+                  <p className="text-xs sm:text-sm text-gray-500 mb-1">Email</p>
+                  <p className="text-sm sm:text-base font-medium text-gray-800">business@example.com</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3 sm:gap-4">
+                <Phone className="w-5 h-5 text-gray-400 flex-shrink-0 mt-0.5" />
+                <div className="flex-1">
+                  <p className="text-xs sm:text-sm text-gray-500 mb-1">Phone</p>
+                  <p className="text-sm sm:text-base font-medium text-gray-800">+91 98765 43210</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3 sm:gap-4">
+                <MapPin className="w-5 h-5 text-gray-400 flex-shrink-0 mt-0.5" />
+                <div className="flex-1">
+                  <p className="text-xs sm:text-sm text-gray-500 mb-1">Address</p>
+                  <p className="text-sm sm:text-base font-medium text-gray-800">123 Business Street, City, State - 123456</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Account Statistics */}
+          <div className="border-t border-gray-200 pt-4 sm:pt-6">
+            <h4 className="text-base sm:text-lg font-bold text-gray-800 mb-3 sm:mb-4">Account Statistics</h4>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
+              <div className="bg-gray-50 rounded-lg p-3 sm:p-4">
+                <p className="text-xs sm:text-sm text-gray-500 mb-1">Total Orders</p>
+                <p className="text-xl sm:text-2xl font-bold text-emerald-600">0</p>
+              </div>
+              <div className="bg-gray-50 rounded-lg p-3 sm:p-4">
+                <p className="text-xs sm:text-sm text-gray-500 mb-1">Pending Orders</p>
+                <p className="text-xl sm:text-2xl font-bold text-orange-600">0</p>
+              </div>
+              <div className="bg-gray-50 rounded-lg p-3 sm:p-4 col-span-2 sm:col-span-1">
+                <p className="text-xs sm:text-sm text-gray-500 mb-1">Total Spent</p>
+                <p className="text-xl sm:text-2xl font-bold text-gray-800">₹0.00</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Actions */}
+          <div className="border-t border-gray-200 pt-4 sm:pt-6 space-y-2 sm:space-y-3">
+            <button className="w-full flex items-center justify-between p-3 sm:p-4 bg-gray-50 hover:bg-gray-100 active:bg-gray-200 rounded-lg transition-colors touch-manipulation">
+              <div className="flex items-center gap-3">
+                <Settings className="w-5 h-5 text-gray-600" />
+                <span className="text-sm sm:text-base font-medium text-gray-800">Account Settings</span>
+              </div>
+              <X className="w-4 h-4 text-gray-400 rotate-45" />
+            </button>
+            <button className="w-full flex items-center justify-between p-3 sm:p-4 bg-gray-50 hover:bg-gray-100 active:bg-gray-200 rounded-lg transition-colors touch-manipulation">
+              <div className="flex items-center gap-3">
+                <FileText className="w-5 h-5 text-gray-600" />
+                <span className="text-sm sm:text-base font-medium text-gray-800">Order History</span>
+              </div>
+              <X className="w-4 h-4 text-gray-400 rotate-45" />
+            </button>
+            <button className="w-full flex items-center justify-between p-3 sm:p-4 bg-red-50 hover:bg-red-100 active:bg-red-200 rounded-lg transition-colors touch-manipulation">
+              <div className="flex items-center gap-3">
+                <LogOut className="w-5 h-5 text-red-600" />
+                <span className="text-sm sm:text-base font-medium text-red-600">Logout</span>
+              </div>
+              <X className="w-4 h-4 text-red-400 rotate-45" />
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Bottom Nav Button - Mobile Optimized
 function NavButton({ icon: Icon, label, active, onClick, badge }) {
   return (
     <button
       onClick={onClick}
-      className={`flex flex-col items-center justify-center py-2 px-3 rounded-lg transition-colors relative ${
+      className={`flex flex-col items-center justify-center py-1.5 sm:py-2 px-2 sm:px-3 rounded-lg transition-colors relative touch-manipulation min-w-[60px] min-h-[60px] sm:min-h-[auto] active:bg-gray-100 ${
         active ? 'text-emerald-600' : 'text-gray-600'
       }`}
+      aria-label={label}
     >
-      <Icon className="w-6 h-6 mb-1" />
-      <span className="text-xs font-medium">{label}</span>
-      {badge > 0 && (
-        <span className="absolute top-0 right-0 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
-          {badge}
-        </span>
-      )}
+      <div className="relative">
+        <Icon className="w-5 h-5 sm:w-6 sm:h-6 mb-0.5 sm:mb-1" />
+        {badge > 0 && (
+          <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] sm:text-xs rounded-full w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center font-bold">
+            {badge > 99 ? '99+' : badge}
+          </span>
+        )}
+      </div>
+      <span className="text-[10px] sm:text-xs font-medium leading-tight">{label}</span>
     </button>
   );
 }

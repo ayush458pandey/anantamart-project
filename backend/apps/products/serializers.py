@@ -31,6 +31,7 @@ class ProductSerializer(serializers.ModelSerializer):
     stock_status = serializers.CharField(read_only=True)
     images = ProductImageSerializer(many=True, read_only=True)
     key_features_list = serializers.SerializerMethodField()
+    image_url = serializers.SerializerMethodField()
     
     class Meta:
         model = Product
@@ -39,7 +40,7 @@ class ProductSerializer(serializers.ModelSerializer):
             'brand', 'product_type', 'key_features', 'key_features_list',
             'ingredients', 'packaging_type', 'dietary_preference',
             'storage_instruction', 'usage_recommendation', 'unit', 'weight',
-            'image', 'images', 'mrp', 'base_price', 'stock', 'stock_status',
+            'image', 'image_url', 'images', 'mrp', 'base_price', 'stock', 'stock_status',
             'moq', 'case_size', 'is_active', 'created_at', 'tiers'
         ]
     
@@ -47,3 +48,12 @@ class ProductSerializer(serializers.ModelSerializer):
         if obj.key_features:
             return [f.strip() for f in obj.key_features.split('\n') if f.strip()]
         return []
+    
+    def get_image_url(self, obj):
+        if obj.image:
+            request = self.context.get('request')
+            if request:
+                return request.build_absolute_uri(obj.image.url)
+            # Fallback if no request context
+            return obj.image.url if obj.image else None
+        return None
