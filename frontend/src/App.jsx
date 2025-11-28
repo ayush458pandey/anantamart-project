@@ -1,10 +1,10 @@
-import { useState } from 'react';
-import { 
-  ShoppingCart, Search, Plus, Minus, Package, 
+import { useState, useEffect } from 'react';
+import {
+  ShoppingCart, Search, Plus, Minus, Package,
   Coffee, Eye, FileText, User, X, CheckCircle, GitCompare,
-  Utensils, Droplet, Briefcase, Shirt, Home, Store, 
-  ShoppingBag, Box, Tag, Grid, Layers, Mail, Phone, 
-  MapPin, Building, Edit, LogOut, Settings
+  Utensils, Droplet, Briefcase, Shirt, Home, Store,
+  ShoppingBag, Box, Tag, Grid, Layers, Mail, Phone,
+  MapPin, Building, Edit, LogOut, Settings, ChevronLeft
 } from 'lucide-react';
 import { useProducts } from './hooks/useProducts';
 import { useCart } from './context/CartContext';
@@ -14,18 +14,21 @@ import ProductDetail from './components/ProductDetail';
 import AdvancedCheckout from './components/AdvancedCheckout';
 import OrdersList from './components/OrdersList';
 
+// Custom Components
+import SubcategoryGrid from './components/SubcategoryGrid';
+import BrandGrid from './components/BrandGrid';
+import BrandPage from './components/BrandPage';
+import { productService } from './api/services/productService';
 
 import './index.css';
 
 // Helper function to get icon for category
 const getCategoryIcon = (category) => {
   if (!category) return Package;
-  
-  // If category has icon field from backend, try to map it
+
   const iconName = category.icon?.toLowerCase() || '';
   const categoryName = category.name?.toLowerCase() || '';
-  
-  // Map common icon names and category names to Lucide icons
+
   const iconMap = {
     'package': Package,
     'box': Box,
@@ -48,15 +51,12 @@ const getCategoryIcon = (category) => {
     'grid': Grid,
     'layers': Layers,
   };
-  
-  // Try to find icon by icon name first, then by category name
+
   for (const [key, icon] of Object.entries(iconMap)) {
     if (iconName.includes(key) || categoryName.includes(key)) {
       return icon;
     }
   }
-  
-  // Default fallback
   return Package;
 };
 
@@ -68,16 +68,111 @@ function AppContent() {
   const [showCheckout, setShowCheckout] = useState(false);
   const [showComparison, setShowComparison] = useState(false);
 
+  // Visual browsing state
+  const [subcategories, setSubcategories] = useState([]);
+  const [selectedSubcategory, setSelectedSubcategory] = useState(null);
+  const [loadingSubcategories, setLoadingSubcategories] = useState(false);
+  const [showSubcategoryView, setShowSubcategoryView] = useState(true);
+  const [brands, setBrands] = useState([]);
+  const [selectedBrand, setSelectedBrand] = useState(null);
+  const [loadingBrands, setLoadingBrands] = useState(false);
+
   const { products, categories, loading, error } = useProducts();
   const { cart, addToCart, removeFromCart, updateQuantity } = useCart();
   const { compareList } = useComparison();
 
-  // Filter products
+  // Fetch subcategories when category changes
+  useEffect(() => {
+    setSelectedSubcategory(null);
+
+    const fetchSubcategories = async () => {
+      if (selectedCategory && selectedCategory !== 'all') {
+        setLoadingSubcategories(true);
+        try {
+          const data = await productService.getSubcategoriesWithImages(selectedCategory);
+          setSubcategories(data);
+        } catch (err) {
+          console.error('Failed to fetch subcategories:', err);
+          setSubcategories([]);
+        } finally {
+          setLoadingSubcategories(false);
+        }
+      } else {
+        setSubcategories([]);
+      }
+    };
+    fetchSubcategories();
+    setShowSubcategoryView(true);
+  }, [selectedCategory]);
+
+  // Fetch brands for catalog view
+  useEffect(() => {
+    const fetchBrands = async () => {
+      if (currentView === 'catalog') {
+        setLoadingBrands(true);
+        try {
+          const data = await productService.getBrands();
+          setBrands(data);
+        } catch (err) {
+          console.error('Failed to fetch brands:', err);
+          setBrands([]);
+        } finally {
+          setLoadingBrands(false);
+        }
+      }
+    };
+    fetchBrands();
+  }, [currentView]);
+
+  // Handle "Back" from Subcategory View
+  const handleBackToSubcategories = () => {
+    setSelectedSubcategory(null);
+    setShowSubcategoryView(true);
+  };
+
+  // --- ROBUST PRODUCT FILTERING ---
   const filteredProducts = products.filter(product => {
-    const matchesCategory = selectedCategory === 'all' || product.category === selectedCategory;
+    // 1. Check Main Category (Convert to string for safety)
+    const matchesCategory = selectedCategory === 'all' || String(product.category) === String(selectedCategory);
+
+    // 2. Check Subcategory (Convert to string for safety)
+    const matchesSubcategory = !selectedSubcategory || String(product.subcategory) === String(selectedSubcategory);
+
+    // 3. Check Search
     const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       product.sku.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesCategory && matchesSearch;
+
+    return matchesCategory && matchesSubcategory && matchesSearch;
+  });
+
+  // --- ROBUST BRAND FILTERING ---
+  const visibleBrands = brands.filter(brand => {
+    // 1. Always show all brands if we are in "All Products"
+    if (selectedCategory === 'all') return true;
+
+    // 2. Filter based on products in the current category
+    const hasProduct = products.some(p => {
+      // A. Check Category Match (Safe String Comparison)
+      const productCatId = String(p.category || p.category_id || (p.category_obj?.id) || '');
+      const currentCatId = String(selectedCategory);
+
+      if (productCatId !== currentCatId) return false;
+
+      // B. Check Brand Match (Safe Data Comparison)
+      const targetBrandId = String(brand.id);
+      const targetBrandName = brand.name.toLowerCase();
+
+      // Match by ID, brand_id, nested object, or name
+      if (p.brand && String(p.brand) === targetBrandId) return true;
+      if (p.brand_id && String(p.brand_id) === targetBrandId) return true;
+      if (typeof p.brand === 'object' && p.brand !== null && String(p.brand.id) === targetBrandId) return true;
+      if (typeof p.brand === 'string' && p.brand.toLowerCase() === targetBrandName) return true;
+      if (p.brand_name && p.brand_name.toLowerCase() === targetBrandName) return true;
+
+      return false;
+    });
+
+    return hasProduct;
   });
 
   // Calculate totals
@@ -86,6 +181,11 @@ function AppContent() {
   const cgst = estimateSubtotal * 0.09;
   const sgst = estimateSubtotal * 0.09;
   const estimateTotal = estimateSubtotal + cgst + sgst;
+
+  // Helper to get active category name
+  const currentCategoryName = categories.find(c => c.id === selectedCategory)?.name || 'All Products';
+  // Helper to get active subcategory object
+  const activeSubcategory = subcategories.find(s => s.id === selectedSubcategory);
 
   if (loading) {
     return (
@@ -118,9 +218,8 @@ function AppContent() {
       {/* HEADER */}
       <header className="sticky top-0 bg-white shadow-md z-40">
         <div className="max-w-7xl mx-auto px-3 sm:px-4 py-3 sm:py-4">
-          {/* Top Row: Logo, Cart, Profile - Mobile: Logo only, Desktop: All */}
           <div className="flex items-center justify-between sm:justify-start gap-2 sm:gap-4 mb-3 sm:mb-4">
-            {/* Logo - Responsive sizing */}
+            {/* Logo */}
             <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
               <Package className="w-6 h-6 sm:w-8 sm:h-8 text-emerald-600" />
               <div className="hidden sm:block">
@@ -131,8 +230,8 @@ function AppContent() {
                 <h1 className="text-lg font-bold text-emerald-600">Anantamart</h1>
               </div>
             </div>
-            
-            {/* Search Bar - Desktop: Beside Logo, Mobile: Below */}
+
+            {/* Search Bar */}
             <div className="hidden sm:flex flex-1 max-w-2xl min-w-0">
               <div className="flex items-center bg-gray-100 rounded-lg px-3 py-2 w-full">
                 <Search className="w-5 h-5 text-gray-400 flex-shrink-0" />
@@ -146,8 +245,8 @@ function AppContent() {
               </div>
             </div>
 
-            {/* Cart Icon with Badge - Better touch target */}
-            <button 
+            {/* Cart Icon */}
+            <button
               onClick={() => setCurrentView('estimate')}
               className="relative p-2 sm:p-2.5 hover:bg-gray-100 active:bg-gray-200 rounded-lg transition-colors touch-manipulation min-w-[44px] min-h-[44px] flex items-center justify-center"
               aria-label="View cart"
@@ -160,8 +259,8 @@ function AppContent() {
               )}
             </button>
 
-            {/* Profile Icon - Better touch target */}
-            <button 
+            {/* Profile Icon */}
+            <button
               onClick={() => setCurrentView('profile')}
               className="p-2 sm:p-2.5 hover:bg-gray-100 active:bg-gray-200 rounded-lg transition-colors touch-manipulation min-w-[44px] min-h-[44px] flex items-center justify-center"
               aria-label="Profile"
@@ -170,7 +269,7 @@ function AppContent() {
             </button>
           </div>
 
-          {/* Search Bar - Mobile: Below Anantamart */}
+          {/* Search Bar - Mobile */}
           <div className="sm:hidden mb-3">
             <div className="flex items-center bg-gray-100 rounded-lg px-3 py-2.5">
               <Search className="w-5 h-5 text-gray-400 flex-shrink-0" />
@@ -184,32 +283,42 @@ function AppContent() {
             </div>
           </div>
 
-          {/* CATEGORIES - HORIZONTAL SCROLL with icons */}
+          {/* CATEGORIES */}
           <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide -mx-3 sm:mx-0 px-3 sm:px-0">
             <button
-              onClick={() => setSelectedCategory('all')}
-              className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 rounded-lg font-medium text-xs sm:text-sm whitespace-nowrap transition-all touch-manipulation ${
-                selectedCategory === 'all'
-                  ? 'bg-emerald-600 text-white shadow-md'
-                  : 'bg-gray-200 text-gray-700 active:bg-gray-300'
-              }`}
+              onClick={() => {
+                setSelectedCategory('all');
+                setSelectedBrand(null);
+                setSelectedSubcategory(null);
+                setShowSubcategoryView(true);
+                setCurrentView('catalog');
+              }}
+              className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 rounded-lg font-medium text-xs sm:text-sm whitespace-nowrap transition-all touch-manipulation ${selectedCategory === 'all'
+                ? 'bg-emerald-600 text-white shadow-md'
+                : 'bg-gray-200 text-gray-700 active:bg-gray-300'
+                }`}
             >
               <Package className={`w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0 ${selectedCategory === 'all' ? 'text-white' : 'text-emerald-600'}`} />
               <span>All Products</span>
             </button>
-            
+
             {categories && categories.map((category) => {
               const CategoryIcon = getCategoryIcon(category);
               const isActive = selectedCategory === category.id;
               return (
                 <button
                   key={category.id}
-                  onClick={() => setSelectedCategory(category.id)}
-                  className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 rounded-lg font-medium text-xs sm:text-sm whitespace-nowrap transition-all touch-manipulation ${
-                    isActive
-                      ? 'bg-emerald-600 text-white shadow-md'
-                      : 'bg-gray-200 text-gray-700 active:bg-gray-300'
-                  }`}
+                  onClick={() => {
+                    setSelectedCategory(category.id);
+                    setSelectedBrand(null);
+                    setSelectedSubcategory(null);
+                    setShowSubcategoryView(true);
+                    setCurrentView('catalog');
+                  }}
+                  className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 rounded-lg font-medium text-xs sm:text-sm whitespace-nowrap transition-all touch-manipulation ${isActive
+                    ? 'bg-emerald-600 text-white shadow-md'
+                    : 'bg-gray-200 text-gray-700 active:bg-gray-300'
+                    }`}
                 >
                   <CategoryIcon className={`w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0 ${isActive ? 'text-white' : 'text-emerald-600'}`} />
                   <span>{category.name}</span>
@@ -220,36 +329,118 @@ function AppContent() {
         </div>
       </header>
 
-       {/* Main Content */}
+      {/* Main Content */}
       <main className="max-w-7xl mx-auto px-3 sm:px-4 py-4">
-        {currentView === 'catalog' && (
-          <>
-            <h2 className="text-base sm:text-lg font-bold text-gray-800 mb-3 sm:mb-4 px-1">
-              {selectedCategory === 'all' ? 'All Products' : categories.find(c => c.id === selectedCategory)?.name}
-            </h2>
-            {/* Product Grid - Responsive */}
-            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2.5 sm:gap-3 md:gap-4 pb-4">
-              {filteredProducts.map((product) => (
-                <ProductCard
-                  key={product.id}
-                  product={product}
-                  onAddToCart={addToCart}
-                  onViewDetails={() => setSelectedProduct(product)}
-                />
-              ))}
+
+        {/* CATALOG VIEW */}
+        {currentView === 'catalog' && !selectedBrand && (
+          <div>
+
+            {/* Back Button (Subcategory) */}
+            {selectedSubcategory && (
+              <button
+                onClick={handleBackToSubcategories}
+                className="flex items-center text-sm font-medium text-emerald-600 hover:text-emerald-700 mb-3 px-1 transition-colors group"
+              >
+                <ChevronLeft className="w-5 h-5 mr-1 group-hover:-translate-x-1 transition-transform" />
+                Back to {currentCategoryName}
+              </button>
+            )}
+
+            {/* Dynamic Title */}
+            <div className="mb-3 sm:mb-4 px-1">
+              {selectedSubcategory && activeSubcategory ? (
+                <div>
+                  <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    {currentCategoryName}
+                  </span>
+                  <h2 className="text-xl sm:text-2xl font-bold text-emerald-800 flex items-center gap-2 mt-0.5">
+                    {activeSubcategory.name}
+                    <span className="text-xs font-normal text-gray-500 bg-gray-100 px-2 py-1 rounded-full border border-gray-200">
+                      {filteredProducts.length} items
+                    </span>
+                  </h2>
+                </div>
+              ) : (
+                <h2 className="text-base sm:text-lg font-bold text-gray-800">
+                  {selectedCategory === 'all' ? 'All Products' : currentCategoryName}
+                </h2>
+              )}
             </div>
-            {filteredProducts.length === 0 && (
-              <div className="text-center py-12 sm:py-16">
-                <Package className="w-12 h-12 sm:w-16 sm:h-16 text-gray-300 mx-auto mb-3" />
-                <p className="text-sm sm:text-base text-gray-500">No products found</p>
-                {searchQuery && (
-                  <p className="text-xs sm:text-sm text-gray-400 mt-2">Try a different search term</p>
-                )}
+
+            {/* 1. SUBCATEGORY GRID (Shows when a specific category is selected) */}
+            {selectedCategory !== 'all' && showSubcategoryView && subcategories.length > 0 && (
+              <div className="mb-6">
+                <div className="flex items-center justify-between mb-3 px-1">
+                  <h3 className="text-sm sm:text-base font-bold text-gray-700">Browse by Subcategory</h3>
+                  <button
+                    onClick={() => setShowSubcategoryView(false)}
+                    className="text-xs text-emerald-600 hover:text-emerald-700 font-medium"
+                  >
+                    View All Products
+                  </button>
+                </div>
+                <SubcategoryGrid
+                  subcategories={subcategories}
+                  onSubcategoryClick={(subcat) => {
+                    setSelectedSubcategory(subcat.id);
+                    setShowSubcategoryView(false);
+                  }}
+                  isLoading={loadingSubcategories}
+                />
               </div>
             )}
-          </>
+
+            {/* 2. BRAND GRID (Shows only brands that have products in current category) */}
+            {!selectedSubcategory && visibleBrands.length > 0 && (
+              <div className="mb-6">
+                <h3 className="text-sm sm:text-base font-bold text-gray-700 mb-3 px-1">
+                  Browse by Brand
+                </h3>
+                <BrandGrid
+                  brands={visibleBrands}
+                  onBrandClick={(brand) => setSelectedBrand(brand)}
+                  isLoading={loadingBrands}
+                />
+              </div>
+            )}
+
+            {/* 3. PRODUCT GRID */}
+            {(!showSubcategoryView || selectedCategory === 'all') && (
+              <>
+                <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2.5 sm:gap-3 md:gap-4 pb-4">
+                  {filteredProducts.map((product) => (
+                    <ProductCard
+                      key={product.id}
+                      product={product}
+                      onAddToCart={addToCart}
+                      onViewDetails={() => setSelectedProduct(product)}
+                    />
+                  ))}
+                </div>
+                {filteredProducts.length === 0 && (
+                  <div className="text-center py-12 sm:py-16">
+                    <Package className="w-12 h-12 sm:w-16 sm:h-16 text-gray-300 mx-auto mb-3" />
+                    <p className="text-sm sm:text-base text-gray-500">No products found</p>
+                    {searchQuery && (
+                      <p className="text-xs sm:text-sm text-gray-400 mt-2">Try a different search term</p>
+                    )}
+                    {selectedSubcategory && (
+                      <button
+                        onClick={handleBackToSubcategories}
+                        className="text-emerald-600 font-medium text-sm mt-2 hover:underline"
+                      >
+                        Go back to Subcategories
+                      </button>
+                    )}
+                  </div>
+                )}
+              </>
+            )}
+          </div>
         )}
 
+        {/* ... (Rest of views: Estimate, Orders, Profile) ... */}
         {currentView === 'estimate' && (
           <EstimateView
             cart={cart}
@@ -266,9 +457,19 @@ function AppContent() {
         {currentView === 'orders' && <OrdersList />}
 
         {currentView === 'profile' && <ProfileView />}
+
+        {/* Brand Page - Shows ONLY when selectedBrand is set */}
+        {selectedBrand && (
+          <BrandPage
+            brand={selectedBrand}
+            onBack={() => setSelectedBrand(null)}
+            onProductClick={(product) => setSelectedProduct(product)}
+            onAddToCart={addToCart}
+          />
+        )}
       </main>
 
-      {/* Bottom Navigation - Mobile Optimized */}
+      {/* Bottom Navigation */}
       <nav className="fixed bottom-0 left-0 right-0 bg-white border-t-2 border-gray-200 z-50 safe-area-inset-bottom">
         <div className="max-w-7xl mx-auto px-2 sm:px-4">
           <div className="flex justify-around py-1.5 sm:py-2">
@@ -276,7 +477,15 @@ function AppContent() {
               icon={Package}
               label="Catalog"
               active={currentView === 'catalog'}
-              onClick={() => setCurrentView('catalog')}
+              onClick={() => {
+                setCurrentView('catalog');
+                setSelectedBrand(null);
+                if (selectedCategory !== 'all') {
+                  // Reset to subcategory view if clicking catalog again
+                  setShowSubcategoryView(true);
+                  setSelectedSubcategory(null);
+                }
+              }}
             />
             <NavButton
               icon={FileText}
@@ -308,7 +517,7 @@ function AppContent() {
         </div>
       </nav>
 
-      {/* Product Detail */}
+      {/* Product Detail Modal */}
       {selectedProduct && (
         <ProductDetail
           product={selectedProduct}
@@ -375,19 +584,18 @@ function ProductCard({ product, onAddToCart, onViewDetails }) {
 
   return (
     <div className="w-full bg-white rounded-lg sm:rounded-xl shadow-sm hover:shadow-md active:shadow-sm transition-all overflow-hidden touch-manipulation">
-      {/* Image Section - Fixed Aspect Ratio */}
+      {/* Image Section */}
       <div
         className="relative bg-gradient-to-br from-gray-50 to-gray-100 cursor-pointer"
         style={{ aspectRatio: '4 / 3' }}
         onClick={onViewDetails}
       >
-        {/* Stock Badge - Top Left */}
+        {/* Stock Badge */}
         <div className="absolute top-1.5 left-1.5 sm:top-2 sm:left-2 z-10">
-          <span className={`text-[9px] sm:text-[10px] font-bold px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full ${
-            product.stock_status === 'in-stock' 
-              ? 'bg-green-600 text-white' 
-              : 'bg-orange-500 text-white'
-          }`}>
+          <span className={`text-[9px] sm:text-[10px] font-bold px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full ${product.stock_status === 'in-stock'
+            ? 'bg-green-600 text-white'
+            : 'bg-orange-500 text-white'
+            }`}>
             {product.stock_status === 'in-stock' ? 'In Stock' : 'Out of Stock'}
           </span>
         </div>
@@ -406,24 +614,23 @@ function ProductCard({ product, onAddToCart, onViewDetails }) {
           </div>
         )}
 
-        {/* Compare Button - Bottom Left - Better mobile sizing */}
+        {/* Compare Button */}
         <button
           onClick={(e) => {
             e.stopPropagation();
             handleCompareToggle();
           }}
-          className={`absolute bottom-1.5 left-1.5 sm:bottom-2 sm:left-2 p-1.5 sm:p-2 rounded-full shadow-md hover:bg-gray-50 active:scale-95 transition-all z-10 touch-manipulation min-w-[36px] min-h-[36px] flex items-center justify-center ${
-            isInCompareList 
-              ? 'bg-emerald-100 border-2 border-emerald-600' 
-              : 'bg-white'
-          }`}
+          className={`absolute bottom-1.5 left-1.5 sm:bottom-2 sm:left-2 p-1.5 sm:p-2 rounded-full shadow-md hover:bg-gray-50 active:scale-95 transition-all z-10 touch-manipulation min-w-[36px] min-h-[36px] flex items-center justify-center ${isInCompareList
+            ? 'bg-emerald-100 border-2 border-emerald-600'
+            : 'bg-white'
+            }`}
           aria-label={isInCompareList ? "Remove from Compare" : "Add to Compare"}
           title={isInCompareList ? "Remove from Compare" : "Add to Compare"}
         >
           <GitCompare className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${isInCompareList ? 'text-emerald-600' : 'text-gray-600'}`} />
         </button>
 
-        {/* ADD Button / Quantity Controls - Bottom Right - Better mobile sizing */}
+        {/* ADD Button / Quantity Controls */}
         <div className="absolute bottom-1.5 right-1.5 sm:bottom-2 sm:right-2 z-10">
           {!isInCart ? (
             <button
@@ -511,12 +718,6 @@ function ProductCard({ product, onAddToCart, onViewDetails }) {
   );
 }
 
-
-
-
-
-
-
 // Estimate View
 function EstimateView({ cart, removeFromCart, updateQuantity, subtotal, cgst, sgst, total, onCheckout }) {
   if (!cart || cart.items.length === 0) {
@@ -553,8 +754,8 @@ function EstimateView({ cart, removeFromCart, updateQuantity, subtotal, cgst, sg
               <div className="flex items-center gap-3 sm:gap-4 flex-1 w-full sm:w-auto">
                 <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden">
                   {item.product?.image ? (
-                    <img 
-                      src={item.product.image} 
+                    <img
+                      src={item.product.image}
                       alt={item.product.name}
                       className="w-full h-full object-contain p-2 sm:p-3"
                       loading="lazy"
@@ -574,7 +775,7 @@ function EstimateView({ cart, removeFromCart, updateQuantity, subtotal, cgst, sg
                 </div>
               </div>
 
-              {/* Quantity Controls - Mobile friendly */}
+              {/* Quantity Controls */}
               <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto justify-between sm:justify-start">
                 <div className="flex items-center gap-2 bg-gray-50 rounded-lg p-1">
                   <button
@@ -650,7 +851,7 @@ function ProfileView() {
   return (
     <div className="max-w-4xl mx-auto">
       <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-4 sm:mb-6">Profile</h2>
-      
+
       <div className="bg-white rounded-lg sm:rounded-xl shadow-md overflow-hidden">
         {/* Profile Header */}
         <div className="bg-gradient-to-r from-emerald-500 to-emerald-600 p-6 sm:p-8">
@@ -762,9 +963,8 @@ function NavButton({ icon: Icon, label, active, onClick, badge }) {
   return (
     <button
       onClick={onClick}
-      className={`flex flex-col items-center justify-center py-1.5 sm:py-2 px-2 sm:px-3 rounded-lg transition-colors relative touch-manipulation min-w-[60px] min-h-[60px] sm:min-h-[auto] active:bg-gray-100 ${
-        active ? 'text-emerald-600' : 'text-gray-600'
-      }`}
+      className={`flex flex-col items-center justify-center py-1.5 sm:py-2 px-2 sm:px-3 rounded-lg transition-colors relative touch-manipulation min-w-[60px] min-h-[60px] sm:min-h-[auto] active:bg-gray-100 ${active ? 'text-emerald-600' : 'text-gray-600'
+        }`}
       aria-label={label}
     >
       <div className="relative">

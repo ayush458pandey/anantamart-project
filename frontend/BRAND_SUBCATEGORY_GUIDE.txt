@@ -1,0 +1,181 @@
+/**
+ * BRAND AND SUBCATEGORY INTEGRATION - COPY/PASTE GUIDE
+ * Follow these steps carefully to add brand and subcategory features
+ */
+
+// ============================================================================
+// STEP 1: Update line 1 - Add useEffect to imports
+// ============================================================================
+// REPLACE THIS:
+import { useState } from 'react';
+
+// WITH THIS:
+import { useState, useEffect } from 'react';
+
+
+// ============================================================================
+// STEP 2: Add imports after line 15 (after OrdersList import)
+// ============================================================================
+// ADD THESE LINES after: import OrdersList from './components/OrdersList';
+
+import SubcategoryGrid from './components/SubcategoryGrid';
+import BrandGrid from './components/BrandGrid';
+import BrandPage from './components/BrandPage';
+import { productService } from './api/services/productService';
+
+
+// ============================================================================
+// STEP 3: Add state variables after line 69 (after showComparison state)
+// ============================================================================
+// ADD THESE LINES after: const [showComparison, setShowComparison] = useState(false);
+
+  // Visual browsing state
+  const [subcategories, setSubcategories] = useState([]);
+  const [loadingSubcategories, setLoadingSubcategories] = useState(false);
+  const [showSubcategoryView, setShowSubcategoryView] = useState(true);
+  const [brands, setBrands] = useState([]);
+  const [selectedBrand, setSelectedBrand] = useState(null);
+  const [loadingBrands, setLoadingBrands] = useState(false);
+
+
+// ============================================================================
+// STEP 4: Add useEffect hooks after line 73 (after compareList line)
+// ============================================================================
+// ADD THESE LINES after: const { compareList } = useComparison();
+
+  // Fetch subcategories when category changes
+  useEffect(() => {
+    const fetchSubcategories = async () => {
+      if (selectedCategory && selectedCategory !== 'all') {
+        setLoadingSubcategories(true);
+        try {
+          const data = await productService.getSubcategoriesWithImages(selectedCategory);
+          setSubcategories(data);
+        } catch (err) {
+          console.error('Failed to fetch subcategories:', err);
+          setSubcategories([]);
+        } finally {
+          setLoadingSubcategories(false);
+        }
+      } else {
+        setSubcategories([]);
+      }
+    };
+    fetchSubcategories();
+    setShowSubcategoryView(true);
+  }, [selectedCategory]);
+
+  // Fetch brands for catalog view
+  useEffect(() => {
+    const fetchBrands = async () => {
+      if (currentView === 'catalog') {
+        setLoadingBrands(true);
+        try {
+          const data = await productService.getBrands();
+          setBrands(data);
+        } catch (err) {
+          console.error('Failed to fetch brands:', err);
+          setBrands([]);
+        } finally {
+          setLoadingBrands(false);
+        }
+      }
+    };
+    fetchBrands();
+  }, [currentView]);
+
+
+// ============================================================================
+// STEP 5: Update catalog view - Find line with {currentView === 'catalog' && (
+// Replace the <> with <div> and </> with </div> if not already done
+// Then ADD brand and subcategory grids BEFORE the product grid
+// ============================================================================
+// The catalog section should look like this:
+
+        {currentView === 'catalog' && (
+          <div>
+            <h2 className="text-base sm:text-lg font-bold text-gray-800 mb-3 sm:mb-4 px-1">
+              {selectedCategory === 'all' ? 'All Products' : categories.find(c => c.id === selectedCategory)?.name}
+            </h2>
+
+            {/* Brand Grid - Show on catalog view */}
+            {selectedCategory === 'all' && !selectedBrand && (
+              <div className="mb-6">
+                <h3 className="text-sm sm:text-base font-bold text-gray-700 mb-3 px-1">Shop by Brand</h3>
+                <BrandGrid
+                  brands={brands}
+                  onBrandClick={(brand) => setSelectedBrand(brand)}
+                  isLoading={loadingBrands}
+                />
+              </div>
+            )}
+
+            {/* Subcategory Grid - Show when category is selected */}
+            {selectedCategory !== 'all' && showSubcategoryView && subcategories.length > 0 && (
+              <div className="mb-6">
+                <div className="flex items-center justify-between mb-3 px-1">
+                  <h3 className="text-sm sm:text-base font-bold text-gray-700">Browse by Subcategory</h3>
+                  <button
+                    onClick={() => setShowSubcategoryView(false)}
+                    className="text-xs text-emerald-600 hover:text-emerald-700 font-medium"
+                  >
+                    View All Products
+                  </button>
+                </div>
+                <SubcategoryGrid
+                  subcategories={subcategories}
+                  onSubcategoryClick={(subcat) => {
+                    setShowSubcategoryView(false);
+                  }}
+                  isLoading={loadingSubcategories}
+                />
+              </div>
+            )}
+
+            {/* Product Grid - Show when not in subcategory view */}
+            {(!showSubcategoryView || selectedCategory === 'all') && (
+              <>
+                {/* Product Grid - Responsive */}
+                <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2.5 sm:gap-3 md:gap-4 pb-4">
+                  {filteredProducts.map((product) => (
+                    <ProductCard
+                      key={product.id}
+                      product={product}
+                      onAddToCart={addToCart}
+                      onViewDetails={() => setSelectedProduct(product)}
+                    />
+                  ))}
+                </div>
+                {filteredProducts.length === 0 && (
+                  <div className="text-center py-12 sm:py-16">
+                    <Package className="w-12 h-12 sm:w-16 sm:h-16 text-gray-300 mx-auto mb-3" />
+                    <p className="text-sm sm:text-base text-gray-500">No products found</p>
+                    {searchQuery && (
+                      <p className="text-xs sm:text-sm text-gray-400 mt-2">Try a different search term</p>
+                    )}
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        )}
+
+
+// ============================================================================
+// STEP 6: Add BrandPage rendering after profile view (around line 268)
+// ============================================================================
+// ADD THIS after the line: {currentView === 'profile' && <ProfileView />}
+
+        {selectedBrand && (
+          <BrandPage
+            brand={selectedBrand}
+            onBack={() => setSelectedBrand(null)}
+            onProductClick={(product) => setSelectedProduct(product)}
+            onAddToCart={addToCart}
+          />
+        )}
+
+
+// ============================================================================
+// DONE! Save the file and the brands and subcategories should appear
+// ============================================================================

@@ -26,7 +26,7 @@ export default function OrdersList() {
     try {
       setLoading(true);
       const data = await orderService.getAllOrders();
-      setOrders(data.results || data); 
+      setOrders(data.results || data);
     } catch (error) {
       console.error('Error fetching orders:', error);
     } finally {
@@ -126,16 +126,14 @@ function FilterTab({ label, count, active, onClick, color = 'gray' }) {
   return (
     <button
       onClick={onClick}
-      className={`flex items-center gap-2 px-4 py-2 rounded-lg whitespace-nowrap transition-all font-medium ${
-        active
+      className={`flex items-center gap-2 px-4 py-2 rounded-lg whitespace-nowrap transition-all font-medium ${active
           ? 'bg-emerald-600 text-white'
           : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-      }`}
+        }`}
     >
       <span>{label}</span>
-      <span className={`text-xs px-2 py-0.5 rounded-full ${
-        active ? 'bg-white text-emerald-600' : 'bg-gray-200'
-      }`}>
+      <span className={`text-xs px-2 py-0.5 rounded-full ${active ? 'bg-white text-emerald-600' : 'bg-gray-200'
+        }`}>
         {count}
       </span>
     </button>
@@ -214,11 +212,11 @@ function OrderCard({ order, onTrack }) {
             <Truck className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
             <div className="flex-1">
               <p className="text-sm font-semibold text-blue-900">
-                {order.status === 'delivered' 
-                  ? 'Delivered' 
+                {order.status === 'delivered'
+                  ? 'Delivered'
                   : order.status === 'shipped'
-                  ? 'Out for Delivery'
-                  : 'Preparing for Dispatch'}
+                    ? 'Out for Delivery'
+                    : 'Preparing for Dispatch'}
               </p>
               {order.tracking_number && (
                 <p className="text-xs text-blue-700 mt-1">

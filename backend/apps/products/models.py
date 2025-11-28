@@ -1,4 +1,5 @@
 from django.db import models
+from django.utils.text import slugify
 
 class Category(models.Model):
     name = models.CharField(max_length=100)
@@ -15,6 +16,46 @@ class Category(models.Model):
         return self.name
 
 
+class Subcategory(models.Model):
+    """Subcategories within a main category (e.g., Mobile Phones under Electronics)"""
+    name = models.CharField(max_length=100)
+    category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name='subcategories')
+    description = models.TextField(blank=True)
+    image = models.ImageField(upload_to='subcategories/', null=True, blank=True, help_text="Subcategory icon/image")
+    icon_name = models.CharField(max_length=50, blank=True, help_text="Fallback icon name (e.g., 'headphones', 'lightbulb')")
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        verbose_name_plural = 'Subcategories'
+        ordering = ['name']
+        unique_together = ['category', 'name']  # Prevent duplicate subcategory names within same category
+    
+    def __str__(self):
+        return f"{self.category.name} - {self.name}"
+
+
+class Brand(models.Model):
+    """Brand model for managing product brands with logos"""
+    name = models.CharField(max_length=100, unique=True)
+    slug = models.SlugField(max_length=100, unique=True, blank=True)
+    logo = models.ImageField(upload_to='brands/', null=True, blank=True, help_text="Brand logo")
+    description = models.TextField(blank=True)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        ordering = ['name']
+    
+    def __str__(self):
+        return self.name
+    
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.name)
+        super().save(*args, **kwargs)
+
+
 class Product(models.Model):
     STOCK_STATUS_CHOICES = [
         ('in-stock', 'In Stock'),
@@ -26,10 +67,12 @@ class Product(models.Model):
     name = models.CharField(max_length=255)
     sku = models.CharField(max_length=100, unique=True)
     category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name='products')
+    subcategory = models.ForeignKey(Subcategory, on_delete=models.SET_NULL, related_name='products', null=True, blank=True)
     description = models.TextField()
     
     # Enhanced Product Details
-    brand = models.CharField(max_length=100, default='Generic', blank=True)
+    brand = models.CharField(max_length=100, default='Generic', blank=True)  # Legacy field, kept for backward compatibility
+    brand_ref = models.ForeignKey(Brand, on_delete=models.SET_NULL, related_name='products', null=True, blank=True, verbose_name="Brand")
     product_type = models.CharField(max_length=100, default='Standard', blank=True)
     key_features = models.TextField(blank=True, help_text="One feature per line")
     ingredients = models.TextField(blank=True)
