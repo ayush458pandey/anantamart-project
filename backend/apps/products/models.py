@@ -1,5 +1,6 @@
 from django.db import models
 from django.utils.text import slugify
+from decimal import Decimal  # <--- CRITICAL IMPORT
 
 class Category(models.Model):
     name = models.CharField(max_length=100)
@@ -17,26 +18,24 @@ class Category(models.Model):
 
 
 class Subcategory(models.Model):
-    """Subcategories within a main category (e.g., Mobile Phones under Electronics)"""
     name = models.CharField(max_length=100)
     category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name='subcategories')
     description = models.TextField(blank=True)
     image = models.ImageField(upload_to='subcategories/', null=True, blank=True, help_text="Subcategory icon/image")
-    icon_name = models.CharField(max_length=50, blank=True, help_text="Fallback icon name (e.g., 'headphones', 'lightbulb')")
+    icon_name = models.CharField(max_length=50, blank=True, help_text="Fallback icon name")
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     
     class Meta:
         verbose_name_plural = 'Subcategories'
         ordering = ['name']
-        unique_together = ['category', 'name']  # Prevent duplicate subcategory names within same category
+        unique_together = ['category', 'name']
     
     def __str__(self):
         return f"{self.category.name} - {self.name}"
 
 
 class Brand(models.Model):
-    """Brand model for managing product brands with logos"""
     name = models.CharField(max_length=100, unique=True)
     slug = models.SlugField(max_length=100, unique=True, blank=True)
     logo = models.ImageField(upload_to='brands/', null=True, blank=True, help_text="Brand logo")
@@ -62,6 +61,15 @@ class Product(models.Model):
         ('low-stock', 'Low Stock'),
         ('out-of-stock', 'Out of Stock'),
     ]
+
+    # --- FIX: Wrapped numbers in Decimal() ---
+    TAX_SLAB_CHOICES = [
+        (Decimal('0.00'), '0% (Exempt)'),
+        (Decimal('5.00'), '5% (Essentials)'),
+        (Decimal('18.00'), '18% (Standard)'),
+        (Decimal('40.00'), '40% (Luxury/Demerit)'),
+    ]
+    # -----------------------------------------
     
     # Basic Info
     name = models.CharField(max_length=255)
@@ -70,8 +78,8 @@ class Product(models.Model):
     subcategory = models.ForeignKey(Subcategory, on_delete=models.SET_NULL, related_name='products', null=True, blank=True)
     description = models.TextField()
     
-    # Enhanced Product Details
-    brand = models.CharField(max_length=100, default='Generic', blank=True)  # Legacy field, kept for backward compatibility
+    # Details
+    brand = models.CharField(max_length=100, default='Generic', blank=True)
     brand_ref = models.ForeignKey(Brand, on_delete=models.SET_NULL, related_name='products', null=True, blank=True, verbose_name="Brand")
     product_type = models.CharField(max_length=100, default='Standard', blank=True)
     key_features = models.TextField(blank=True, help_text="One feature per line")
@@ -89,6 +97,16 @@ class Product(models.Model):
     # Pricing
     mrp = models.DecimalField(max_digits=10, decimal_places=2)
     base_price = models.DecimalField(max_digits=10, decimal_places=2)
+    
+    # --- UPDATED FIELD ---
+    tax_rate = models.DecimalField(
+        max_digits=5, 
+        decimal_places=2, 
+        choices=TAX_SLAB_CHOICES, 
+        default=Decimal('18.00'), 
+        help_text="Select applicable GST Slab"
+    )
+    # ---------------------
     
     # Stock
     stock = models.PositiveIntegerField(default=0)
@@ -117,7 +135,6 @@ class Product(models.Model):
 
 
 class ProductImage(models.Model):
-    """Multiple images for a product (gallery)"""
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='images')
     image = models.ImageField(upload_to='products/gallery/')
     order = models.PositiveIntegerField(default=0, help_text="Display order")
@@ -134,14 +151,12 @@ class ProductImage(models.Model):
         return f"Image {self.order} for {self.product.name}"
     
     def save(self, *args, **kwargs):
-        # If this is set as primary, unset other primary images
         if self.is_primary:
             ProductImage.objects.filter(product=self.product, is_primary=True).exclude(id=self.id).update(is_primary=False)
         super().save(*args, **kwargs)
 
 
 class PriceTier(models.Model):
-    """Bulk pricing tiers"""
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='tiers')
     min_quantity = models.PositiveIntegerField()
     max_quantity = models.PositiveIntegerField(null=True, blank=True)

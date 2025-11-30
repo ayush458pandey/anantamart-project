@@ -28,7 +28,6 @@ class BrandAdmin(admin.ModelAdmin):
     fields = ['name', 'slug', 'logo', 'description', 'is_active']
 
 
-
 class ProductImageInline(admin.TabularInline):
     model = ProductImage
     extra = 1
@@ -43,10 +42,17 @@ class PriceTierInline(admin.TabularInline):
 
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
-    list_display = ['name', 'sku', 'brand_ref', 'category', 'subcategory', 'base_price', 'stock', 'stock_status', 'is_active']
-    list_filter = ['category', 'subcategory', 'brand_ref', 'is_active', 'stock_status', 'dietary_preference']
+    # Added 'tax_rate' to list_display
+    list_display = ['name', 'sku', 'brand_ref', 'category', 'subcategory', 'base_price', 'tax_rate', 'stock', 'stock_status', 'is_active']
+    
+    # Added 'tax_rate' to filters
+    list_filter = ['category', 'subcategory', 'brand_ref', 'is_active', 'stock_status', 'tax_rate', 'dietary_preference']
+    
     search_fields = ['name', 'sku', 'brand__name', 'brand_ref__name', 'description']
-    list_editable = ['stock', 'is_active']
+    
+    # Added 'tax_rate' to editable list fields
+    list_editable = ['stock', 'is_active', 'base_price', 'tax_rate']
+    
     readonly_fields = ['created_at', 'updated_at']
     
     fieldsets = (
@@ -55,13 +61,14 @@ class ProductAdmin(admin.ModelAdmin):
         }),
         ('Product Details', {
             'fields': ('brand_ref', 'product_type', 'key_features', 'ingredients', 
-                      'packaging_type', 'dietary_preference', 'unit', 'weight')
+                       'packaging_type', 'dietary_preference', 'unit', 'weight')
         }),
         ('Usage & Storage', {
             'fields': ('usage_recommendation', 'storage_instruction')
         }),
         ('Pricing', {
-            'fields': ('mrp', 'base_price')
+            # Added tax_rate here
+            'fields': ('mrp', 'base_price', 'tax_rate')
         }),
         ('Stock', {
             'fields': ('stock', 'stock_status', 'moq', 'case_size')
