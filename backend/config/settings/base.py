@@ -78,12 +78,15 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'config.wsgi.application'
 
-# Database - Defaults to SQLite; consider PostgreSQL for persistent production data.
+# This looks for the 'DATABASE_URL' we set in Render's Environment Variables.
+# If it doesn't find it (like on your laptop), it uses your local db.sqlite3 file.
+
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
+    'default': dj_database_url.config(
+        default=os.environ.get('DATABASE_URL', f"sqlite:///{BASE_DIR / 'db.sqlite3'}"),
+        conn_max_age=600,
+        ssl_require=True
+    )
 }
 
 # Password validation
