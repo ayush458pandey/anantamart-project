@@ -82,7 +82,7 @@ DATABASES = {
     )
 }
 
-# --- STATIC & MEDIA STORAGE (Compatibility with Django 6.0 & Cloudinary) ---
+# --- STATIC & MEDIA STORAGE (Django 6.0 & Cloudinary Compatibility) ---
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_DIRS = [BASE_DIR / 'static']
@@ -90,19 +90,21 @@ STATICFILES_DIRS = [BASE_DIR / 'static']
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
-# Cloudinary Credentials (Set these in Render Environment Variables)
+# Cloudinary Credentials (Set in Render Environment Variables)
 CLOUDINARY_STORAGE = {
     'CLOUD_NAME': os.environ.get('CLOUDINARY_CLOUD_NAME'),
     'API_KEY': os.environ.get('CLOUDINARY_API_KEY'),
     'API_SECRET': os.environ.get('CLOUDINARY_API_SECRET'),
 }
 
+# Fix for "MissingFileError" in WhiteNoise (prevents crashing on missing admin icons)
+WHITENOISE_MANIFEST_STRICT = False 
+
 if not DEBUG:
-    # Production: Legacy keys required for cloudinary-storage library compatibility
+    # Production: Use legacy keys for library compatibility + new STORAGES dict
     STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
     DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
     
-    # Django 6.0+ STORAGES dictionary
     STORAGES = {
         "default": {
             "BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage",
@@ -112,11 +114,10 @@ if not DEBUG:
         },
     }
 else:
-    # Local Development: Legacy keys
+    # Local Development
     STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
     DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
     
-    # Django 6.0+ STORAGES dictionary
     STORAGES = {
         "default": {
             "BACKEND": "django.core.files.storage.FileSystemStorage",
