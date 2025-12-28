@@ -44,7 +44,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware', # Serves static files
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -82,7 +82,7 @@ DATABASES = {
     )
 }
 
-# --- STATIC & MEDIA STORAGE ---
+# --- STATIC & MEDIA STORAGE (Django 6.0 & Cloudinary Compatibility) ---
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_DIRS = [BASE_DIR / 'static']
@@ -90,16 +90,19 @@ STATICFILES_DIRS = [BASE_DIR / 'static']
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
-# Cloudinary Credentials
+# Cloudinary Credentials (Set in Render Environment Variables)
 CLOUDINARY_STORAGE = {
     'CLOUD_NAME': os.environ.get('CLOUDINARY_CLOUD_NAME'),
     'API_KEY': os.environ.get('CLOUDINARY_API_KEY'),
     'API_SECRET': os.environ.get('CLOUDINARY_API_SECRET'),
 }
 
+# Fix for "MissingFileError" and unstyled Admin panel
+WHITENOISE_MANIFEST_STRICT = False 
+WHITENOISE_USE_FINDERS = True  # Ensures WhiteNoise finds Admin CSS
+
 if not DEBUG:
-    # Use standard StaticFilesStorage instead of the strict CompressedManifest version
-    # This prevents the "MissingFileError" crash while still allowing WhiteNoise to serve files
+    # Production: Use legacy keys for library compatibility + new STORAGES dict
     STATICFILES_STORAGE = 'whitenoise.storage.StaticFilesStorage'
     DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
     
@@ -112,6 +115,10 @@ if not DEBUG:
         },
     }
 else:
+    # Local Development
+    STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
+    DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
+    
     STORAGES = {
         "default": {
             "BACKEND": "django.core.files.storage.FileSystemStorage",
