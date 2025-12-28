@@ -2,6 +2,9 @@ import os
 from pathlib import Path
 from datetime import timedelta
 import dj_database_url
+import cloudinary
+import cloudinary.uploader
+import cloudinary.api
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
@@ -79,10 +82,13 @@ DATABASES = {
     )
 }
 
-# --- STATIC & MEDIA STORAGE (Cloudinary & WhiteNoise) ---
+# --- STATIC & MEDIA STORAGE (Compatibility with Django 6.0 & Cloudinary) ---
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_DIRS = [BASE_DIR / 'static']
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
 
 # Cloudinary Credentials (Set these in Render Environment Variables)
 CLOUDINARY_STORAGE = {
@@ -92,7 +98,11 @@ CLOUDINARY_STORAGE = {
 }
 
 if not DEBUG:
-    # Production: Media to Cloudinary, Static to WhiteNoise
+    # Production: Legacy keys required for cloudinary-storage library compatibility
+    STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+    DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+    
+    # Django 6.0+ STORAGES dictionary
     STORAGES = {
         "default": {
             "BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage",
@@ -102,7 +112,11 @@ if not DEBUG:
         },
     }
 else:
-    # Local Development
+    # Local Development: Legacy keys
+    STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
+    DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
+    
+    # Django 6.0+ STORAGES dictionary
     STORAGES = {
         "default": {
             "BACKEND": "django.core.files.storage.FileSystemStorage",
@@ -112,10 +126,7 @@ else:
         },
     }
 
-MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media'
-
-# --- THE REST OF YOUR SETTINGS ---
+# --- REMAINING SETTINGS ---
 TIME_ZONE = 'Asia/Kolkata'
 USE_I18N = True
 USE_TZ = True
