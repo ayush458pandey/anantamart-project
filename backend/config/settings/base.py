@@ -82,7 +82,7 @@ DATABASES = {
     )
 }
 
-# --- STATIC & MEDIA STORAGE (Django 6.0 & Cloudinary Compatibility) ---
+# --- STATIC & MEDIA STORAGE ---
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_DIRS = [BASE_DIR / 'static']
@@ -90,19 +90,17 @@ STATICFILES_DIRS = [BASE_DIR / 'static']
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
-# Cloudinary Credentials (Set in Render Environment Variables)
+# Cloudinary Credentials
 CLOUDINARY_STORAGE = {
     'CLOUD_NAME': os.environ.get('CLOUDINARY_CLOUD_NAME'),
     'API_KEY': os.environ.get('CLOUDINARY_API_KEY'),
     'API_SECRET': os.environ.get('CLOUDINARY_API_SECRET'),
 }
 
-# Fix for "MissingFileError" in WhiteNoise (prevents crashing on missing admin icons)
-WHITENOISE_MANIFEST_STRICT = False 
-
 if not DEBUG:
-    # Production: Use legacy keys for library compatibility + new STORAGES dict
-    STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+    # Use standard StaticFilesStorage instead of the strict CompressedManifest version
+    # This prevents the "MissingFileError" crash while still allowing WhiteNoise to serve files
+    STATICFILES_STORAGE = 'whitenoise.storage.StaticFilesStorage'
     DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
     
     STORAGES = {
@@ -110,14 +108,10 @@ if not DEBUG:
             "BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage",
         },
         "staticfiles": {
-            "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+            "BACKEND": "whitenoise.storage.StaticFilesStorage",
         },
     }
 else:
-    # Local Development
-    STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
-    DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
-    
     STORAGES = {
         "default": {
             "BACKEND": "django.core.files.storage.FileSystemStorage",
