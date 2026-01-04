@@ -14,13 +14,13 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-your-secret-key-chang
 DEBUG = os.environ.get('DEBUG', 'True') == 'True'
 
 # --- ALLOWED HOSTS ---
-# Added your new domain and the Render hostname
+# Define all domains that can serve this app
 ALLOWED_HOSTS = [
     'localhost', 
     '127.0.0.1', 
     '[::1]', 
-    'ananta-mart.in',              # New Domain
-    'www.ananta-mart.in',          # New Domain (www version)
+    'ananta-mart.in',              # Production Domain
+    'www.ananta-mart.in',          # Production Domain (www)
     'anantamart-project.onrender.com', 
     '.onrender.com'
 ]
@@ -31,7 +31,7 @@ if RENDER_EXTERNAL_HOSTNAME:
 
 # --- APPLICATION DEFINITION ---
 INSTALLED_APPS = [
-    'cloudinary_storage',          # MUST be above staticfiles
+    'cloudinary_storage',          # MUST be above django.contrib.staticfiles
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -93,6 +93,7 @@ DATABASES = {
 }
 
 # --- STATIC & MEDIA STORAGE ---
+# FIX: Configuring both Legacy and New Storage settings for Django 6 + Cloudinary compatibility
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_DIRS = [BASE_DIR / 'static']
@@ -107,12 +108,16 @@ CLOUDINARY_STORAGE = {
     'API_SECRET': os.environ.get('CLOUDINARY_API_SECRET'),
 }
 
-# Fix for "MissingFileError" and unstyled Admin panel
 WHITENOISE_MANIFEST_STRICT = False 
 WHITENOISE_USE_FINDERS = True 
 
 if not DEBUG:
-    # Production: Use Whitenoise for Static and Cloudinary for Media
+    # --- PRODUCTION SETTINGS ---
+    # Legacy variables (Required by django-cloudinary-storage library)
+    STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+    DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+    
+    # Django 5/6 Standard
     STORAGES = {
         "default": {
             "BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage",
@@ -122,7 +127,12 @@ if not DEBUG:
         },
     }
 else:
-    # Local Development
+    # --- LOCAL DEVELOPMENT SETTINGS ---
+    # Legacy variables
+    STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
+    DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
+    
+    # Django 5/6 Standard
     STORAGES = {
         "default": {
             "BACKEND": "django.core.files.storage.FileSystemStorage",
@@ -153,7 +163,7 @@ CORS_ALLOWED_ORIGINS = [
     'http://localhost:5173',
     'https://anantamart-project.onrender.com',
     'https://ananta-mart.in',        # Production Frontend
-    'https://www.ananta-mart.in',    # Production Frontend
+    'https://www.ananta-mart.in',    # Production Frontend (www)
 ]
 CORS_ALLOW_CREDENTIALS = True
 
@@ -170,5 +180,3 @@ if not DEBUG:
     CSRF_COOKIE_SECURE = True
     SESSION_COOKIE_SAMESITE = 'None'
     CSRF_COOKIE_SAMESITE = 'None'
-    # Optional: ensure cookies are valid for the whole domain
-    # SESSION_COOKIE_DOMAIN = '.ananta-mart.in'
