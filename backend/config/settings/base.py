@@ -14,7 +14,6 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-your-secret-key-chang
 DEBUG = os.environ.get('DEBUG', 'True') == 'True'
 
 # --- ALLOWED HOSTS ---
-# Define all domains that can serve this app
 ALLOWED_HOSTS = [
     'localhost', 
     '127.0.0.1', 
@@ -93,7 +92,6 @@ DATABASES = {
 }
 
 # --- STATIC & MEDIA STORAGE ---
-# FIX: Configuring both Legacy and New Storage settings for Django 6 + Cloudinary compatibility
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_DIRS = [BASE_DIR / 'static']
@@ -108,13 +106,15 @@ CLOUDINARY_STORAGE = {
     'API_SECRET': os.environ.get('CLOUDINARY_API_SECRET'),
 }
 
+# Settings to prevent WhiteNoise crashes
 WHITENOISE_MANIFEST_STRICT = False 
 WHITENOISE_USE_FINDERS = True 
 
 if not DEBUG:
     # --- PRODUCTION SETTINGS ---
     # Legacy variables (Required by django-cloudinary-storage library)
-    STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+    # Using 'CompressedStaticFilesStorage' (Non-Manifest) to prevent MissingFileError
+    STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
     DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
     
     # Django 5/6 Standard
@@ -123,7 +123,8 @@ if not DEBUG:
             "BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage",
         },
         "staticfiles": {
-            "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+            # Non-Manifest storage is safer for Admin files
+            "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage",
         },
     }
 else:
