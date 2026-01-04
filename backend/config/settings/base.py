@@ -112,9 +112,8 @@ WHITENOISE_USE_FINDERS = True
 
 if not DEBUG:
     # --- PRODUCTION SETTINGS ---
-    # Legacy variables (Required by django-cloudinary-storage library)
-    # Using 'CompressedStaticFilesStorage' (Non-Manifest) to prevent MissingFileError
-    STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
+    # 🚨 FIX: Using Standard Django Storage to bypass WhiteNoise compression crash
+    STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
     DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
     
     # Django 5/6 Standard
@@ -123,17 +122,15 @@ if not DEBUG:
             "BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage",
         },
         "staticfiles": {
-            # Non-Manifest storage is safer for Admin files
-            "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage",
+            # 🚨 FIX: Standard storage prevents looking for missing files
+            "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
         },
     }
 else:
     # --- LOCAL DEVELOPMENT SETTINGS ---
-    # Legacy variables
     STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
     DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
     
-    # Django 5/6 Standard
     STORAGES = {
         "default": {
             "BACKEND": "django.core.files.storage.FileSystemStorage",
