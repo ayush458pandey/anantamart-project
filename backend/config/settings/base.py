@@ -159,18 +159,19 @@ REST_FRAMEWORK = {
 CORS_ALLOWED_ORIGINS = [
     'http://localhost:5173',
     'https://anantamart-project.onrender.com',
-    'https://ananta-mart.in',        # Production Frontend
-    'https://www.ananta-mart.in',    # Production Frontend (www)
+    'https://ananta-mart.in',
+    'https://www.ananta-mart.in',
+    'https://anantamart-project.vercel.app',  # <--- ADD THIS LINE
 ]
+
 CORS_ALLOW_CREDENTIALS = True
 
-# Trusted origins for secure requests (POST, PUT, DELETE)
 CSRF_TRUSTED_ORIGINS = [
     'https://anantamart-project.onrender.com',
     'https://ananta-mart.in',
-    'https://www.ananta-mart.in'
+    'https://www.ananta-mart.in',
+    'https://anantamart-project.vercel.app',  # <--- ADD THIS LINE
 ]
-
 # Guest Cart & Session Security Settings
 if not DEBUG:
     SESSION_COOKIE_SECURE = True
