@@ -14,7 +14,17 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-your-secret-key-chang
 DEBUG = os.environ.get('DEBUG', 'True') == 'True'
 
 # --- ALLOWED HOSTS ---
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', '[::1]', 'anantamart-project.onrender.com', '.onrender.com']
+# Added your new domain and the Render hostname
+ALLOWED_HOSTS = [
+    'localhost', 
+    '127.0.0.1', 
+    '[::1]', 
+    'ananta-mart.in',              # New Domain
+    'www.ananta-mart.in',          # New Domain (www version)
+    'anantamart-project.onrender.com', 
+    '.onrender.com'
+]
+
 RENDER_EXTERNAL_HOSTNAME = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
 if RENDER_EXTERNAL_HOSTNAME:
     ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
@@ -42,7 +52,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
-    'corsheaders.middleware.CorsMiddleware',
+    'corsheaders.middleware.CorsMiddleware', # MUST be at the top
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware', # Serves static files
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -82,7 +92,7 @@ DATABASES = {
     )
 }
 
-# --- STATIC & MEDIA STORAGE (Django 6.0 & Cloudinary Compatibility) ---
+# --- STATIC & MEDIA STORAGE ---
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_DIRS = [BASE_DIR / 'static']
@@ -99,26 +109,20 @@ CLOUDINARY_STORAGE = {
 
 # Fix for "MissingFileError" and unstyled Admin panel
 WHITENOISE_MANIFEST_STRICT = False 
-WHITENOISE_USE_FINDERS = True  # Ensures WhiteNoise finds Admin CSS
+WHITENOISE_USE_FINDERS = True 
 
 if not DEBUG:
-    # Production: Use legacy keys for library compatibility + new STORAGES dict
-    STATICFILES_STORAGE = 'whitenoise.storage.StaticFilesStorage'
-    DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
-    
+    # Production: Use Whitenoise for Static and Cloudinary for Media
     STORAGES = {
         "default": {
             "BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage",
         },
         "staticfiles": {
-            "BACKEND": "whitenoise.storage.StaticFilesStorage",
+            "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
         },
     }
 else:
     # Local Development
-    STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
-    DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
-    
     STORAGES = {
         "default": {
             "BACKEND": "django.core.files.storage.FileSystemStorage",
@@ -135,21 +139,36 @@ USE_TZ = True
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': ['rest_framework.authentication.SessionAuthentication'],
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.SessionAuthentication',
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ],
     'DEFAULT_PERMISSION_CLASSES': ['rest_framework.permissions.AllowAny'],
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 20,
 }
 
+# --- CORS & CSRF PRODUCTION CONFIG ---
 CORS_ALLOWED_ORIGINS = [
     'http://localhost:5173',
     'https://anantamart-project.onrender.com',
+    'https://ananta-mart.in',        # Production Frontend
+    'https://www.ananta-mart.in',    # Production Frontend
 ]
 CORS_ALLOW_CREDENTIALS = True
-CSRF_TRUSTED_ORIGINS = ['https://anantamart-project.onrender.com']
 
+# Trusted origins for secure requests (POST, PUT, DELETE)
+CSRF_TRUSTED_ORIGINS = [
+    'https://anantamart-project.onrender.com',
+    'https://ananta-mart.in',
+    'https://www.ananta-mart.in'
+]
+
+# Guest Cart & Session Security Settings
 if not DEBUG:
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
     SESSION_COOKIE_SAMESITE = 'None'
     CSRF_COOKIE_SAMESITE = 'None'
+    # Optional: ensure cookies are valid for the whole domain
+    # SESSION_COOKIE_DOMAIN = '.ananta-mart.in'
