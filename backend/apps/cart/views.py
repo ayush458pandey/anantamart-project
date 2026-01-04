@@ -1,38 +1,51 @@
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
+from django.shortcuts import get_object_or_404
 from .models import Cart, CartItem
 from .serializers import CartSerializer
 from apps.products.models import Product
 
+# --- HELPER FUNCTION ---
+def get_cart(request):
+    """
+    Logic to get the correct cart:
+    1. If user is logged in -> Get User Cart
+    2. If guest -> Get Session Cart
+    """
+    if request.user.is_authenticated:
+        # Get or create a cart linked to the USER
+        cart, created = Cart.objects.get_or_create(user=request.user)
+        return cart
+    else:
+        # Ensure session exists
+        if not request.session.session_key:
+            request.session.create()
+        
+        # Get or create a cart linked to the SESSION
+        cart, created = Cart.objects.get_or_create(
+            session_key=request.session.session_key,
+            defaults={'user': None}
+        )
+        return cart
+
+# --- VIEWS ---
 
 @api_view(['GET'])
-@permission_classes([AllowAny])
+@permission_classes([AllowAny]) # Open to everyone
 def my_cart(request):
-    """Get current user's cart"""
-    session_key = request.session.session_key
-    if not session_key:
-        request.session.create()
-        session_key = request.session.session_key
-    
-    cart, created = Cart.objects.get_or_create(session_key=session_key)
-    
-    # ✅ Pass request context to serializer for full image URLs
+    """Get current user's (or guest's) cart"""
+    cart = get_cart(request)
     serializer = CartSerializer(cart, context={'request': request})
     return Response(serializer.data)
 
 
 @api_view(['POST'])
-@permission_classes([AllowAny])
+@permission_classes([AllowAny]) # Open to everyone
 def add_to_cart(request):
     """Add item to cart or update quantity"""
-    session_key = request.session.session_key
-    if not session_key:
-        request.session.create()
-        session_key = request.session.session_key
-    
-    cart, created = Cart.objects.get_or_create(session_key=session_key)
+    cart = get_cart(request)
     
     product_id = request.data.get('product_id')
     quantity = int(request.data.get('quantity', 1))
@@ -50,12 +63,11 @@ def add_to_cart(request):
             defaults={'quantity': quantity}
         )
         
-        # If item already exists, update quantity
+        # If item already exists, just update the quantity
         if not created:
-            cart_item.quantity = quantity
+            cart_item.quantity = quantity # Or use += quantity if you want to increment
             cart_item.save()
         
-        # ✅ Pass request context for full image URLs
         serializer = CartSerializer(cart, context={'request': request})
         return Response(serializer.data, status=status.HTTP_200_OK)
     
@@ -67,55 +79,43 @@ def add_to_cart(request):
 @permission_classes([AllowAny])
 def update_cart_item(request, item_id):
     """Update cart item quantity"""
-    try:
-        cart_item = CartItem.objects.get(id=item_id)
-        quantity = int(request.data.get('quantity', 1))
-        
-        if quantity <= 0:
-            cart_item.delete()
-        else:
-            cart_item.quantity = quantity
-            cart_item.save()
-        
-        # ✅ Pass request context
-        serializer = CartSerializer(cart_item.cart, context={'request': request})
-        return Response(serializer.data)
+    cart = get_cart(request)
     
-    except CartItem.DoesNotExist:
-        return Response({'error': 'Cart item not found'}, status=status.HTTP_404_NOT_FOUND)
+    # Security: Ensure we only modify items in OUR cart
+    cart_item = get_object_or_404(CartItem, id=item_id, cart=cart)
+    
+    quantity = int(request.data.get('quantity', 1))
+    
+    if quantity <= 0:
+        cart_item.delete()
+    else:
+        cart_item.quantity = quantity
+        cart_item.save()
+    
+    serializer = CartSerializer(cart.cart, context={'request': request}) # cart_item.cart points to parent
+    return Response(serializer.data)
 
 
 @api_view(['DELETE'])
 @permission_classes([AllowAny])
 def remove_from_cart(request, item_id):
     """Remove item from cart"""
-    try:
-        cart_item = CartItem.objects.get(id=item_id)
-        cart = cart_item.cart
-        cart_item.delete()
-        
-        # ✅ Pass request context
-        serializer = CartSerializer(cart, context={'request': request})
-        return Response(serializer.data)
+    cart = get_cart(request)
     
-    except CartItem.DoesNotExist:
-        return Response({'error': 'Cart item not found'}, status=status.HTTP_404_NOT_FOUND)
+    # Security: Ensure we only delete items from OUR cart
+    cart_item = get_object_or_404(CartItem, id=item_id, cart=cart)
+    cart_item.delete()
+    
+    serializer = CartSerializer(cart, context={'request': request})
+    return Response(serializer.data)
 
 
 @api_view(['DELETE'])
 @permission_classes([AllowAny])
 def clear_cart(request):
     """Clear all items from cart"""
-    session_key = request.session.session_key
-    if session_key:
-        try:
-            cart = Cart.objects.get(session_key=session_key)
-            cart.items.all().delete()
-            
-            # ✅ Pass request context
-            serializer = CartSerializer(cart, context={'request': request})
-            return Response(serializer.data)
-        except Cart.DoesNotExist:
-            pass
+    cart = get_cart(request)
+    cart.items.all().delete()
     
-    return Response({'message': 'Cart cleared'}, status=status.HTTP_200_OK)
+    serializer = CartSerializer(cart, context={'request': request})
+    return Response(serializer.data)

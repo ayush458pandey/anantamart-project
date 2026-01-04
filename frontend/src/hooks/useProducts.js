@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
-import axios from 'axios';
-
-const API_BASE_URL = 'http://localhost:8000/api';
+// Import the custom axios instance we configured earlier
+// MAKE SURE THIS PATH MATCHES WHERE YOU SAVED axios.js
+import axios from '../api/axios';
 
 export const useProducts = () => {
-  const [products, setProducts] = useState([]);  // Initialize as empty array
-  const [categories, setCategories] = useState([]);  // Initialize as empty array
+  const [products, setProducts] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -14,47 +14,46 @@ export const useProducts = () => {
       try {
         setLoading(true);
 
-        // Fetch categories
-        const categoriesRes = await axios.get(`${API_BASE_URL}/categories/`);
+        // 1. Fetch Categories
+        // We use simple paths ('/categories/') because the Base URL is in axios.js
+        const categoriesRes = await axios.get('/categories/');
         console.log('📦 Full Categories Response:', categoriesRes.data);
-        
-        // Handle both array and paginated response
-        const categoriesData = Array.isArray(categoriesRes.data) 
-          ? categoriesRes.data 
+
+        const categoriesData = Array.isArray(categoriesRes.data)
+          ? categoriesRes.data
           : (categoriesRes.data.results || []);
-        
-        console.log('✅ Categories Array:', categoriesData);
+
         setCategories(categoriesData);
 
-        // Fetch products
-        const productsRes = await axios.get(`${API_BASE_URL}/products/`);
+        // 2. Fetch Products
+        const productsRes = await axios.get('/products/');
         console.log('📦 Full Products Response:', productsRes.data);
-        
-        // Handle both array and paginated response
-        let productsData = Array.isArray(productsRes.data) 
-          ? productsRes.data 
+
+        let productsData = Array.isArray(productsRes.data)
+          ? productsRes.data
           : (productsRes.data.results || []);
-        
-        // Ensure image URLs are properly formatted
+
+        // 3. Fix Image Logic for Cloudinary
         productsData = productsData.map(product => {
-          // Use image_url if available, otherwise use image, otherwise null
+          // Cloudinary gives us full URLs, so we don't need "localhost" anymore.
+          // We prioritize 'image_url' if it exists.
           if (product.image_url) {
             product.image = product.image_url;
-          } else if (product.image && !product.image.startsWith('http')) {
-            // If image is a relative path, make it absolute
-            product.image = `http://localhost:8000${product.image}`;
+          }
+          // If we have gallery images, use the first one as the main image
+          else if (product.images && product.images.length > 0) {
+            product.image = product.images[0].image;
           }
           return product;
         });
-        
+
         console.log('✅ Products Array:', productsData);
         setProducts(productsData);
-
         setError(null);
+
       } catch (err) {
-        console.error('❌ Error:', err.message);
-        setError('Failed to fetch data. Make sure backend is running.');
-        // Set empty arrays on error
+        console.error('❌ Error:', err);
+        setError(`Failed to fetch data: ${err.message}`);
         setProducts([]);
         setCategories([]);
       } finally {

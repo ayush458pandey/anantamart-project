@@ -205,9 +205,18 @@ function AppContent() {
           <h2 className="text-lg sm:text-xl font-bold text-red-600 mb-2">Connection Error</h2>
           <p className="text-sm sm:text-base text-red-700 mb-4">{error}</p>
           <p className="text-xs sm:text-sm text-gray-600">
-            Make sure Django backend is running at:{' '}
-            <code className="bg-red-100 px-2 py-1 rounded text-xs sm:text-sm break-all">http://localhost:8000</code>
+            Could not reach the server at:{' '}
+            {/* dynamically show the real URL instead of hardcoded localhost */}
+            <code className="bg-red-100 px-2 py-1 rounded text-xs sm:text-sm break-all">
+              https://anantamart-project.onrender.com
+            </code>
           </p>
+          <button
+            onClick={() => window.location.reload()}
+            className="mt-4 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 w-full"
+          >
+            Retry Connection
+          </button>
         </div>
       </div>
     );

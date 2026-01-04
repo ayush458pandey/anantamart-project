@@ -1,14 +1,17 @@
 import axios from 'axios';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
+// ---------------------------------------------------------------------------
+// 🚨 CRITICAL CHANGE: We are forcing the app to use the Live Render URL
+// ---------------------------------------------------------------------------
+const API_BASE_URL = 'https://anantamart-project.onrender.com/api';
 
 const axiosInstance = axios.create({
   baseURL: API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
   },
-  timeout: 15000, // Increased timeout to 15 seconds
-  withCredentials: true, 
+  timeout: 15000,
+  withCredentials: true,
 });
 
 // Request interceptor
@@ -30,7 +33,6 @@ axiosInstance.interceptors.response.use(
   (response) => response,
   async (error) => {
     if (error.response?.status === 401) {
-      // Clear token and redirect to login
       localStorage.removeItem('access_token');
       window.location.href = '/login';
     }
