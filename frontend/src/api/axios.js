@@ -3,7 +3,8 @@ import axios from 'axios';
 // ---------------------------------------------------------------------------
 // 🚨 CRITICAL CHANGE: We are forcing the app to use the Live Render URL
 // ---------------------------------------------------------------------------
-const API_BASE_URL = 'https://ananta-mart.in/api';// Forced update to fix Production URL
+// ✅ Point to the NEW Backend location
+const API_BASE_URL = 'https://api.ananta-mart.in/api';
 
 const axiosInstance = axios.create({
   baseURL: API_BASE_URL,
