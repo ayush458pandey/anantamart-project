@@ -15,13 +15,11 @@ DEBUG = os.environ.get('DEBUG', 'True') == 'True'
 
 # --- ALLOWED HOSTS ---
 ALLOWED_HOSTS = [
-    'localhost', 
-    '127.0.0.1', 
-    '[::1]', 
-    'ananta-mart.in',              # Production Domain
-    'www.ananta-mart.in',          # Production Domain (www)
-    'anantamart-project.onrender.com', 
-    '.onrender.com'
+    'anantamart-project.onrender.com',
+    'api.ananta-mart.in',    # <--- CRITICAL: This was missing!
+    'ananta-mart.in',
+    'localhost',
+    '127.0.0.1'
 ]
 
 RENDER_EXTERNAL_HOSTNAME = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
@@ -157,20 +155,20 @@ REST_FRAMEWORK = {
 
 # --- CORS & CSRF PRODUCTION CONFIG ---
 CORS_ALLOWED_ORIGINS = [
-    'http://localhost:5173',
-    'https://anantamart-project.onrender.com',
-    'https://ananta-mart.in',
-    'https://www.ananta-mart.in',
-    'https://anantamart-project.vercel.app',  # <--- ADD THIS LINE
+    "http://localhost:5173",
+    "https://anantamart-project.onrender.com",
+    "https://ananta-mart.in",      # Your new Shop
+    "https://www.ananta-mart.in",
+    "https://anantamart-project.vercel.app",
 ]
-
 CORS_ALLOW_CREDENTIALS = True
 
 CSRF_TRUSTED_ORIGINS = [
-    'https://anantamart-project.onrender.com',
-    'https://ananta-mart.in',
-    'https://www.ananta-mart.in',
-    'https://anantamart-project.vercel.app',  # <--- ADD THIS LINE
+    "https://anantamart-project.onrender.com",
+    "https://api.ananta-mart.in",  # <--- CRITICAL: Required for Admin Login
+    "https://ananta-mart.in",
+    "https://www.ananta-mart.in",
+    "https://anantamart-project.vercel.app",
 ]
 # Guest Cart & Session Security Settings
 if not DEBUG:
