@@ -112,7 +112,7 @@ WHITENOISE_USE_FINDERS = True
 
 if not DEBUG:
     # --- PRODUCTION SETTINGS ---
-    # 🚨 FIX: Using Standard Django Storage to bypass WhiteNoise compression crash
+    # Fix: Using Standard Django Storage to bypass WhiteNoise/Cloudinary errors
     STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
     DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
     
@@ -122,7 +122,7 @@ if not DEBUG:
             "BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage",
         },
         "staticfiles": {
-            # 🚨 FIX: Standard storage prevents looking for missing files
+            # Standard storage prevents looking for missing files
             "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
         },
     }
@@ -149,7 +149,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.SessionAuthentication',
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
+        # 'rest_framework_simplejwt.authentication.JWTAuthentication', <--- REMOVED TO FIX CRASH
     ],
     'DEFAULT_PERMISSION_CLASSES': ['rest_framework.permissions.AllowAny'],
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
