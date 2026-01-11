@@ -1,3 +1,6 @@
+import razorpay
+from django.conf import settings
+from rest_framework.decorators import api_view, permission_classes
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -75,3 +78,34 @@ class OrderViewSet(viewsets.ModelViewSet):
         order.save()
         serializer = self.get_serializer(order)
         return Response(serializer.data)
+
+    @api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def create_payment_order(request):
+    try:
+        amount = request.data.get('amount') # Amount in Rupees
+        if not amount:
+            return Response({'error': 'Amount is required'}, status=400)
+
+        # Initialize Razorpay Client
+        client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
+
+        # Create Order (Amount must be in Paise, so multiply by 100)
+        payment_data = {
+            'amount': int(float(amount) * 100),
+            'currency': 'INR',
+            'receipt': f'order_{request.user.id}',
+            'payment_capture': 1 
+        }
+
+        order = client.order.create(data=payment_data)
+
+        return Response({
+            'order_id': order['id'],
+            'amount': order['amount'],
+            'key_id': settings.RAZORPAY_KEY_ID
+        })
+
+    except Exception as e:
+        print(f"Payment Error: {str(e)}")
+        return Response({'error': str(e)}, status=500)    

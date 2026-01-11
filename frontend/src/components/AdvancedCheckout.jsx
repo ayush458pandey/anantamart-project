@@ -133,6 +133,17 @@ export default function AdvancedCheckout({ cart, onClose, onPlaceOrder }) {
   const deliveryCharges = subtotal > 5000 ? 0 : deliveryCost;
   const total = subtotalAfterDiscount + cgst + sgst + deliveryCharges;
 
+  // 👇 Add this helper function at the top of your component or outside it
+  const loadRazorpay = (src) => {
+    return new Promise((resolve) => {
+      const script = document.createElement("script");
+      script.src = src;
+      script.onload = () => resolve(true);
+      script.onerror = () => resolve(false);
+      document.body.appendChild(script);
+    });
+  };
+
   const handlePlaceOrder = async () => {
     if (!selectedPayment) {
       alert('Please select a payment method');
@@ -143,13 +154,80 @@ export default function AdvancedCheckout({ cart, onClose, onPlaceOrder }) {
       return;
     }
 
+    setIsProcessing(true);
+
+    // Find the full address object
+    const addressObj = addresses.find(a => a.id === selectedAddress);
+
+    try {
+      // 1. If COD/Credit/Advance (No Gateway needed)
+      if (selectedPayment === 'credit-terms' || selectedPayment === 'advance') {
+        await placeFinalOrder(addressObj, 'Pending'); // Direct order
+        return;
+      }
+
+      // 2. If Online Payment (UPI, Card, Netbanking) - START RAZORPAY
+      const res = await loadRazorpay("https://checkout.razorpay.com/v1/checkout.js");
+      if (!res) {
+        alert("Razorpay SDK failed to load. Are you online?");
+        setIsProcessing(false);
+        return;
+      }
+
+      // A. Create Order on Server
+      // We need to fetch the API URL from your addressService (or hardcode for now)
+      const token = localStorage.getItem('access_token');
+      const orderResponse = await fetch('https://api.ananta-mart.in/api/orders/payment/create/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ amount: total })
+      });
+
+      const orderData = await orderResponse.json();
+
+      if (orderData.error) {
+        throw new Error(orderData.error);
+      }
+
+      // B. Open Razorpay Popup
+      const options = {
+        key: orderData.key_id,
+        amount: orderData.amount,
+        currency: "INR",
+        name: "Ananta Mart",
+        description: "Wholesale Order Payment",
+        order_id: orderData.order_id,
+        handler: async function (response) {
+          // C. Payment Success! Place the actual order in Backend
+          await placeFinalOrder(addressObj, 'Paid', response);
+        },
+        prefill: {
+          name: "Ananta Mart User", // You can put real user name here
+          contact: addressObj.phone_number
+        },
+        theme: {
+          color: "#10b981" // Emerald Green
+        }
+      };
+
+      const paymentObject = new window.Razorpay(options);
+      paymentObject.open();
+      setIsProcessing(false); // Stop spinner so user can see popup
+
+    } catch (error) {
+      console.error("Payment Error:", error);
+      alert("Payment failed: " + error.message);
+      setIsProcessing(false);
+    }
+  };
+
+  // 3. The Actual Order Placement Logic (Reusable)
+  const placeFinalOrder = async (addressObj, paymentStatus, paymentDetails = {}) => {
     try {
       setIsProcessing(true);
-
-      // Find the full address object
-      const addressObj = addresses.find(a => a.id === selectedAddress);
-
-      // Prepare order data for backend
       const orderPayload = {
         items: cart.items.map(item => ({
           product_id: item.product.id,
@@ -157,7 +235,6 @@ export default function AdvancedCheckout({ cart, onClose, onPlaceOrder }) {
         })),
         payment_method: selectedPayment,
         delivery_option: deliveryOptions.find(d => d.id === selectedDelivery)?.name,
-        // Send simplified address string to backend order note (or handle structured address if backend supports it)
         delivery_address: `${addressObj.name}, ${addressObj.street_address}, ${addressObj.city} - ${addressObj.pincode}`,
         scheduled_date: scheduledDate || null,
         subtotal: subtotal,
@@ -165,39 +242,22 @@ export default function AdvancedCheckout({ cart, onClose, onPlaceOrder }) {
         cgst: cgst,
         sgst: sgst,
         delivery_charges: deliveryCharges,
-        total: total
+        total: total,
+        payment_status: paymentStatus, // 'Paid' or 'Pending'
+        transaction_id: paymentDetails.razorpay_payment_id || null
       };
 
-      // Create order in backend
       const createdOrder = await orderService.createOrder(orderPayload);
 
-      console.log('Order created:', createdOrder);
-
-      // Prepare order data for display
-      const orderData = {
-        order_id: createdOrder.id,
-        order_number: createdOrder.order_number,
-        items: cart.items,
-        payment_method: paymentMethods.find(m => m.id === selectedPayment)?.name,
-        delivery_option: deliveryOptions.find(d => d.id === selectedDelivery)?.name,
-        delivery_address: addressObj,
-        scheduled_date: scheduledDate,
-        pricing: {
-          subtotal,
-          discount,
-          cgst,
-          sgst,
-          delivery: deliveryCharges,
-          total
-        }
-      };
-
-      setCompletedOrder(orderData);
+      // Success! Show confirmation
+      setCompletedOrder({
+        ...createdOrder,
+        delivery_address: addressObj, // for display
+        pricing: { subtotal, discount, cgst, sgst, delivery: deliveryCharges, total }
+      });
       setOrderPlaced(true);
-
-    } catch (error) {
-      console.error('Error placing order:', error);
-      alert('Failed to place order. Please try again.');
+    } catch (err) {
+      alert("Failed to save order: " + err.message);
     } finally {
       setIsProcessing(false);
     }
@@ -313,8 +373,8 @@ export default function AdvancedCheckout({ cart, onClose, onPlaceOrder }) {
                         <label
                           key={address.id}
                           className={`block p-4 border-2 rounded-lg cursor-pointer transition-all ${selectedAddress === address.id
-                              ? 'border-emerald-600 bg-emerald-50'
-                              : 'border-gray-200 hover:border-emerald-300'
+                            ? 'border-emerald-600 bg-emerald-50'
+                            : 'border-gray-200 hover:border-emerald-300'
                             }`}
                         >
                           <input
@@ -326,8 +386,8 @@ export default function AdvancedCheckout({ cart, onClose, onPlaceOrder }) {
                           />
                           <div className="flex items-start gap-3">
                             <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 mt-0.5 ${selectedAddress === address.id
-                                ? 'border-emerald-600 bg-emerald-600'
-                                : 'border-gray-300'
+                              ? 'border-emerald-600 bg-emerald-600'
+                              : 'border-gray-300'
                               }`}>
                               {selectedAddress === address.id && (
                                 <div className="w-2 h-2 bg-white rounded-full"></div>
@@ -363,8 +423,8 @@ export default function AdvancedCheckout({ cart, onClose, onPlaceOrder }) {
                       <label
                         key={option.id}
                         className={`block p-4 border-2 rounded-lg cursor-pointer transition-all ${selectedDelivery === option.id
-                            ? 'border-emerald-600 bg-emerald-50'
-                            : 'border-gray-200 hover:border-emerald-300'
+                          ? 'border-emerald-600 bg-emerald-50'
+                          : 'border-gray-200 hover:border-emerald-300'
                           }`}
                       >
                         <input
@@ -426,8 +486,8 @@ export default function AdvancedCheckout({ cart, onClose, onPlaceOrder }) {
                       <label
                         key={method.id}
                         className={`block p-4 border-2 rounded-lg cursor-pointer transition-all ${selectedPayment === method.id
-                            ? 'border-emerald-600 bg-emerald-50'
-                            : 'border-gray-200 hover:border-emerald-300'
+                          ? 'border-emerald-600 bg-emerald-50'
+                          : 'border-gray-200 hover:border-emerald-300'
                           }`}
                       >
                         <input
@@ -439,8 +499,8 @@ export default function AdvancedCheckout({ cart, onClose, onPlaceOrder }) {
                         />
                         <div className="flex items-start gap-3">
                           <div className={`p-3 rounded-lg ${selectedPayment === method.id
-                              ? 'bg-emerald-600 text-white'
-                              : 'bg-gray-100 text-gray-600'
+                            ? 'bg-emerald-600 text-white'
+                            : 'bg-gray-100 text-gray-600'
                             }`}>
                             <Icon className="w-6 h-6" />
                           </div>
@@ -449,8 +509,8 @@ export default function AdvancedCheckout({ cart, onClose, onPlaceOrder }) {
                             <div className="text-sm text-gray-600">{method.description}</div>
                           </div>
                           <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${selectedPayment === method.id
-                              ? 'border-emerald-600 bg-emerald-600'
-                              : 'border-gray-300'
+                            ? 'border-emerald-600 bg-emerald-600'
+                            : 'border-gray-300'
                             }`}>
                             {selectedPayment === method.id && (
                               <div className="w-2 h-2 bg-white rounded-full"></div>
@@ -626,10 +686,10 @@ function StepIndicator({ step, current, label }) {
   return (
     <div className="flex flex-col items-center">
       <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold transition-all ${isActive
-          ? 'bg-emerald-600 text-white'
-          : isCompleted
-            ? 'bg-emerald-100 text-emerald-600'
-            : 'bg-gray-200 text-gray-500'
+        ? 'bg-emerald-600 text-white'
+        : isCompleted
+          ? 'bg-emerald-100 text-emerald-600'
+          : 'bg-gray-200 text-gray-500'
         }`}>
         {isCompleted ? <CheckCircle className="w-6 h-6" /> : step}
       </div>

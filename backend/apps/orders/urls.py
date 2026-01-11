@@ -7,4 +7,5 @@ router.register(r'orders', OrderViewSet, basename='order')
 
 urlpatterns = [
     path('', include(router.urls)),
+    path('payment/create/', create_payment_order, name='create-payment'),
 ]
