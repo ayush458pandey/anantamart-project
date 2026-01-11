@@ -1,7 +1,7 @@
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import IsAuthenticated  # 👈 Changed from AllowAny
 from .models import Order, OrderItem
 from .serializers import OrderSerializer
 from apps.products.models import Product
@@ -11,24 +11,18 @@ from datetime import datetime
 
 class OrderViewSet(viewsets.ModelViewSet):
     serializer_class = OrderSerializer
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated]  # 👈 STRICT SECURITY
     
     def get_queryset(self):
-        if self.request.user.is_authenticated:
-            return Order.objects.filter(user=self.request.user)
-        # For demo, return all orders
-        return Order.objects.all()
+        # 👈 Only return orders belonging to the logged-in user
+        return Order.objects.filter(user=self.request.user)
     
     def create(self, request):
         # Generate order number
         order_number = 'ORD' + ''.join(random.choices(string.digits, k=8))
         
-        # Get or create demo user
-        from django.contrib.auth.models import User
-        if not request.user.is_authenticated:
-            user, _ = User.objects.get_or_create(username='demo_user')
-        else:
-            user = request.user
+        # 👈 Use the real user, not a demo user
+        user = request.user
         
         # Create order
         order = Order.objects.create(
@@ -69,7 +63,6 @@ class OrderViewSet(viewsets.ModelViewSet):
         
         order.status = new_status
         
-        # Update timestamps based on status
         if new_status == 'confirmed' and not order.confirmed_at:
             order.confirmed_at = datetime.now()
         elif new_status == 'packed' and not order.packed_at:
