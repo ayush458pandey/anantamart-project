@@ -805,19 +805,6 @@ function AppContent() {
               label="Profile"
               active={currentView === 'profile'}
               onClick={() => {
-                if (user) {
-                  setCurrentView('profile');
-                } else {
-                  setLoginProps({}); // Reset to normal login (with signup)
-                  setCurrentView('login');
-                }
-              }}
-            />
-            <NavButton
-              icon={User}
-              label="Profile"
-              active={currentView === 'profile'}
-              onClick={() => {
                 if (user) setCurrentView('profile');
                 else setCurrentView('login');
               }}
