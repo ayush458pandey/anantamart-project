@@ -819,7 +819,14 @@ function AppContent() {
               icon={ShoppingCart}
               label="Orders"
               active={currentView === 'orders'}
-              onClick={() => setCurrentView('orders')}
+              onClick={() => {
+                // 👇 SECURITY CHECK: Only show orders if logged in
+                if (user) {
+                  setCurrentView('orders');
+                } else {
+                  setCurrentView('login');
+                }
+              }}
             />
             <NavButton
               icon={User}
