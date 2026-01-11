@@ -636,4 +636,5 @@ function StepIndicator({ step, current, label }) {
       <span className="text-xs mt-1 font-medium text-gray-600">{label}</span>
     </div>
   );
-}
+}   
+ 
