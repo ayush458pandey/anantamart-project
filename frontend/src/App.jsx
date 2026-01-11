@@ -60,6 +60,104 @@ const getCategoryIcon = (category) => {
   return Package;
 };
 
+// --- NEW LOGIN COMPONENT ---
+function LoginView({ onLogin, onCancel }) {
+  const [formData, setFormData] = useState({ email: '', password: '' });
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+
+    try {
+      // 1. Get Token
+      const response = await fetch('https://api.ananta-mart.in/api/token/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData)
+      });
+
+      if (!response.ok) throw new Error('Invalid email or password');
+
+      const data = await response.json();
+      localStorage.setItem('access_token', data.access);
+      localStorage.setItem('refresh_token', data.refresh);
+
+      // 2. Get User Details
+      const userResponse = await fetch('https://api.ananta-mart.in/api/user/me/', {
+        headers: { 'Authorization': `Bearer ${data.access}` }
+      });
+
+      if (!userResponse.ok) throw new Error('Failed to fetch profile');
+
+      const userData = await userResponse.json();
+      onLogin(userData); // Pass user data back to App
+
+    } catch (err) {
+      setError(err.message || 'Login failed');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+      <div className="bg-white p-8 rounded-xl shadow-lg w-full max-w-md">
+        <div className="text-center mb-6">
+          <div className="bg-emerald-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+            <User className="w-8 h-8 text-emerald-600" />
+          </div>
+          <h2 className="text-2xl font-bold text-emerald-800">Welcome Back</h2>
+          <p className="text-gray-500">Sign in to your business account</p>
+        </div>
+
+        {error && (
+          <div className="bg-red-50 text-red-600 p-3 rounded-lg mb-4 text-sm border border-red-200">
+            {error}
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+            <input
+              type="email"
+              required
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none transition-all"
+              value={formData.email}
+              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+              placeholder="name@company.com"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+            <input
+              type="password"
+              required
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none transition-all"
+              value={formData.password}
+              onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+              placeholder="••••••••"
+            />
+          </div>
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-emerald-600 text-white py-2.5 rounded-lg font-bold hover:bg-emerald-700 transition-colors disabled:opacity-50 shadow-md"
+          >
+            {loading ? 'Signing in...' : 'Sign In'}
+          </button>
+        </form>
+        <button onClick={onCancel} className="w-full mt-4 text-gray-500 text-sm hover:text-emerald-600 font-medium transition-colors">
+          Cancel and return to store
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function AppContent() {
   const [currentView, setCurrentView] = useState('catalog');
   const [selectedCategory, setSelectedCategory] = useState('all');
@@ -67,6 +165,10 @@ function AppContent() {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [showCheckout, setShowCheckout] = useState(false);
   const [showComparison, setShowComparison] = useState(false);
+
+  // Authentication State
+  const [user, setUser] = useState(null);
+  const [authLoading, setAuthLoading] = useState(true);
 
   // Visual browsing state
   const [subcategories, setSubcategories] = useState([]);
@@ -80,6 +182,39 @@ function AppContent() {
   const { products, categories, loading, error } = useProducts();
   const { cart, addToCart, removeFromCart, updateQuantity } = useCart();
   const { compareList } = useComparison();
+
+  // Check for login token on load
+  useEffect(() => {
+    const checkAuth = async () => {
+      const token = localStorage.getItem('access_token');
+      if (token) {
+        try {
+          const response = await fetch('https://api.ananta-mart.in/api/user/me/', {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          if (response.ok) {
+            const userData = await response.json();
+            setUser(userData);
+          } else {
+            // Token invalid
+            localStorage.removeItem('access_token');
+            localStorage.removeItem('refresh_token');
+          }
+        } catch (err) {
+          console.error("Session check failed", err);
+        }
+      }
+      setAuthLoading(false);
+    };
+    checkAuth();
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem('access_token');
+    localStorage.removeItem('refresh_token');
+    setUser(null);
+    setCurrentView('catalog');
+  };
 
   // Fetch subcategories when category changes
   useEffect(() => {
@@ -152,17 +287,14 @@ function AppContent() {
 
     // 2. Filter based on products in the current category
     const hasProduct = products.some(p => {
-      // A. Check Category Match (Safe String Comparison)
       const productCatId = String(p.category || p.category_id || (p.category_obj?.id) || '');
       const currentCatId = String(selectedCategory);
 
       if (productCatId !== currentCatId) return false;
 
-      // B. Check Brand Match (Safe Data Comparison)
       const targetBrandId = String(brand.id);
       const targetBrandName = brand.name.toLowerCase();
 
-      // Match by ID, brand_id, nested object, or name
       if (p.brand && String(p.brand) === targetBrandId) return true;
       if (p.brand_id && String(p.brand_id) === targetBrandId) return true;
       if (typeof p.brand === 'object' && p.brand !== null && String(p.brand.id) === targetBrandId) return true;
@@ -184,10 +316,9 @@ function AppContent() {
 
   // Helper to get active category name
   const currentCategoryName = categories.find(c => c.id === selectedCategory)?.name || 'All Products';
-  // Helper to get active subcategory object
   const activeSubcategory = subcategories.find(s => s.id === selectedSubcategory);
 
-  if (loading) {
+  if (loading || authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
         <div className="text-center">
@@ -205,10 +336,9 @@ function AppContent() {
           <h2 className="text-lg sm:text-xl font-bold text-red-600 mb-2">Connection Error</h2>
           <p className="text-sm sm:text-base text-red-700 mb-4">{error}</p>
           <p className="text-xs sm:text-sm text-gray-600">
-            Could not reach the server at:{' '}
-            {/* dynamically show the real URL instead of hardcoded localhost */}
-            <code className="bg-red-100 px-2 py-1 rounded text-xs sm:text-sm break-all">
-              https://anantamart-project.onrender.com
+            Could not reach the server at:
+            <code className="bg-red-100 px-2 py-1 rounded text-xs sm:text-sm break-all ml-1">
+              https://api.ananta-mart.in
             </code>
           </p>
           <button
@@ -229,7 +359,7 @@ function AppContent() {
         <div className="max-w-7xl mx-auto px-3 sm:px-4 py-3 sm:py-4">
           <div className="flex items-center justify-between sm:justify-start gap-2 sm:gap-4 mb-3 sm:mb-4">
             {/* Logo */}
-            <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
+            <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0 cursor-pointer" onClick={() => setCurrentView('catalog')}>
               <Package className="w-6 h-6 sm:w-8 sm:h-8 text-emerald-600" />
               <div className="hidden sm:block">
                 <h1 className="text-xl sm:text-2xl font-bold text-emerald-600">Anantamart</h1>
@@ -268,13 +398,25 @@ function AppContent() {
               )}
             </button>
 
-            {/* Profile Icon */}
+            {/* Profile Icon (Redirects to Login if not logged in) */}
             <button
-              onClick={() => setCurrentView('profile')}
+              onClick={() => {
+                if (user) {
+                  setCurrentView('profile');
+                } else {
+                  setCurrentView('login');
+                }
+              }}
               className="p-2 sm:p-2.5 hover:bg-gray-100 active:bg-gray-200 rounded-lg transition-colors touch-manipulation min-w-[44px] min-h-[44px] flex items-center justify-center"
               aria-label="Profile"
             >
-              <User className="w-5 h-5 sm:w-6 sm:h-6 text-gray-700" />
+              {user ? (
+                <div className="w-6 h-6 bg-emerald-600 rounded-full flex items-center justify-center text-white text-xs font-bold">
+                  {user.first_name ? user.first_name[0] : 'U'}
+                </div>
+              ) : (
+                <User className="w-5 h-5 sm:w-6 sm:h-6 text-gray-700" />
+              )}
             </button>
           </div>
 
@@ -340,6 +482,17 @@ function AppContent() {
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-3 sm:px-4 py-4">
+
+        {/* LOGIN VIEW */}
+        {currentView === 'login' && (
+          <LoginView
+            onLogin={(userData) => {
+              setUser(userData);
+              setCurrentView('catalog');
+            }}
+            onCancel={() => setCurrentView('catalog')}
+          />
+        )}
 
         {/* CATALOG VIEW */}
         {currentView === 'catalog' && !selectedBrand && (
@@ -449,7 +602,6 @@ function AppContent() {
           </div>
         )}
 
-        {/* ... (Rest of views: Estimate, Orders, Profile) ... */}
         {currentView === 'estimate' && (
           <EstimateView
             cart={cart}
@@ -459,13 +611,19 @@ function AppContent() {
             cgst={cgst}
             sgst={sgst}
             total={estimateTotal}
-            onCheckout={() => setShowCheckout(true)}
+            onCheckout={() => {
+              if (user) {
+                setShowCheckout(true);
+              } else {
+                setCurrentView('login');
+              }
+            }}
           />
         )}
 
         {currentView === 'orders' && <OrdersList />}
 
-        {currentView === 'profile' && <ProfileView />}
+        {currentView === 'profile' && <ProfileView user={user} onLogout={handleLogout} />}
 
         {/* Brand Page - Shows ONLY when selectedBrand is set */}
         {selectedBrand && (
@@ -490,7 +648,6 @@ function AppContent() {
                 setCurrentView('catalog');
                 setSelectedBrand(null);
                 if (selectedCategory !== 'all') {
-                  // Reset to subcategory view if clicking catalog again
                   setShowSubcategoryView(true);
                   setSelectedSubcategory(null);
                 }
@@ -520,7 +677,10 @@ function AppContent() {
               icon={User}
               label="Profile"
               active={currentView === 'profile'}
-              onClick={() => setCurrentView('profile')}
+              onClick={() => {
+                if (user) setCurrentView('profile');
+                else setCurrentView('login');
+              }}
             />
           </div>
         </div>
@@ -855,105 +1015,65 @@ function EstimateView({ cart, removeFromCart, updateQuantity, subtotal, cgst, sg
   );
 }
 
-// Profile View Component
-function ProfileView() {
+// Profile View Component (CONNECTED TO REAL DATA)
+function ProfileView({ user, onLogout }) {
+  if (!user) return null;
+
   return (
     <div className="max-w-4xl mx-auto">
-      <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-4 sm:mb-6">Profile</h2>
+      <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-4 sm:mb-6">My Profile</h2>
 
       <div className="bg-white rounded-lg sm:rounded-xl shadow-md overflow-hidden">
         {/* Profile Header */}
         <div className="bg-gradient-to-r from-emerald-500 to-emerald-600 p-6 sm:p-8">
           <div className="flex items-center gap-4 sm:gap-6">
-            <div className="w-16 h-16 sm:w-20 sm:h-20 bg-white rounded-full flex items-center justify-center shadow-lg">
-              <User className="w-8 h-8 sm:w-10 sm:h-10 text-emerald-600" />
+            <div className="w-16 h-16 sm:w-20 sm:h-20 bg-white rounded-full flex items-center justify-center shadow-lg text-emerald-600 font-bold text-2xl">
+              {user.first_name ? user.first_name[0] : 'U'}
             </div>
             <div className="flex-1 text-white">
-              <h3 className="text-xl sm:text-2xl font-bold mb-1">Business Account</h3>
-              <p className="text-emerald-100 text-sm sm:text-base">B2B Wholesale Customer</p>
+              <h3 className="text-xl sm:text-2xl font-bold mb-1">
+                {user.business_name || `${user.first_name} ${user.last_name}`}
+              </h3>
+              <p className="text-emerald-100 text-sm sm:text-base">{user.email}</p>
+              <span className="inline-block mt-2 bg-emerald-700 bg-opacity-50 px-3 py-1 rounded-full text-xs font-medium">
+                {user.is_superuser ? 'Super Admin' : 'Business Account'}
+              </span>
             </div>
-            <button className="p-2 sm:p-3 bg-white bg-opacity-20 hover:bg-opacity-30 rounded-lg transition-colors touch-manipulation">
-              <Edit className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
-            </button>
           </div>
         </div>
 
         {/* Profile Details */}
         <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
-          {/* Business Information */}
           <div>
             <h4 className="text-base sm:text-lg font-bold text-gray-800 mb-3 sm:mb-4 flex items-center gap-2">
               <Building className="w-5 h-5 text-emerald-600" />
-              Business Information
+              Account Details
             </h4>
             <div className="space-y-3 sm:space-y-4">
               <div className="flex items-start gap-3 sm:gap-4">
-                <Building className="w-5 h-5 text-gray-400 flex-shrink-0 mt-0.5" />
-                <div className="flex-1">
-                  <p className="text-xs sm:text-sm text-gray-500 mb-1">Business Name</p>
-                  <p className="text-sm sm:text-base font-medium text-gray-800">Your Business Name</p>
+                <User className="w-5 h-5 text-gray-400 flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-xs sm:text-sm text-gray-500 mb-1">Full Name</p>
+                  <p className="text-sm sm:text-base font-medium text-gray-800">
+                    {user.first_name} {user.last_name}
+                  </p>
                 </div>
               </div>
               <div className="flex items-start gap-3 sm:gap-4">
                 <Mail className="w-5 h-5 text-gray-400 flex-shrink-0 mt-0.5" />
-                <div className="flex-1">
+                <div>
                   <p className="text-xs sm:text-sm text-gray-500 mb-1">Email</p>
-                  <p className="text-sm sm:text-base font-medium text-gray-800">business@example.com</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-3 sm:gap-4">
-                <Phone className="w-5 h-5 text-gray-400 flex-shrink-0 mt-0.5" />
-                <div className="flex-1">
-                  <p className="text-xs sm:text-sm text-gray-500 mb-1">Phone</p>
-                  <p className="text-sm sm:text-base font-medium text-gray-800">+91 98765 43210</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-3 sm:gap-4">
-                <MapPin className="w-5 h-5 text-gray-400 flex-shrink-0 mt-0.5" />
-                <div className="flex-1">
-                  <p className="text-xs sm:text-sm text-gray-500 mb-1">Address</p>
-                  <p className="text-sm sm:text-base font-medium text-gray-800">123 Business Street, City, State - 123456</p>
+                  <p className="text-sm sm:text-base font-medium text-gray-800">{user.email}</p>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Account Statistics */}
           <div className="border-t border-gray-200 pt-4 sm:pt-6">
-            <h4 className="text-base sm:text-lg font-bold text-gray-800 mb-3 sm:mb-4">Account Statistics</h4>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
-              <div className="bg-gray-50 rounded-lg p-3 sm:p-4">
-                <p className="text-xs sm:text-sm text-gray-500 mb-1">Total Orders</p>
-                <p className="text-xl sm:text-2xl font-bold text-emerald-600">0</p>
-              </div>
-              <div className="bg-gray-50 rounded-lg p-3 sm:p-4">
-                <p className="text-xs sm:text-sm text-gray-500 mb-1">Pending Orders</p>
-                <p className="text-xl sm:text-2xl font-bold text-orange-600">0</p>
-              </div>
-              <div className="bg-gray-50 rounded-lg p-3 sm:p-4 col-span-2 sm:col-span-1">
-                <p className="text-xs sm:text-sm text-gray-500 mb-1">Total Spent</p>
-                <p className="text-xl sm:text-2xl font-bold text-gray-800">₹0.00</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Actions */}
-          <div className="border-t border-gray-200 pt-4 sm:pt-6 space-y-2 sm:space-y-3">
-            <button className="w-full flex items-center justify-between p-3 sm:p-4 bg-gray-50 hover:bg-gray-100 active:bg-gray-200 rounded-lg transition-colors touch-manipulation">
-              <div className="flex items-center gap-3">
-                <Settings className="w-5 h-5 text-gray-600" />
-                <span className="text-sm sm:text-base font-medium text-gray-800">Account Settings</span>
-              </div>
-              <X className="w-4 h-4 text-gray-400 rotate-45" />
-            </button>
-            <button className="w-full flex items-center justify-between p-3 sm:p-4 bg-gray-50 hover:bg-gray-100 active:bg-gray-200 rounded-lg transition-colors touch-manipulation">
-              <div className="flex items-center gap-3">
-                <FileText className="w-5 h-5 text-gray-600" />
-                <span className="text-sm sm:text-base font-medium text-gray-800">Order History</span>
-              </div>
-              <X className="w-4 h-4 text-gray-400 rotate-45" />
-            </button>
-            <button className="w-full flex items-center justify-between p-3 sm:p-4 bg-red-50 hover:bg-red-100 active:bg-red-200 rounded-lg transition-colors touch-manipulation">
+            <button
+              onClick={onLogout}
+              className="w-full flex items-center justify-between p-3 sm:p-4 bg-red-50 hover:bg-red-100 active:bg-red-200 rounded-lg transition-colors touch-manipulation"
+            >
               <div className="flex items-center gap-3">
                 <LogOut className="w-5 h-5 text-red-600" />
                 <span className="text-sm sm:text-base font-medium text-red-600">Logout</span>
