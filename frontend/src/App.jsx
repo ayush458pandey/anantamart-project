@@ -28,8 +28,6 @@ const getCategoryIcon = (category) => {
 
   const iconName = category.icon?.toLowerCase() || '';
   const categoryName = category.name?.toLowerCase() || '';
-  const { cart, addToCart, removeFromCart, updateQuantity, clearCart } = useCart();
-  const { compareList } = useComparison();
 
   const iconMap = {
     'package': Package,
@@ -62,9 +60,7 @@ const getCategoryIcon = (category) => {
   return Package;
 };
 
-// --- NEW LOGIN COMPONENT ---
-// --- NEW LOGIN & SIGNUP VIEW ---
-// 👇 REPLACED LOGIN VIEW
+// --- UPDATED LOGIN VIEW (Supports Custom Messages) ---
 function LoginView({ onLogin, onCancel, message, hideSignup }) {
   const [isLogin, setIsLogin] = useState(true);
   const [formData, setFormData] = useState({
@@ -139,11 +135,15 @@ function LoginView({ onLogin, onCancel, message, hideSignup }) {
     }
   };
 
+  const handleGoogleLogin = () => {
+    alert("Google Login coming soon! We need to configure the Google Cloud Console first.");
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 py-8">
       <div className="bg-white p-8 rounded-xl shadow-lg w-full max-w-md transition-all">
 
-        {/* 👇 NEW: Show Custom Message if it exists */}
+        {/* Custom Message (Bouncer) */}
         {message && (
           <div className="bg-blue-50 text-blue-700 px-4 py-3 rounded-lg mb-6 text-sm text-center border border-blue-200 font-medium">
             {message}
@@ -167,7 +167,6 @@ function LoginView({ onLogin, onCancel, message, hideSignup }) {
             </button>
           </div>
         ) : (
-          // If hiding signup, just show a Title
           <div className="mb-6 text-center">
             <h2 className="text-2xl font-bold text-gray-800">Sign In</h2>
           </div>
@@ -251,6 +250,29 @@ function LoginView({ onLogin, onCancel, message, hideSignup }) {
           </button>
         </form>
 
+        <div className="relative my-6">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-gray-300"></div>
+          </div>
+          <div className="relative flex justify-center text-sm">
+            <span className="px-2 bg-white text-gray-500">Or continue with</span>
+          </div>
+        </div>
+
+        <button
+          onClick={handleGoogleLogin}
+          className="w-full flex items-center justify-center gap-3 bg-white border border-gray-300 text-gray-700 font-medium py-2.5 rounded-lg hover:bg-gray-50 transition-colors"
+        >
+          {/* Google SVG */}
+          <svg className="w-5 h-5" viewBox="0 0 24 24">
+            <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
+            <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
+            <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" />
+            <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
+          </svg>
+          Google
+        </button>
+
         <button onClick={onCancel} className="w-full mt-6 text-gray-400 text-sm hover:text-gray-600 transition-colors">
           Cancel and return to store
         </button>
@@ -267,6 +289,9 @@ function AppContent() {
   const [showCheckout, setShowCheckout] = useState(false);
   const [showComparison, setShowComparison] = useState(false);
 
+  // This manages the custom login messages
+  const [loginProps, setLoginProps] = useState({});
+
   // Authentication State
   const [user, setUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
@@ -281,7 +306,7 @@ function AppContent() {
   const [loadingBrands, setLoadingBrands] = useState(false);
 
   const { products, categories, loading, error } = useProducts();
-  const { cart, addToCart, removeFromCart, updateQuantity } = useCart();
+  const { cart, addToCart, removeFromCart, updateQuantity, clearCart } = useCart();
   const { compareList } = useComparison();
 
   // Check for login token on load
@@ -297,7 +322,6 @@ function AppContent() {
             const userData = await response.json();
             setUser(userData);
           } else {
-            // Token invalid
             localStorage.removeItem('access_token');
             localStorage.removeItem('refresh_token');
           }
@@ -311,20 +335,11 @@ function AppContent() {
   }, []);
 
   const handleLogout = () => {
-    // A. Remove the Keys
     localStorage.removeItem('access_token');
     localStorage.removeItem('refresh_token');
-
-    // B. Wipe User Data
     setUser(null);
-
-    // C. Wipe Cart Data (If your Context supports it)
     if (clearCart) clearCart();
-
-    // D. Force View back to Catalog
     setCurrentView('catalog');
-
-    // E. Clear any selected sensitive data
     setSelectedProduct(null);
     setShowCheckout(false);
   };
@@ -332,7 +347,6 @@ function AppContent() {
   // Fetch subcategories when category changes
   useEffect(() => {
     setSelectedSubcategory(null);
-
     const fetchSubcategories = async () => {
       if (selectedCategory && selectedCategory !== 'all') {
         setLoadingSubcategories(true);
@@ -372,62 +386,43 @@ function AppContent() {
     fetchBrands();
   }, [currentView]);
 
-  // Handle "Back" from Subcategory View
   const handleBackToSubcategories = () => {
     setSelectedSubcategory(null);
     setShowSubcategoryView(true);
   };
 
-  // --- ROBUST PRODUCT FILTERING ---
   const filteredProducts = products.filter(product => {
-    // 1. Check Main Category (Convert to string for safety)
     const matchesCategory = selectedCategory === 'all' || String(product.category) === String(selectedCategory);
-
-    // 2. Check Subcategory (Convert to string for safety)
     const matchesSubcategory = !selectedSubcategory || String(product.subcategory) === String(selectedSubcategory);
-
-    // 3. Check Search
     const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       product.sku.toLowerCase().includes(searchQuery.toLowerCase());
-
     return matchesCategory && matchesSubcategory && matchesSearch;
   });
 
-  // --- ROBUST BRAND FILTERING ---
   const visibleBrands = brands.filter(brand => {
-    // 1. Always show all brands if we are in "All Products"
     if (selectedCategory === 'all') return true;
-
-    // 2. Filter based on products in the current category
     const hasProduct = products.some(p => {
       const productCatId = String(p.category || p.category_id || (p.category_obj?.id) || '');
       const currentCatId = String(selectedCategory);
-
       if (productCatId !== currentCatId) return false;
-
       const targetBrandId = String(brand.id);
       const targetBrandName = brand.name.toLowerCase();
-
       if (p.brand && String(p.brand) === targetBrandId) return true;
       if (p.brand_id && String(p.brand_id) === targetBrandId) return true;
       if (typeof p.brand === 'object' && p.brand !== null && String(p.brand.id) === targetBrandId) return true;
       if (typeof p.brand === 'string' && p.brand.toLowerCase() === targetBrandName) return true;
       if (p.brand_name && p.brand_name.toLowerCase() === targetBrandName) return true;
-
       return false;
     });
-
     return hasProduct;
   });
 
-  // Calculate totals
   const estimateSubtotal = cart?.items?.reduce((sum, item) =>
     sum + parseFloat(item.total_price), 0) || 0;
   const cgst = estimateSubtotal * 0.09;
   const sgst = estimateSubtotal * 0.09;
   const estimateTotal = estimateSubtotal + cgst + sgst;
 
-  // Helper to get active category name
   const currentCategoryName = categories.find(c => c.id === selectedCategory)?.name || 'All Products';
   const activeSubcategory = subcategories.find(s => s.id === selectedSubcategory);
 
@@ -448,16 +443,7 @@ function AppContent() {
         <div className="bg-red-50 border-2 border-red-200 rounded-lg sm:rounded-xl p-6 sm:p-8 max-w-md w-full">
           <h2 className="text-lg sm:text-xl font-bold text-red-600 mb-2">Connection Error</h2>
           <p className="text-sm sm:text-base text-red-700 mb-4">{error}</p>
-          <p className="text-xs sm:text-sm text-gray-600">
-            Could not reach the server at:
-            <code className="bg-red-100 px-2 py-1 rounded text-xs sm:text-sm break-all ml-1">
-              https://api.ananta-mart.in
-            </code>
-          </p>
-          <button
-            onClick={() => window.location.reload()}
-            className="mt-4 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 w-full"
-          >
+          <button onClick={() => window.location.reload()} className="mt-4 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 w-full">
             Retry Connection
           </button>
         </div>
@@ -467,11 +453,9 @@ function AppContent() {
 
   return (
     <div className="min-h-screen bg-gray-50 pb-24 sm:pb-20">
-      {/* HEADER */}
       <header className="sticky top-0 bg-white shadow-md z-40">
         <div className="max-w-7xl mx-auto px-3 sm:px-4 py-3 sm:py-4">
           <div className="flex items-center justify-between sm:justify-start gap-2 sm:gap-4 mb-3 sm:mb-4">
-            {/* Logo */}
             <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0 cursor-pointer" onClick={() => setCurrentView('catalog')}>
               <Package className="w-6 h-6 sm:w-8 sm:h-8 text-emerald-600" />
               <div className="hidden sm:block">
@@ -483,7 +467,6 @@ function AppContent() {
               </div>
             </div>
 
-            {/* Search Bar */}
             <div className="hidden sm:flex flex-1 max-w-2xl min-w-0">
               <div className="flex items-center bg-gray-100 rounded-lg px-3 py-2 w-full">
                 <Search className="w-5 h-5 text-gray-400 flex-shrink-0" />
@@ -497,11 +480,9 @@ function AppContent() {
               </div>
             </div>
 
-            {/* Cart Icon */}
             <button
               onClick={() => setCurrentView('estimate')}
               className="relative p-2 sm:p-2.5 hover:bg-gray-100 active:bg-gray-200 rounded-lg transition-colors touch-manipulation min-w-[44px] min-h-[44px] flex items-center justify-center"
-              aria-label="View cart"
             >
               <ShoppingCart className="w-5 h-5 sm:w-6 sm:h-6 text-gray-700" />
               {cart?.items?.length > 0 && (
@@ -511,17 +492,16 @@ function AppContent() {
               )}
             </button>
 
-            {/* Profile Icon (Redirects to Login if not logged in) */}
             <button
               onClick={() => {
                 if (user) {
                   setCurrentView('profile');
                 } else {
+                  setLoginProps({});
                   setCurrentView('login');
                 }
               }}
               className="p-2 sm:p-2.5 hover:bg-gray-100 active:bg-gray-200 rounded-lg transition-colors touch-manipulation min-w-[44px] min-h-[44px] flex items-center justify-center"
-              aria-label="Profile"
             >
               {user ? (
                 <div className="w-6 h-6 bg-emerald-600 rounded-full flex items-center justify-center text-white text-xs font-bold">
@@ -533,7 +513,6 @@ function AppContent() {
             </button>
           </div>
 
-          {/* Search Bar - Mobile */}
           <div className="sm:hidden mb-3">
             <div className="flex items-center bg-gray-100 rounded-lg px-3 py-2.5">
               <Search className="w-5 h-5 text-gray-400 flex-shrink-0" />
@@ -547,7 +526,6 @@ function AppContent() {
             </div>
           </div>
 
-          {/* CATEGORIES */}
           <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide -mx-3 sm:mx-0 px-3 sm:px-0">
             <button
               onClick={() => {
@@ -593,25 +571,25 @@ function AppContent() {
         </div>
       </header>
 
-      {/* Main Content */}
       <main className="max-w-7xl mx-auto px-3 sm:px-4 py-4">
-
-        {/* LOGIN VIEW */}
         {currentView === 'login' && (
           <LoginView
             onLogin={(userData) => {
               setUser(userData);
               setCurrentView('catalog');
+              setLoginProps({});
             }}
-            onCancel={() => setCurrentView('catalog')}
+            onCancel={() => {
+              setCurrentView('catalog');
+              setLoginProps({});
+            }}
+            message={loginProps.message}
+            hideSignup={loginProps.hideSignup}
           />
         )}
 
-        {/* CATALOG VIEW */}
         {currentView === 'catalog' && !selectedBrand && (
           <div>
-
-            {/* Back Button (Subcategory) */}
             {selectedSubcategory && (
               <button
                 onClick={handleBackToSubcategories}
@@ -622,7 +600,6 @@ function AppContent() {
               </button>
             )}
 
-            {/* Dynamic Title */}
             <div className="mb-3 sm:mb-4 px-1">
               {selectedSubcategory && activeSubcategory ? (
                 <div>
@@ -643,7 +620,6 @@ function AppContent() {
               )}
             </div>
 
-            {/* 1. SUBCATEGORY GRID (Shows when a specific category is selected) */}
             {selectedCategory !== 'all' && showSubcategoryView && subcategories.length > 0 && (
               <div className="mb-6">
                 <div className="flex items-center justify-between mb-3 px-1">
@@ -666,7 +642,6 @@ function AppContent() {
               </div>
             )}
 
-            {/* 2. BRAND GRID (Shows only brands that have products in current category) */}
             {!selectedSubcategory && visibleBrands.length > 0 && (
               <div className="mb-6">
                 <h3 className="text-sm sm:text-base font-bold text-gray-700 mb-3 px-1">
@@ -680,7 +655,6 @@ function AppContent() {
               </div>
             )}
 
-            {/* 3. PRODUCT GRID */}
             {(!showSubcategoryView || selectedCategory === 'all') && (
               <>
                 <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2.5 sm:gap-3 md:gap-4 pb-4">
@@ -699,14 +673,6 @@ function AppContent() {
                     <p className="text-sm sm:text-base text-gray-500">No products found</p>
                     {searchQuery && (
                       <p className="text-xs sm:text-sm text-gray-400 mt-2">Try a different search term</p>
-                    )}
-                    {selectedSubcategory && (
-                      <button
-                        onClick={handleBackToSubcategories}
-                        className="text-emerald-600 font-medium text-sm mt-2 hover:underline"
-                      >
-                        Go back to Subcategories
-                      </button>
                     )}
                   </div>
                 )}
@@ -728,6 +694,7 @@ function AppContent() {
               if (user) {
                 setShowCheckout(true);
               } else {
+                setLoginProps({});
                 setCurrentView('login');
               }
             }}
@@ -738,7 +705,6 @@ function AppContent() {
 
         {currentView === 'profile' && <ProfileView user={user} onLogout={handleLogout} />}
 
-        {/* Brand Page - Shows ONLY when selectedBrand is set */}
         {selectedBrand && (
           <BrandPage
             brand={selectedBrand}
@@ -749,7 +715,6 @@ function AppContent() {
         )}
       </main>
 
-      {/* Bottom Navigation */}
       <nav className="fixed bottom-0 left-0 right-0 bg-white border-t-2 border-gray-200 z-50 safe-area-inset-bottom">
         <div className="max-w-7xl mx-auto px-2 sm:px-4">
           <div className="flex justify-around py-1.5 sm:py-2">
@@ -780,7 +745,8 @@ function AppContent() {
               onClick={() => setShowComparison(true)}
               badge={compareList?.length || 0}
             />
-            {/* Orders Button - Strict Sign In Only */}
+
+            {/* ORDERS BUTTON (Updated Logic) */}
             <NavButton
               icon={ShoppingCart}
               label="Orders"
@@ -789,7 +755,6 @@ function AppContent() {
                 if (user) {
                   setCurrentView('orders');
                 } else {
-                  // 👇 Set the custom message & hide signup
                   setLoginProps({
                     message: "If you want to see your order history please signin",
                     hideSignup: true
@@ -799,21 +764,23 @@ function AppContent() {
               }}
             />
 
-            {/* Profile Button - Normal Login (Allows Signup) */}
             <NavButton
               icon={User}
               label="Profile"
               active={currentView === 'profile'}
               onClick={() => {
-                if (user) setCurrentView('profile');
-                else setCurrentView('login');
+                if (user) {
+                  setCurrentView('profile');
+                } else {
+                  setLoginProps({}); // Reset Props
+                  setCurrentView('login');
+                }
               }}
             />
           </div>
         </div>
       </nav>
 
-      {/* Product Detail Modal */}
       {selectedProduct && (
         <ProductDetail
           product={selectedProduct}
@@ -822,7 +789,6 @@ function AppContent() {
         />
       )}
 
-      {/* Advanced Checkout Modal */}
       {showCheckout && (
         <AdvancedCheckout
           cart={cart}
@@ -834,7 +800,6 @@ function AppContent() {
         />
       )}
 
-      {/* Comparison Modal */}
       {showComparison && (
         <ProductComparison onClose={() => setShowComparison(false)} />
       )}
@@ -880,13 +845,11 @@ function ProductCard({ product, onAddToCart, onViewDetails }) {
 
   return (
     <div className="w-full bg-white rounded-lg sm:rounded-xl shadow-sm hover:shadow-md active:shadow-sm transition-all overflow-hidden touch-manipulation">
-      {/* Image Section */}
       <div
         className="relative bg-gradient-to-br from-gray-50 to-gray-100 cursor-pointer"
         style={{ aspectRatio: '4 / 3' }}
         onClick={onViewDetails}
       >
-        {/* Stock Badge */}
         <div className="absolute top-1.5 left-1.5 sm:top-2 sm:left-2 z-10">
           <span className={`text-[9px] sm:text-[10px] font-bold px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full ${product.stock_status === 'in-stock'
             ? 'bg-green-600 text-white'
@@ -896,7 +859,6 @@ function ProductCard({ product, onAddToCart, onViewDetails }) {
           </span>
         </div>
 
-        {/* Product Image */}
         {product.image ? (
           <img
             src={product.image}
@@ -910,7 +872,6 @@ function ProductCard({ product, onAddToCart, onViewDetails }) {
           </div>
         )}
 
-        {/* Compare Button */}
         <button
           onClick={(e) => {
             e.stopPropagation();
@@ -920,13 +881,10 @@ function ProductCard({ product, onAddToCart, onViewDetails }) {
             ? 'bg-emerald-100 border-2 border-emerald-600'
             : 'bg-white'
             }`}
-          aria-label={isInCompareList ? "Remove from Compare" : "Add to Compare"}
-          title={isInCompareList ? "Remove from Compare" : "Add to Compare"}
         >
           <GitCompare className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${isInCompareList ? 'text-emerald-600' : 'text-gray-600'}`} />
         </button>
 
-        {/* ADD Button / Quantity Controls */}
         <div className="absolute bottom-1.5 right-1.5 sm:bottom-2 sm:right-2 z-10">
           {!isInCart ? (
             <button
@@ -966,9 +924,7 @@ function ProductCard({ product, onAddToCart, onViewDetails }) {
         </div>
       </div>
 
-      {/* Product Details */}
       <div className="p-2 sm:p-3">
-        {/* Price Row */}
         <div className="flex items-center gap-1.5 sm:gap-2 mb-1">
           <div className="bg-emerald-600 text-white px-2 sm:px-2.5 py-0.5 sm:py-1 rounded">
             <span className="text-xs sm:text-sm font-bold">₹{Math.round(product.base_price)}</span>
@@ -978,14 +934,12 @@ function ProductCard({ product, onAddToCart, onViewDetails }) {
           </span>
         </div>
 
-        {/* Discount Badge */}
         {discountPercent > 0 && (
           <div className="text-[10px] sm:text-[11px] text-gray-600 mb-1.5 sm:mb-2 font-semibold">
             {discountPercent}% OFF
           </div>
         )}
 
-        {/* Product Name */}
         <h3
           onClick={onViewDetails}
           className="text-xs sm:text-sm font-semibold text-gray-900 line-clamp-2 min-h-[32px] sm:min-h-[36px] mb-1 cursor-pointer hover:text-emerald-600 active:text-emerald-700 transition-colors"
@@ -993,17 +947,14 @@ function ProductCard({ product, onAddToCart, onViewDetails }) {
           {product.name}
         </h3>
 
-        {/* SKU */}
         <p className="text-[10px] sm:text-[11px] text-gray-500 mb-0.5 sm:mb-1">
           SKU: <span className="font-medium text-gray-700">{product.sku}</span>
         </p>
 
-        {/* Pack Info */}
         <p className="text-[10px] sm:text-[11px] text-gray-600 mb-0.5 sm:mb-1">
           1 pack ({product.moq} {product.unit || 'ml'})
         </p>
 
-        {/* MOQ & Case */}
         <p className="text-[10px] sm:text-[11px] text-gray-600">
           <span className="font-semibold text-emerald-600">MOQ: {product.moq}</span>
           {' • '}
@@ -1046,7 +997,6 @@ function EstimateView({ cart, removeFromCart, updateQuantity, subtotal, cgst, sg
         {cart.items.map((item, idx) => {
           return (
             <div key={item.id} className={`p-3 sm:p-4 flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 ${idx !== cart.items.length - 1 ? 'border-b border-gray-200' : ''}`}>
-              {/* Product Image and Info */}
               <div className="flex items-center gap-3 sm:gap-4 flex-1 w-full sm:w-auto">
                 <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden">
                   {item.product?.image ? (
@@ -1071,14 +1021,12 @@ function EstimateView({ cart, removeFromCart, updateQuantity, subtotal, cgst, sg
                 </div>
               </div>
 
-              {/* Quantity Controls */}
               <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto justify-between sm:justify-start">
                 <div className="flex items-center gap-2 bg-gray-50 rounded-lg p-1">
                   <button
                     onClick={() => handleDecrease(item.product, item.quantity)}
                     className="p-2 hover:bg-gray-100 active:bg-gray-200 rounded-lg transition-colors touch-manipulation min-w-[40px] min-h-[40px] flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
                     disabled={item.quantity <= item.product.moq}
-                    aria-label="Decrease quantity"
                   >
                     <Minus className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600" />
                   </button>
@@ -1088,7 +1036,6 @@ function EstimateView({ cart, removeFromCart, updateQuantity, subtotal, cgst, sg
                   <button
                     onClick={() => handleIncrease(item.product, item.quantity)}
                     className="p-2 hover:bg-gray-100 active:bg-gray-200 rounded-lg transition-colors touch-manipulation min-w-[40px] min-h-[40px] flex items-center justify-center"
-                    aria-label="Increase quantity"
                   >
                     <Plus className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600" />
                   </button>
@@ -1142,7 +1089,7 @@ function EstimateView({ cart, removeFromCart, updateQuantity, subtotal, cgst, sg
   );
 }
 
-// Profile View Component (CONNECTED TO REAL DATA)
+// Profile View Component
 function ProfileView({ user, onLogout }) {
   if (!user) return null;
 
@@ -1151,7 +1098,6 @@ function ProfileView({ user, onLogout }) {
       <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-4 sm:mb-6">My Profile</h2>
 
       <div className="bg-white rounded-lg sm:rounded-xl shadow-md overflow-hidden">
-        {/* Profile Header */}
         <div className="bg-gradient-to-r from-emerald-500 to-emerald-600 p-6 sm:p-8">
           <div className="flex items-center gap-4 sm:gap-6">
             <div className="w-16 h-16 sm:w-20 sm:h-20 bg-white rounded-full flex items-center justify-center shadow-lg text-emerald-600 font-bold text-2xl">
@@ -1169,7 +1115,6 @@ function ProfileView({ user, onLogout }) {
           </div>
         </div>
 
-        {/* Profile Details */}
         <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
           <div>
             <h4 className="text-base sm:text-lg font-bold text-gray-800 mb-3 sm:mb-4 flex items-center gap-2">
@@ -1221,7 +1166,6 @@ function NavButton({ icon: Icon, label, active, onClick, badge }) {
       onClick={onClick}
       className={`flex flex-col items-center justify-center py-1.5 sm:py-2 px-2 sm:px-3 rounded-lg transition-colors relative touch-manipulation min-w-[60px] min-h-[60px] sm:min-h-[auto] active:bg-gray-100 ${active ? 'text-emerald-600' : 'text-gray-600'
         }`}
-      aria-label={label}
     >
       <div className="relative">
         <Icon className="w-5 h-5 sm:w-6 sm:h-6 mb-0.5 sm:mb-1" />
