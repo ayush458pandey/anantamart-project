@@ -178,12 +178,10 @@ if not DEBUG:
     SESSION_COOKIE_SAMESITE = 'None'
     CSRF_COOKIE_SAMESITE = 'None'
 
-# 👇 ADD THIS AT THE BOTTOM OF SETTINGS.PY
-REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
-    ),
-    'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.AllowAny',
-    ],
-}    
+# --- RAZORPAY PAYMENT GATEWAY CONFIGURATION ---
+RAZORPAY_KEY_ID = os.environ.get('RAZORPAY_KEY_ID', '')
+RAZORPAY_KEY_SECRET = os.environ.get('RAZORPAY_KEY_SECRET', '')
+
+# For testing locally, you can use test keys:
+# RAZORPAY_KEY_ID = 'rzp_test_xxxxxxxxxx'
+# RAZORPAY_KEY_SECRET = 'xxxxxxxxxxxxx'    

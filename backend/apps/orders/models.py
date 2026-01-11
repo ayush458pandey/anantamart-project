@@ -21,6 +21,12 @@ class Order(models.Model):
         ('advance', 'Advance Payment'),
     ]
     
+    PAYMENT_STATUS_CHOICES = [
+        ('Pending', 'Pending'),
+        ('Paid', 'Paid'),
+        ('Failed', 'Failed'),
+    ]
+    
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='orders')
     order_number = models.CharField(max_length=50, unique=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
@@ -40,7 +46,8 @@ class Order(models.Model):
     
     # Payment
     payment_method = models.CharField(max_length=50, choices=PAYMENT_CHOICES)
-    payment_status = models.CharField(max_length=20, default='pending')
+    payment_status = models.CharField(max_length=20, choices=PAYMENT_STATUS_CHOICES, default='Pending')
+    transaction_id = models.CharField(max_length=255, null=True, blank=True)  # 🆕 NEW FIELD
     
     # Tracking
     tracking_number = models.CharField(max_length=100, blank=True)
