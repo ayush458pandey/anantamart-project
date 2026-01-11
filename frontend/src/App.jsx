@@ -28,6 +28,8 @@ const getCategoryIcon = (category) => {
 
   const iconName = category.icon?.toLowerCase() || '';
   const categoryName = category.name?.toLowerCase() || '';
+  const { cart, addToCart, removeFromCart, updateQuantity, clearCart } = useCart();
+  const { compareList } = useComparison();
 
   const iconMap = {
     'package': Package,
@@ -344,10 +346,22 @@ function AppContent() {
   }, []);
 
   const handleLogout = () => {
+    // A. Remove the Keys
     localStorage.removeItem('access_token');
     localStorage.removeItem('refresh_token');
+
+    // B. Wipe User Data
     setUser(null);
+
+    // C. Wipe Cart Data (If your Context supports it)
+    if (clearCart) clearCart();
+
+    // D. Force View back to Catalog
     setCurrentView('catalog');
+
+    // E. Clear any selected sensitive data
+    setSelectedProduct(null);
+    setShowCheckout(false);
   };
 
   // Fetch subcategories when category changes
