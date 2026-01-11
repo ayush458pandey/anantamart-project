@@ -1,53 +1,49 @@
-from rest_framework import viewsets, status
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework import serializers
 from django.contrib.auth.models import User
 from .models import Address
-from .serializers import AddressSerializer, UserSerializer, RegisterSerializer
 
-# Address ViewSet (already exists)
-class AddressViewSet(viewsets.ModelViewSet):
-    serializer_class = AddressSerializer
-    permission_classes = [IsAuthenticated]
-    
-    def get_queryset(self):
-        return Address.objects.filter(user=self.request.user)
-    
-    def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
+# Remove this line if it exists:
+# from .serializers import AddressSerializer, UserSerializer, RegisterSerializer
+
+class AddressSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Address
+        fields = ['id', 'name', 'phone_number', 'street_address', 'city', 
+                  'state', 'pincode', 'address_type', 'is_default']
+        read_only_fields = ['id']
 
 
-# Register View
-class RegisterView(APIView):
-    permission_classes = [AllowAny]
-    
-    def post(self, request):
-        serializer = RegisterSerializer(data=request.data)
-        if serializer.is_valid():
-            user = serializer.save()
-            return Response({
-                'user': {
-                    'id': user.id,
-                    'username': user.username,
-                    'email': user.email,
-                },
-                'message': 'User registered successfully'
-            }, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['id', 'username', 'email', 'first_name', 'last_name']
+        read_only_fields = ['id']
 
 
-# Profile View
-class ProfileView(APIView):
-    permission_classes = [IsAuthenticated]
+class RegisterSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(write_only=True, min_length=8)
+    password2 = serializers.CharField(write_only=True, min_length=8)
     
-    def get(self, request):
-        serializer = UserSerializer(request.user)
-        return Response(serializer.data)
+    class Meta:
+        model = User
+        fields = ['username', 'email', 'password', 'password2', 'first_name', 'last_name']
     
-    def put(self, request):
-        serializer = UserSerializer(request.user, data=request.data, partial=True)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    def validate(self, data):
+        if data['password'] != data['password2']:
+            raise serializers.ValidationError("Passwords don't match")
+        
+        if User.objects.filter(email=data['email']).exists():
+            raise serializers.ValidationError("Email already exists")
+        
+        return data
+    
+    def create(self, validated_data):
+        validated_data.pop('password2')
+        user = User.objects.create_user(
+            username=validated_data['username'],
+            email=validated_data['email'],
+            password=validated_data['password'],
+            first_name=validated_data.get('first_name', ''),
+            last_name=validated_data.get('last_name', '')
+        )
+        return user
