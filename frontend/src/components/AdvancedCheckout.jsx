@@ -100,7 +100,6 @@ export default function AdvancedCheckout({ cart, onClose, onPlaceOrder }) {
     try {
       const data = await addressService.getAddresses();
       setAddresses(data);
-      // Select the default address automatically
       const defaultAddr = data.find(a => a.is_default) || data[0];
       if (defaultAddr) setSelectedAddress(defaultAddr.id);
     } catch (err) {
@@ -130,7 +129,7 @@ export default function AdvancedCheckout({ cart, onClose, onPlaceOrder }) {
   const deliveryCharges = subtotal > 5000 ? 0 : deliveryCost;
   const total = subtotalAfterDiscount + cgst + sgst + deliveryCharges;
 
-  // The Actual Order Placement Logic
+  // Place Final Order Function
   const placeFinalOrder = async (addressObj, paymentStatus, paymentDetails = {}) => {
     try {
       setIsProcessing(true);
@@ -155,7 +154,6 @@ export default function AdvancedCheckout({ cart, onClose, onPlaceOrder }) {
 
       const createdOrder = await orderService.createOrder(orderPayload);
 
-      // Success! Show confirmation
       setCompletedOrder({
         ...createdOrder,
         delivery_address: addressObj,
@@ -169,6 +167,7 @@ export default function AdvancedCheckout({ cart, onClose, onPlaceOrder }) {
     }
   };
 
+  // Handle Place Order
   const handlePlaceOrder = async () => {
     if (!selectedPayment || !selectedAddress) {
       alert('Please select a payment method and address');
