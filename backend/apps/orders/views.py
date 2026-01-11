@@ -79,7 +79,7 @@ class OrderViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(order)
         return Response(serializer.data)
 
-    @api_view(['POST'])
+@api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def create_payment_order(request):
     try:
