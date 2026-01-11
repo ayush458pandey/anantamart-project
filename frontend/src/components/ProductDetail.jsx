@@ -5,17 +5,56 @@ export default function ProductDetail({ product, onClose, onAddToCart }) {
   const [quantity, setQuantity] = useState(product.moq || 1);
   const [selectedImage, setSelectedImage] = useState(0);
 
-  const images = product.images?.length > 0 
+  const images = product.images?.length > 0
     ? product.images.map(img => img.image_url || img.image)
-    : product.image 
-    ? [product.image] 
-    : [];
+    : product.image
+      ? [product.image]
+      : [];
 
   const discount = Math.round(((product.mrp - product.base_price) / product.mrp) * 100);
 
-  const handleAddToCart = () => {
-    onAddToCart(product.id, quantity);
-    alert(`Added ${quantity} units to cart!`);
+  // --- NEW HANDLE ADD TO CART ---
+  const handleAddToCart = async () => {
+    try {
+      // 1. Get the Login Token (if user is logged in)
+      const token = localStorage.getItem('access_token');
+
+      // 2. Prepare Headers (Attach the ID card if we have it)
+      const headers = {
+        'Content-Type': 'application/json',
+      };
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
+      // 3. Send Request to Backend
+      // ⚠️ IMPORTANT: Verify this URL matches your backend/apps/cart/urls.py
+      const response = await fetch('https://api.ananta-mart.in/api/cart/add/', {
+        method: 'POST',
+        headers: headers,
+        body: JSON.stringify({
+          product_id: product.id,
+          quantity: quantity
+        })
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        // Success!
+        alert(`✅ Added ${quantity} units to cart!`);
+        if (onAddToCart) onAddToCart(data); // Update parent state if needed
+        onClose(); // Close the modal
+      } else {
+        // Error from Backend
+        console.error("Cart Error:", data);
+        alert(`❌ Failed to add: ${data.error || 'Unknown error'}`);
+      }
+
+    } catch (error) {
+      console.error("Network Error:", error);
+      alert("❌ Could not connect to the server.");
+    }
   };
 
   return (
@@ -54,9 +93,8 @@ export default function ProductDetail({ product, onClose, onAddToCart }) {
                       <button
                         key={idx}
                         onClick={() => setSelectedImage(idx)}
-                        className={`flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-all ${
-                          selectedImage === idx ? 'border-emerald-600' : 'border-gray-200'
-                        }`}
+                        className={`flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-all ${selectedImage === idx ? 'border-emerald-600' : 'border-gray-200'
+                          }`}
                       >
                         <img src={img} alt="" className="w-full h-full object-cover" />
                       </button>
@@ -69,7 +107,7 @@ export default function ProductDetail({ product, onClose, onAddToCart }) {
               <div>
                 {/* Product Name */}
                 <h1 className="text-2xl font-bold text-gray-900 mb-2">{product.name}</h1>
-                
+
                 {/* Brand & Category */}
                 <div className="flex items-center gap-3 mb-4">
                   {product.brand && (
@@ -105,11 +143,10 @@ export default function ProductDetail({ product, onClose, onAddToCart }) {
 
                 {/* Stock Status */}
                 <div className="flex items-center gap-4 mb-6">
-                  <span className={`px-4 py-2 rounded-full text-sm font-bold ${
-                    product.stock_status === 'in-stock' 
-                      ? 'bg-green-100 text-green-700' 
-                      : 'bg-orange-100 text-orange-700'
-                  }`}>
+                  <span className={`px-4 py-2 rounded-full text-sm font-bold ${product.stock_status === 'in-stock'
+                    ? 'bg-green-100 text-green-700'
+                    : 'bg-orange-100 text-orange-700'
+                    }`}>
                     {product.stock_status === 'in-stock' ? '✓ In Stock' : '⚠ Low Stock'}
                   </span>
                   <span className="text-sm text-gray-600">SKU: {product.sku}</span>
@@ -179,7 +216,7 @@ export default function ProductDetail({ product, onClose, onAddToCart }) {
             {/* Product Details Table */}
             <div className="mt-8 border-t pt-8">
               <h3 className="text-xl font-bold text-gray-900 mb-6">Product Information</h3>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
                 {product.brand && <DetailRow label="Brand" value={product.brand} />}
                 {product.product_type && <DetailRow label="Product Type" value={product.product_type} />}
