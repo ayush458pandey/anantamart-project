@@ -82,26 +82,30 @@ function LoginView({ onLogin, onCancel }) {
     // Define the URL based on mode (Login vs Signup)
     const url = isLogin
       ? 'https://api.ananta-mart.in/api/token/'
-      : 'https://api.ananta-mart.in/api/user/register/'; // We need to build this next!
+      : 'https://api.ananta-mart.in/api/user/register/';
 
     try {
+      // 👇 FIX: If logging in, send 'email' as 'username'
+      const payload = isLogin
+        ? { username: formData.email, password: formData.password }
+        : formData;
+
       // 1. Send Request
       const response = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
+        body: JSON.stringify(payload) // <--- Use the new payload here
       });
 
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(JSON.stringify(data) || 'Authentication failed');
+        // Handle specific error messages
+        throw new Error(JSON.stringify(data));
       }
 
       // 2. If Signup was successful, automatically log them in
       if (!isLogin) {
-        // Automatically switch to login flow or just grab the token if your API returns it
-        // For now, let's just alert success and switch to login
         setIsLogin(true);
         setLoading(false);
         alert("Account created! Please sign in.");
@@ -123,10 +127,17 @@ function LoginView({ onLogin, onCancel }) {
 
     } catch (err) {
       console.error(err);
-      // Clean up error message
-      let msg = err.message;
-      if (msg.includes('detail')) msg = "Invalid credentials";
-      if (msg.includes('email')) msg = "Email already exists or is invalid";
+      let msg = 'Authentication failed';
+      // Try to parse the error message nicely
+      try {
+        const errObj = JSON.parse(err.message);
+        if (errObj.username) msg = "Please enter a valid email/username.";
+        if (errObj.detail) msg = errObj.detail;
+      } catch (e) {
+        msg = err.message;
+      }
+
+      if (msg.includes('401')) msg = "Incorrect password or email.";
       setError(msg);
     } finally {
       setLoading(false);
