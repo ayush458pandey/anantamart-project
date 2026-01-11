@@ -1,10 +1,12 @@
-import { useState } from 'react';
-import { 
-  X, CreditCard, Smartphone, Building2, FileText, Wallet, 
-  CheckCircle, MapPin, Truck, Calendar, Package, AlertCircle 
+import { useState, useEffect } from 'react';
+import {
+  X, CreditCard, Smartphone, Building2, FileText, Wallet,
+  CheckCircle, MapPin, Truck, Package, AlertCircle, Plus, Loader
 } from 'lucide-react';
 import InvoiceGenerator from './InvoiceGenerator';
+import AddressForm from './AddressForm'; // 👈 NEW
 import { orderService } from '../api/services/orderService';
+import { addressService } from '../api/services/addressService'; // 👈 NEW
 
 const paymentMethods = [
   {
@@ -75,42 +77,60 @@ const deliveryOptions = [
   }
 ];
 
-const savedAddresses = [
-  {
-    id: 1,
-    type: 'Warehouse',
-    name: 'Main Warehouse',
-    address: '123 Industrial Area, Sector 5, Mumbai, Maharashtra - 400001',
-    gstin: '27XXXXX1234X1ZX'
-  },
-  {
-    id: 2,
-    type: 'Office',
-    name: 'Head Office',
-    address: '45 Business Park, Bandra East, Mumbai, Maharashtra - 400051',
-    gstin: '27XXXXX1234X1ZX'
-  }
-];
-
 export default function AdvancedCheckout({ cart, onClose, onPlaceOrder }) {
   const [step, setStep] = useState(1);
   const [selectedPayment, setSelectedPayment] = useState(null);
   const [selectedDelivery, setSelectedDelivery] = useState('standard');
-  const [selectedAddress, setSelectedAddress] = useState(savedAddresses[0]);
+
+  // 🆕 Real Address State
+  const [addresses, setAddresses] = useState([]);
+  const [selectedAddress, setSelectedAddress] = useState(null);
+  const [showAddressForm, setShowAddressForm] = useState(false);
+  const [loadingAddresses, setLoadingAddresses] = useState(true);
+
   const [scheduledDate, setScheduledDate] = useState('');
   const [orderPlaced, setOrderPlaced] = useState(false);
   const [showInvoice, setShowInvoice] = useState(false);
   const [completedOrder, setCompletedOrder] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
 
+  // 🆕 Load Addresses on Mount
+  useEffect(() => {
+    loadAddresses();
+  }, []);
+
+  const loadAddresses = async () => {
+    try {
+      const data = await addressService.getAddresses();
+      setAddresses(data);
+      // Select the default address automatically
+      const defaultAddr = data.find(a => a.is_default) || data[0];
+      if (defaultAddr) setSelectedAddress(defaultAddr.id);
+    } catch (err) {
+      console.error("Failed to load addresses", err);
+    } finally {
+      setLoadingAddresses(false);
+    }
+  };
+
+  const handleSaveAddress = async (newAddressData) => {
+    try {
+      await addressService.addAddress(newAddressData);
+      await loadAddresses(); // Reload list
+      setShowAddressForm(false); // Close modal
+    } catch (err) {
+      alert("Error saving address: " + err.message);
+    }
+  };
+
   // Calculate pricing
   const subtotal = cart?.items?.reduce((sum, item) => sum + parseFloat(item.total_price), 0) || 0;
   const deliveryCost = deliveryOptions.find(d => d.id === selectedDelivery)?.cost || 0;
-  const discount = subtotal > 10000 ? subtotal * 0.1 : 0; // 10% discount on orders > ₹10,000
+  const discount = subtotal > 10000 ? subtotal * 0.1 : 0;
   const subtotalAfterDiscount = subtotal - discount;
   const cgst = subtotalAfterDiscount * 0.09;
   const sgst = subtotalAfterDiscount * 0.09;
-  const deliveryCharges = subtotal > 5000 ? 0 : deliveryCost; // Free delivery on orders > ₹5,000
+  const deliveryCharges = subtotal > 5000 ? 0 : deliveryCost;
   const total = subtotalAfterDiscount + cgst + sgst + deliveryCharges;
 
   const handlePlaceOrder = async () => {
@@ -118,10 +138,17 @@ export default function AdvancedCheckout({ cart, onClose, onPlaceOrder }) {
       alert('Please select a payment method');
       return;
     }
-    
+    if (!selectedAddress) {
+      alert('Please select a delivery address');
+      return;
+    }
+
     try {
       setIsProcessing(true);
-      
+
+      // Find the full address object
+      const addressObj = addresses.find(a => a.id === selectedAddress);
+
       // Prepare order data for backend
       const orderPayload = {
         items: cart.items.map(item => ({
@@ -130,7 +157,8 @@ export default function AdvancedCheckout({ cart, onClose, onPlaceOrder }) {
         })),
         payment_method: selectedPayment,
         delivery_option: deliveryOptions.find(d => d.id === selectedDelivery)?.name,
-        delivery_address: `${selectedAddress.name}, ${selectedAddress.address}`,
+        // Send simplified address string to backend order note (or handle structured address if backend supports it)
+        delivery_address: `${addressObj.name}, ${addressObj.street_address}, ${addressObj.city} - ${addressObj.pincode}`,
         scheduled_date: scheduledDate || null,
         subtotal: subtotal,
         discount: discount,
@@ -142,9 +170,9 @@ export default function AdvancedCheckout({ cart, onClose, onPlaceOrder }) {
 
       // Create order in backend
       const createdOrder = await orderService.createOrder(orderPayload);
-      
+
       console.log('Order created:', createdOrder);
-      
+
       // Prepare order data for display
       const orderData = {
         order_id: createdOrder.id,
@@ -152,7 +180,7 @@ export default function AdvancedCheckout({ cart, onClose, onPlaceOrder }) {
         items: cart.items,
         payment_method: paymentMethods.find(m => m.id === selectedPayment)?.name,
         delivery_option: deliveryOptions.find(d => d.id === selectedDelivery)?.name,
-        delivery_address: selectedAddress,
+        delivery_address: addressObj,
         scheduled_date: scheduledDate,
         pricing: {
           subtotal,
@@ -166,10 +194,7 @@ export default function AdvancedCheckout({ cart, onClose, onPlaceOrder }) {
 
       setCompletedOrder(orderData);
       setOrderPlaced(true);
-      
-      // Optionally clear cart
-      // await cartService.clearCart();
-      
+
     } catch (error) {
       console.error('Error placing order:', error);
       alert('Failed to place order. Please try again.');
@@ -182,7 +207,7 @@ export default function AdvancedCheckout({ cart, onClose, onPlaceOrder }) {
     return (
       <>
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl max-w-md w-full p-8 text-center">
+          <div className="bg-white rounded-xl max-w-md w-full p-8 text-center animate-scale-in">
             <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <CheckCircle className="w-12 h-12 text-green-600" />
             </div>
@@ -196,7 +221,7 @@ export default function AdvancedCheckout({ cart, onClose, onPlaceOrder }) {
             <p className="text-sm text-gray-600 mb-6">
               You will receive order confirmation via email and SMS shortly.
             </p>
-            
+
             <div className="flex gap-3">
               <button
                 onClick={() => setShowInvoice(true)}
@@ -231,9 +256,9 @@ export default function AdvancedCheckout({ cart, onClose, onPlaceOrder }) {
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 overflow-y-auto">
       <div className="min-h-screen p-4 flex items-center justify-center">
-        <div className="bg-white rounded-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="bg-white rounded-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto flex flex-col">
           {/* Header */}
-          <div className="sticky top-0 bg-white border-b p-4 flex items-center justify-between z-10">
+          <div className="sticky top-0 bg-white border-b p-4 flex items-center justify-between z-10 rounded-t-xl">
             <div>
               <h2 className="text-2xl font-bold">Checkout</h2>
               <p className="text-sm text-gray-600">Complete your order</p>
@@ -258,51 +283,73 @@ export default function AdvancedCheckout({ cart, onClose, onPlaceOrder }) {
               <div className="space-y-6">
                 {/* Delivery Address */}
                 <div>
-                  <h3 className="text-lg font-bold mb-3 flex items-center gap-2">
-                    <MapPin className="w-5 h-5 text-emerald-600" />
-                    Delivery Address
-                  </h3>
-                  <div className="space-y-3">
-                    {savedAddresses.map((address) => (
-                      <label
-                        key={address.id}
-                        className={`block p-4 border-2 rounded-lg cursor-pointer transition-all ${
-                          selectedAddress?.id === address.id
-                            ? 'border-emerald-600 bg-emerald-50'
-                            : 'border-gray-200 hover:border-emerald-300'
-                        }`}
-                      >
-                        <input
-                          type="radio"
-                          name="address"
-                          checked={selectedAddress?.id === address.id}
-                          onChange={() => setSelectedAddress(address)}
-                          className="hidden"
-                        />
-                        <div className="flex items-start gap-3">
-                          <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 mt-0.5 ${
-                            selectedAddress?.id === address.id
-                              ? 'border-emerald-600 bg-emerald-600'
-                              : 'border-gray-300'
-                          }`}>
-                            {selectedAddress?.id === address.id && (
-                              <div className="w-2 h-2 bg-white rounded-full"></div>
-                            )}
-                          </div>
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-1">
-                              <span className="font-bold text-gray-800">{address.name}</span>
-                              <span className="text-xs bg-gray-100 px-2 py-1 rounded-full text-gray-600">
-                                {address.type}
-                              </span>
-                            </div>
-                            <p className="text-sm text-gray-600 mb-1">{address.address}</p>
-                            <p className="text-xs text-gray-500">GSTIN: {address.gstin}</p>
-                          </div>
-                        </div>
-                      </label>
-                    ))}
+                  <div className="flex justify-between items-center mb-3">
+                    <h3 className="text-lg font-bold flex items-center gap-2">
+                      <MapPin className="w-5 h-5 text-emerald-600" />
+                      Delivery Address
+                    </h3>
+                    <button
+                      onClick={() => setShowAddressForm(true)}
+                      className="text-sm text-emerald-600 font-bold flex items-center gap-1 hover:bg-emerald-50 px-3 py-1.5 rounded-lg transition-colors"
+                    >
+                      <Plus className="w-4 h-4" /> Add New
+                    </button>
                   </div>
+
+                  {loadingAddresses ? (
+                    <div className="flex items-center justify-center py-8 text-gray-500">
+                      <Loader className="w-5 h-5 animate-spin mr-2" /> Loading addresses...
+                    </div>
+                  ) : addresses.length === 0 ? (
+                    <div className="text-center py-8 bg-gray-50 rounded-xl border border-dashed border-gray-300">
+                      <p className="text-gray-500 mb-2">No addresses found.</p>
+                      <button onClick={() => setShowAddressForm(true)} className="text-emerald-600 font-bold hover:underline">
+                        Add your first address
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {addresses.map((address) => (
+                        <label
+                          key={address.id}
+                          className={`block p-4 border-2 rounded-lg cursor-pointer transition-all ${selectedAddress === address.id
+                              ? 'border-emerald-600 bg-emerald-50'
+                              : 'border-gray-200 hover:border-emerald-300'
+                            }`}
+                        >
+                          <input
+                            type="radio"
+                            name="address"
+                            checked={selectedAddress === address.id}
+                            onChange={() => setSelectedAddress(address.id)}
+                            className="hidden"
+                          />
+                          <div className="flex items-start gap-3">
+                            <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 mt-0.5 ${selectedAddress === address.id
+                                ? 'border-emerald-600 bg-emerald-600'
+                                : 'border-gray-300'
+                              }`}>
+                              {selectedAddress === address.id && (
+                                <div className="w-2 h-2 bg-white rounded-full"></div>
+                              )}
+                            </div>
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-1">
+                                <span className="font-bold text-gray-800">{address.name}</span>
+                                <span className="text-xs bg-gray-100 px-2 py-1 rounded-full text-gray-600 uppercase">
+                                  {address.address_type}
+                                </span>
+                              </div>
+                              <p className="text-sm text-gray-600 mb-1">
+                                {address.street_address}, {address.city}, {address.state} - {address.pincode}
+                              </p>
+                              <p className="text-xs text-gray-500">Phone: {address.phone_number}</p>
+                            </div>
+                          </div>
+                        </label>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 {/* Delivery Options */}
@@ -315,11 +362,10 @@ export default function AdvancedCheckout({ cart, onClose, onPlaceOrder }) {
                     {deliveryOptions.map((option) => (
                       <label
                         key={option.id}
-                        className={`block p-4 border-2 rounded-lg cursor-pointer transition-all ${
-                          selectedDelivery === option.id
+                        className={`block p-4 border-2 rounded-lg cursor-pointer transition-all ${selectedDelivery === option.id
                             ? 'border-emerald-600 bg-emerald-50'
                             : 'border-gray-200 hover:border-emerald-300'
-                        }`}
+                          }`}
                       >
                         <input
                           type="radio"
@@ -379,11 +425,10 @@ export default function AdvancedCheckout({ cart, onClose, onPlaceOrder }) {
                     return (
                       <label
                         key={method.id}
-                        className={`block p-4 border-2 rounded-lg cursor-pointer transition-all ${
-                          selectedPayment === method.id
+                        className={`block p-4 border-2 rounded-lg cursor-pointer transition-all ${selectedPayment === method.id
                             ? 'border-emerald-600 bg-emerald-50'
                             : 'border-gray-200 hover:border-emerald-300'
-                        }`}
+                          }`}
                       >
                         <input
                           type="radio"
@@ -393,22 +438,20 @@ export default function AdvancedCheckout({ cart, onClose, onPlaceOrder }) {
                           className="hidden"
                         />
                         <div className="flex items-start gap-3">
-                          <div className={`p-3 rounded-lg ${
-                            selectedPayment === method.id
+                          <div className={`p-3 rounded-lg ${selectedPayment === method.id
                               ? 'bg-emerald-600 text-white'
                               : 'bg-gray-100 text-gray-600'
-                          }`}>
+                            }`}>
                             <Icon className="w-6 h-6" />
                           </div>
                           <div className="flex-1">
                             <div className="font-bold text-gray-800 mb-1">{method.name}</div>
                             <div className="text-sm text-gray-600">{method.description}</div>
                           </div>
-                          <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
-                            selectedPayment === method.id
+                          <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${selectedPayment === method.id
                               ? 'border-emerald-600 bg-emerald-600'
                               : 'border-gray-300'
-                          }`}>
+                            }`}>
                             {selectedPayment === method.id && (
                               <div className="w-2 h-2 bg-white rounded-full"></div>
                             )}
@@ -467,7 +510,7 @@ export default function AdvancedCheckout({ cart, onClose, onPlaceOrder }) {
                       <span className="text-gray-700">Subtotal ({cart.items.length} items):</span>
                       <span className="font-semibold">₹{subtotal.toFixed(2)}</span>
                     </div>
-                    
+
                     {discount > 0 && (
                       <div className="flex justify-between text-green-600">
                         <span>Discount (10% on orders &gt; ₹10,000):</span>
@@ -514,8 +557,12 @@ export default function AdvancedCheckout({ cart, onClose, onPlaceOrder }) {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="bg-gray-50 rounded-lg p-4">
                     <h4 className="font-bold mb-2 text-sm">Delivery Address</h4>
-                    <p className="text-sm text-gray-700">{selectedAddress.name}</p>
-                    <p className="text-xs text-gray-600">{selectedAddress.address}</p>
+                    {selectedAddress && (
+                      <>
+                        <p className="text-sm text-gray-700">{addresses.find(a => a.id === selectedAddress)?.name}</p>
+                        <p className="text-xs text-gray-600">{addresses.find(a => a.id === selectedAddress)?.city}</p>
+                      </>
+                    )}
                   </div>
                   <div className="bg-gray-50 rounded-lg p-4">
                     <h4 className="font-bold mb-2 text-sm">Payment Method</h4>
@@ -559,6 +606,14 @@ export default function AdvancedCheckout({ cart, onClose, onPlaceOrder }) {
           </div>
         </div>
       </div>
+
+      {/* 🆕 Address Form Modal */}
+      {showAddressForm && (
+        <AddressForm
+          onCancel={() => setShowAddressForm(false)}
+          onSave={handleSaveAddress}
+        />
+      )}
     </div>
   );
 }
@@ -570,13 +625,12 @@ function StepIndicator({ step, current, label }) {
 
   return (
     <div className="flex flex-col items-center">
-      <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold transition-all ${
-        isActive
+      <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold transition-all ${isActive
           ? 'bg-emerald-600 text-white'
           : isCompleted
-          ? 'bg-emerald-100 text-emerald-600'
-          : 'bg-gray-200 text-gray-500'
-      }`}>
+            ? 'bg-emerald-100 text-emerald-600'
+            : 'bg-gray-200 text-gray-500'
+        }`}>
         {isCompleted ? <CheckCircle className="w-6 h-6" /> : step}
       </div>
       <span className="text-xs mt-1 font-medium text-gray-600">{label}</span>
