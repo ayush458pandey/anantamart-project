@@ -14,6 +14,7 @@ import ProductDetail from './components/ProductDetail';
 import AdvancedCheckout from './components/AdvancedCheckout';
 import OrdersList from './components/OrdersList';
 import AllBrands from './components/AllBrands';
+import CategoryRail from './components/CategoryRail';
 
 // Custom Components
 import SubcategoryGrid from './components/SubcategoryGrid';
@@ -593,6 +594,22 @@ function AppContent() {
 
         {currentView === 'catalog' && !selectedBrand && (
           <div>
+            {/* 1. Category Rail (Top of Homepage) */}
+            {!selectedSubcategory && (
+              <CategoryRail
+                categories={categories}
+                selectedCategory={selectedCategory}
+                onSelectCategory={(id) => {
+                  setSelectedCategory(id);
+                  setSelectedBrand(null);
+                  setSelectedSubcategory(null);
+                  setShowSubcategoryView(true);
+                  setSearchQuery(''); // Clear search when switching category
+                }}
+              />
+            )}
+
+            {/* 2. Subcategory Navigation (Back Button) */}
             {selectedSubcategory && (
               <button
                 onClick={handleBackToSubcategories}
@@ -603,6 +620,7 @@ function AppContent() {
               </button>
             )}
 
+            {/* 3. Page Title / Subcategory Header */}
             <div className="mb-3 sm:mb-4 px-1">
               {selectedSubcategory && activeSubcategory ? (
                 <div>
@@ -623,6 +641,7 @@ function AppContent() {
               )}
             </div>
 
+            {/* 4. Subcategory Grid (Only if not selected) */}
             {selectedCategory !== 'all' && showSubcategoryView && subcategories.length > 0 && (
               <div className="mb-6">
                 <div className="flex items-center justify-between mb-3 px-1">
@@ -645,15 +664,13 @@ function AppContent() {
               </div>
             )}
 
-            {/* BRAND SECTION - HORIZONTAL SCROLL WITH VIEW ALL */}
+            {/* 5. Brand Horizontal Scroll */}
             {!selectedSubcategory && visibleBrands.length > 0 && (
               <div className="mb-8">
                 <div className="flex items-center justify-between mb-3 px-1">
                   <h3 className="text-base sm:text-lg font-bold text-gray-800">
                     Browse by Brand
                   </h3>
-
-                  {/* The Button to open the full directory */}
                   <button
                     onClick={() => setCurrentView('all-brands')}
                     className="text-xs sm:text-sm font-medium text-emerald-600 hover:text-emerald-700 transition-colors flex items-center gap-1"
@@ -661,8 +678,6 @@ function AppContent() {
                     View All <span className="text-lg">›</span>
                   </button>
                 </div>
-
-                {/* Horizontal Scroll Grid */}
                 <BrandGrid
                   brands={visibleBrands}
                   onBrandClick={(brand) => setSelectedBrand(brand)}
@@ -671,28 +686,26 @@ function AppContent() {
               </div>
             )}
 
+            {/* 6. MAIN PRODUCT DISPLAY (Shelves vs Grid) */}
             {(!showSubcategoryView || selectedCategory === 'all') && (
               <>
-                {/* SCENARIO 1: HOMEPAGE SHELVES (No Search, All Categories) */}
+                {/* SCENARIO A: HOMEPAGE SHELVES (No Search, All Categories) */}
                 {selectedCategory === 'all' && !searchQuery ? (
                   <div className="space-y-10 pb-10">
                     {categories.map((category) => {
-                      // 1. Find products for this specific shelf
+                      const CategoryIcon = getCategoryIcon(category.name);
                       const categoryProducts = products.filter(p =>
                         String(p.category) === String(category.id) ||
                         String(p.category?.id) === String(category.id)
                       );
 
-                      // 2. Hide empty categories
                       if (categoryProducts.length === 0) return null;
 
                       return (
                         <div key={category.id} className="border-b border-gray-100 pb-6 last:border-0">
-                          {/* Shelf Header */}
                           <div className="flex items-center justify-between mb-4 px-1">
                             <h3 className="text-lg sm:text-xl font-bold text-gray-800 flex items-center gap-2">
-                              {/* Try to render icon if available, otherwise just text */}
-                              {getCategoryIcon(category) && React.createElement(getCategoryIcon(category), { className: "w-5 h-5 text-emerald-600" })}
+                              {CategoryIcon && <CategoryIcon className="w-5 h-5 text-emerald-600" />}
                               {category.name}
                             </h3>
                             <button
@@ -706,7 +719,6 @@ function AppContent() {
                             </button>
                           </div>
 
-                          {/* Horizontal Scroll Container (The Shelf) */}
                           <div className="flex overflow-x-auto gap-3 sm:gap-4 pb-4 -mx-3 px-3 scrollbar-hide snap-x">
                             {categoryProducts.slice(0, 8).map((product) => (
                               <div key={product.id} className="flex-shrink-0 w-[160px] sm:w-[200px] snap-start">
@@ -717,8 +729,6 @@ function AppContent() {
                                 />
                               </div>
                             ))}
-
-                            {/* "See More" Card at end of scroll */}
                             {categoryProducts.length > 8 && (
                               <div className="flex-shrink-0 w-[100px] sm:w-[120px] flex items-center justify-center snap-start">
                                 <button
@@ -739,9 +749,14 @@ function AppContent() {
                         </div>
                       );
                     })}
+                    {products.length === 0 && (
+                      <div className="text-center py-12">
+                        <p className="text-gray-500">No products found.</p>
+                      </div>
+                    )}
                   </div>
                 ) : (
-                  /* SCENARIO 2: STANDARD GRID (Search Results or Specific Category) */
+                  /* SCENARIO B: STANDARD GRID (Search Results or Specific Category) */
                   <>
                     <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2.5 sm:gap-3 md:gap-4 pb-4">
                       {filteredProducts.map((product) => (
@@ -791,16 +806,15 @@ function AppContent() {
 
         {currentView === 'orders' && <OrdersList />}
 
-        {/* NEW: Full Brand Directory View */}
+        {currentView === 'profile' && <ProfileView user={user} onLogout={handleLogout} />}
+
         {currentView === 'all-brands' && (
           <AllBrands
-            brands={brands} // Pass the full list
+            brands={brands}
             onBrandClick={(brand) => setSelectedBrand(brand)}
             onBack={() => setCurrentView('catalog')}
           />
         )}
-
-        {currentView === 'profile' && <ProfileView user={user} onLogout={handleLogout} />}
 
         {selectedBrand && (
           <BrandPage
@@ -878,29 +892,35 @@ function AppContent() {
         </div>
       </nav>
 
-      {selectedProduct && (
-        <ProductDetail
-          product={selectedProduct}
-          onClose={() => setSelectedProduct(null)}
-          onAddToCart={addToCart}
-        />
-      )}
+      {
+        selectedProduct && (
+          <ProductDetail
+            product={selectedProduct}
+            onClose={() => setSelectedProduct(null)}
+            onAddToCart={addToCart}
+          />
+        )
+      }
 
-      {showCheckout && (
-        <AdvancedCheckout
-          cart={cart}
-          onClose={() => setShowCheckout(false)}
-          onPlaceOrder={(orderData) => {
-            console.log('Order placed:', orderData);
-            setShowCheckout(false);
-          }}
-        />
-      )}
+      {
+        showCheckout && (
+          <AdvancedCheckout
+            cart={cart}
+            onClose={() => setShowCheckout(false)}
+            onPlaceOrder={(orderData) => {
+              console.log('Order placed:', orderData);
+              setShowCheckout(false);
+            }}
+          />
+        )
+      }
 
-      {showComparison && (
-        <ProductComparison onClose={() => setShowComparison(false)} />
-      )}
-    </div>
+      {
+        showComparison && (
+          <ProductComparison onClose={() => setShowComparison(false)} />
+        )
+      }
+    </div >
   );
 }
 
