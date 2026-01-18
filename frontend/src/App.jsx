@@ -14,7 +14,7 @@ import ProductDetail from './components/ProductDetail';
 import AdvancedCheckout from './components/AdvancedCheckout';
 import OrdersList from './components/OrdersList';
 import AllBrands from './components/AllBrands';
-import CategoryRail from './components/CategoryRail';
+
 
 // Custom Components
 import SubcategoryGrid from './components/SubcategoryGrid';
@@ -595,22 +595,7 @@ function AppContent() {
 
         {currentView === 'catalog' && !selectedBrand && (
           <div>
-            {/* 1. Category Rail (Top of Homepage) */}
-            {!selectedSubcategory && (
-              <CategoryRail
-                categories={categories}
-                selectedCategory={selectedCategory}
-                onSelectCategory={(id) => {
-                  setSelectedCategory(id);
-                  setSelectedBrand(null);
-                  setSelectedSubcategory(null);
-                  setShowSubcategoryView(true);
-                  setSearchQuery(''); // Clear search when switching category
-                }}
-              />
-            )}
-
-            {/* 2. Subcategory Navigation (Back Button) */}
+            {/* 1. Subcategory Navigation (Back Button) */}
             {selectedSubcategory && (
               <button
                 onClick={handleBackToSubcategories}
@@ -621,7 +606,7 @@ function AppContent() {
               </button>
             )}
 
-            {/* 3. Page Title / Subcategory Header */}
+            {/* 2. Page Title */}
             <div className="mb-3 sm:mb-4 px-1">
               {selectedSubcategory && activeSubcategory ? (
                 <div>
@@ -642,7 +627,7 @@ function AppContent() {
               )}
             </div>
 
-            {/* 4. Subcategory Grid (Only if not selected) */}
+            {/* 3. Subcategory Grid (Only if not selected) */}
             {selectedCategory !== 'all' && showSubcategoryView && subcategories.length > 0 && (
               <div className="mb-6">
                 <div className="flex items-center justify-between mb-3 px-1">
@@ -665,7 +650,7 @@ function AppContent() {
               </div>
             )}
 
-            {/* 5. Brand Horizontal Scroll */}
+            {/* 4. Brand Horizontal Scroll */}
             {!selectedSubcategory && visibleBrands.length > 0 && (
               <div className="mb-8">
                 <div className="flex items-center justify-between mb-3 px-1">
@@ -687,24 +672,23 @@ function AppContent() {
               </div>
             )}
 
-            {/* 6. MAIN PRODUCT DISPLAY (Shelves vs Grid) */}
+            {/* 5. MAIN PRODUCT DISPLAY */}
             {(!showSubcategoryView || selectedCategory === 'all') && (
               <>
-                {/* SCENARIO A: HOMEPAGE (Category Grid + Product Shelves) */}
+                {/* SCENARIO A: HOMEPAGE */}
                 {selectedCategory === 'all' && !searchQuery ? (
                   <div className="space-y-8 pb-10">
 
-                    {/* 1. SHOP BY CATEGORY (The Blinkit-Style Grid) */}
+                    {/* SHOP BY CATEGORY (Small Grid) */}
                     <CategoryDirectory
                       categories={categories}
                       onSelectCategory={(id) => {
                         setSelectedCategory(id);
-                        // This triggers the switch to Scenario B (Specific Category View)
                         window.scrollTo({ top: 0, behavior: 'smooth' });
                       }}
                     />
 
-                    {/* 2. PRODUCT SHELVES (Horizontal Scrolling Rows) */}
+                    {/* PRODUCT SHELVES */}
                     <div className="space-y-10 border-t border-gray-100 pt-8">
                       {categories.map((category) => {
                         const CategoryIcon = getCategoryIcon(category.name);
@@ -717,7 +701,6 @@ function AppContent() {
 
                         return (
                           <div key={category.id} className="border-b border-gray-100 pb-6 last:border-0">
-                            {/* Shelf Header */}
                             <div className="flex items-center justify-between mb-4 px-1">
                               <h3 className="text-lg sm:text-xl font-bold text-gray-800 flex items-center gap-2">
                                 {CategoryIcon && <CategoryIcon className="w-5 h-5 text-emerald-600" />}
@@ -733,8 +716,6 @@ function AppContent() {
                                 View All
                               </button>
                             </div>
-
-                            {/* Horizontal Scroll Container */}
                             <div className="flex overflow-x-auto gap-3 sm:gap-4 pb-4 -mx-3 px-3 scrollbar-hide snap-x">
                               {categoryProducts.slice(0, 8).map((product) => (
                                 <div key={product.id} className="flex-shrink-0 w-[160px] sm:w-[200px] snap-start">
@@ -765,15 +746,10 @@ function AppContent() {
                           </div>
                         );
                       })}
-                      {products.length === 0 && (
-                        <div className="text-center py-12">
-                          <p className="text-gray-500">No products found.</p>
-                        </div>
-                      )}
                     </div>
                   </div>
                 ) : (
-                  /* SCENARIO B: STANDARD GRID (Search Results or Specific Category) */
+                  /* SCENARIO B: STANDARD GRID */
                   <>
                     <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2.5 sm:gap-3 md:gap-4 pb-4">
                       {filteredProducts.map((product) => (
@@ -789,9 +765,6 @@ function AppContent() {
                       <div className="text-center py-12 sm:py-16">
                         <Package className="w-12 h-12 sm:w-16 sm:h-16 text-gray-300 mx-auto mb-3" />
                         <p className="text-sm sm:text-base text-gray-500">No products found</p>
-                        {searchQuery && (
-                          <p className="text-xs sm:text-sm text-gray-400 mt-2">Try a different search term</p>
-                        )}
                       </div>
                     )}
                   </>

@@ -28,7 +28,7 @@ const CategoryDirectory = ({ categories, onSelectCategory }) => {
                 </h3>
             </div>
 
-            {/* UPDATED GRID: Matches BrandGrid exactly (4 cols mobile, 8 cols desktop) */}
+            {/* GRID: Exact match to BrandGrid (4 cols mobile, 8 cols desktop) */}
             <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 gap-3 sm:gap-4">
                 {categories.map((category) => {
                     const Icon = getCategoryIcon(category.name);
@@ -39,7 +39,7 @@ const CategoryDirectory = ({ categories, onSelectCategory }) => {
                             onClick={() => onSelectCategory(category.id)}
                             className="group flex flex-col items-center cursor-pointer"
                         >
-                            {/* THE BOX: Exact match to BrandGrid size (w-20/w-24) */}
+                            {/* BOX SIZE: w-20 (80px) mobile, w-24 (96px) desktop - Matches BrandGrid */}
                             <div className="w-20 h-20 sm:w-24 sm:h-24 bg-white border border-gray-200 rounded-xl flex items-center justify-center p-3 shadow-sm transition-all duration-200 group-hover:shadow-md group-hover:border-emerald-500 group-hover:-translate-y-1">
                                 {category.image ? (
                                     <img
@@ -52,7 +52,7 @@ const CategoryDirectory = ({ categories, onSelectCategory }) => {
                                 )}
                             </div>
 
-                            {/* LABEL: Compact text below */}
+                            {/* LABEL: Small and compact */}
                             <span className="mt-2 text-[10px] sm:text-xs font-medium text-gray-600 text-center truncate w-full px-1 group-hover:text-emerald-700">
                                 {category.name}
                             </span>
