@@ -16,7 +16,7 @@ DEBUG = os.environ.get('DEBUG', 'True') == 'True'
 # --- ALLOWED HOSTS ---
 ALLOWED_HOSTS = [
     'anantamart-project.onrender.com',
-    'api.ananta-mart.in',    # <--- CRITICAL: This was missing!
+    'api.ananta-mart.in',
     'ananta-mart.in',
     'localhost',
     '127.0.0.1'
@@ -111,7 +111,6 @@ WHITENOISE_USE_FINDERS = True
 
 if not DEBUG:
     # --- PRODUCTION SETTINGS ---
-    # Fix: Using Standard Django Storage to bypass WhiteNoise/Cloudinary errors
     STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
     DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
     
@@ -121,7 +120,6 @@ if not DEBUG:
             "BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage",
         },
         "staticfiles": {
-            # Standard storage prevents looking for missing files
             "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
         },
     }
@@ -159,7 +157,7 @@ REST_FRAMEWORK = {
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
     "https://anantamart-project.onrender.com",
-    "https://ananta-mart.in",      # Your new Shop
+    "https://ananta-mart.in",
     "https://www.ananta-mart.in",
     "https://anantamart-project.vercel.app",
 ]
@@ -167,11 +165,12 @@ CORS_ALLOW_CREDENTIALS = True
 
 CSRF_TRUSTED_ORIGINS = [
     "https://anantamart-project.onrender.com",
-    "https://api.ananta-mart.in",  # <--- CRITICAL: Required for Admin Login
+    "https://api.ananta-mart.in",
     "https://ananta-mart.in",
     "https://www.ananta-mart.in",
     "https://anantamart-project.vercel.app",
 ]
+
 # Guest Cart & Session Security Settings
 if not DEBUG:
     SESSION_COOKIE_SECURE = True
@@ -182,11 +181,3 @@ if not DEBUG:
 # --- RAZORPAY PAYMENT GATEWAY CONFIGURATION ---
 RAZORPAY_KEY_ID = os.environ.get('RAZORPAY_KEY_ID', '')
 RAZORPAY_KEY_SECRET = os.environ.get('RAZORPAY_KEY_SECRET', '')
-
-# For testing locally, you can use test keys:
-# RAZORPAY_KEY_ID = 'rzp_test_xxxxxxxxxx'
-# RAZORPAY_KEY_SECRET = 'xxxxxxxxxxxxx'    
-
-MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
-

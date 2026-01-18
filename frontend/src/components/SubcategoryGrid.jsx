@@ -1,19 +1,24 @@
+import React from 'react';
 import { Package } from 'lucide-react';
 
 /**
- * SubcategoryGrid Component
- * Displays subcategories as visual cards with images
+ * SubcategoryGrid Component (Compact Version)
+ * Displays subcategories as small, clickable squares
  */
 export default function SubcategoryGrid({
     subcategories,
     onSubcategoryClick,
     isLoading = false
 }) {
+    // Loading Skeleton
     if (isLoading) {
         return (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4">
-                {[1, 2, 3, 4, 5, 6].map(i => (
-                    <SubcategoryCardSkeleton key={i} />
+            <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 gap-3 sm:gap-4 animate-pulse">
+                {[1, 2, 3, 4, 5, 6, 7, 8].map(i => (
+                    <div key={i} className="flex flex-col items-center gap-2">
+                        <div className="w-20 h-20 bg-gray-100 rounded-xl" />
+                        <div className="h-3 w-16 bg-gray-100 rounded" />
+                    </div>
                 ))}
             </div>
         );
@@ -21,71 +26,43 @@ export default function SubcategoryGrid({
 
     if (!subcategories || subcategories.length === 0) {
         return (
-            <div className="text-center py-12">
-                <Package className="w-16 h-16 text-gray-300 mx-auto mb-3" />
-                <p className="text-gray-500">No subcategories available</p>
+            <div className="text-center py-8">
+                <Package className="w-12 h-12 text-gray-300 mx-auto mb-2" />
+                <p className="text-sm text-gray-500">No subcategories found</p>
             </div>
         );
     }
 
     return (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4">
+        // Grid Layout: 4 cols on mobile, up to 8 on desktop (Matches Brands)
+        <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 gap-3 sm:gap-4">
             {subcategories.map(subcategory => (
-                <SubcategoryCard
+                <div
                     key={subcategory.id}
-                    subcategory={subcategory}
                     onClick={() => onSubcategoryClick(subcategory)}
-                />
+                    className="group flex flex-col items-center cursor-pointer"
+                >
+                    {/* Compact Box Container */}
+                    <div className="w-20 h-20 sm:w-24 sm:h-24 bg-white border border-gray-200 rounded-xl flex items-center justify-center p-2 shadow-sm transition-all duration-200 group-hover:shadow-md group-hover:border-emerald-500 group-hover:-translate-y-1">
+                        {subcategory.image_url ? (
+                            <img
+                                src={subcategory.image_url}
+                                alt={subcategory.name}
+                                className="w-full h-full object-contain rounded-lg"
+                                loading="lazy"
+                            />
+                        ) : (
+                            // Fallback Icon
+                            <Package className="w-8 h-8 text-emerald-600 opacity-50" />
+                        )}
+                    </div>
+
+                    {/* Compact Name Label */}
+                    <span className="mt-2 text-[10px] sm:text-xs font-medium text-gray-600 text-center truncate w-full px-1 group-hover:text-emerald-700">
+                        {subcategory.name}
+                    </span>
+                </div>
             ))}
-        </div>
-    );
-}
-
-// Individual subcategory card
-function SubcategoryCard({ subcategory, onClick }) {
-    return (
-        <button
-            onClick={onClick}
-            className="group bg-white rounded-xl shadow-sm hover:shadow-md active:shadow-sm transition-all p-4 flex flex-col items-center gap-3 touch-manipulation"
-        >
-            {/* Image/Icon */}
-            <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-full flex items-center justify-center overflow-hidden group-hover:scale-110 transition-transform">
-                {subcategory.image_url ? (
-                    <img
-                        src={subcategory.image_url}
-                        alt={subcategory.name}
-                        className="w-full h-full object-cover"
-                        loading="lazy"
-                    />
-                ) : (
-                    <Package className="w-8 h-8 sm:w-10 sm:h-10 text-emerald-600" />
-                )}
-            </div>
-
-            {/* Name */}
-            <div className="text-center">
-                <h3 className="text-xs sm:text-sm font-semibold text-gray-900 line-clamp-2 mb-1">
-                    {subcategory.name}
-                </h3>
-                {subcategory.product_count !== undefined && (
-                    <p className="text-[10px] sm:text-xs text-gray-500">
-                        {subcategory.product_count} {subcategory.product_count === 1 ? 'product' : 'products'}
-                    </p>
-                )}
-            </div>
-        </button>
-    );
-}
-
-// Loading skeleton
-function SubcategoryCardSkeleton() {
-    return (
-        <div className="bg-white rounded-xl shadow-sm p-4 flex flex-col items-center gap-3 animate-pulse">
-            <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gray-200 rounded-full"></div>
-            <div className="w-full space-y-2">
-                <div className="h-3 bg-gray-200 rounded w-3/4 mx-auto"></div>
-                <div className="h-2 bg-gray-200 rounded w-1/2 mx-auto"></div>
-            </div>
         </div>
     );
 }
