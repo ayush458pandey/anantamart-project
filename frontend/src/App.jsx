@@ -595,16 +595,28 @@ function AppContent() {
 
         {currentView === 'catalog' && !selectedBrand && (
           <div>
-            {/* 1. Subcategory Navigation (Back Button) */}
-            {selectedSubcategory && (
-              <button
-                onClick={handleBackToSubcategories}
-                className="flex items-center text-sm font-medium text-emerald-600 hover:text-emerald-700 mb-3 px-1 transition-colors group"
-              >
-                <ChevronLeft className="w-5 h-5 mr-1 group-hover:-translate-x-1 transition-transform" />
-                Back to {currentCategoryName}
-              </button>
+            {/* 1. Brand Horizontal Scroll */}
+            {!selectedSubcategory && visibleBrands.length > 0 && (
+              <div className="mb-8">
+                <div className="flex items-center justify-between mb-3 px-1">
+                  <h3 className="text-base sm:text-lg font-bold text-gray-800">
+                    Browse by Brand
+                  </h3>
+                  <button
+                    onClick={() => setCurrentView('all-brands')}
+                    className="text-xs sm:text-sm font-medium text-emerald-600 hover:text-emerald-700 transition-colors flex items-center gap-1"
+                  >
+                    View All <span className="text-lg">›</span>
+                  </button>
+                </div>
+                <BrandGrid
+                  brands={visibleBrands}
+                  onBrandClick={(brand) => setSelectedBrand(brand)}
+                  isLoading={loadingBrands}
+                />
+              </div>
             )}
+
 
             {/* 2. Page Title */}
             <div className="mb-3 sm:mb-4 px-1">
@@ -650,26 +662,15 @@ function AppContent() {
               </div>
             )}
 
-            {/* 4. Brand Horizontal Scroll */}
-            {!selectedSubcategory && visibleBrands.length > 0 && (
-              <div className="mb-8">
-                <div className="flex items-center justify-between mb-3 px-1">
-                  <h3 className="text-base sm:text-lg font-bold text-gray-800">
-                    Browse by Brand
-                  </h3>
-                  <button
-                    onClick={() => setCurrentView('all-brands')}
-                    className="text-xs sm:text-sm font-medium text-emerald-600 hover:text-emerald-700 transition-colors flex items-center gap-1"
-                  >
-                    View All <span className="text-lg">›</span>
-                  </button>
-                </div>
-                <BrandGrid
-                  brands={visibleBrands}
-                  onBrandClick={(brand) => setSelectedBrand(brand)}
-                  isLoading={loadingBrands}
-                />
-              </div>
+            {/* 4. Subcategory Navigation (Back Button) */}
+            {selectedSubcategory && (
+              <button
+                onClick={handleBackToSubcategories}
+                className="flex items-center text-sm font-medium text-emerald-600 hover:text-emerald-700 mb-3 px-1 transition-colors group"
+              >
+                <ChevronLeft className="w-5 h-5 mr-1 group-hover:-translate-x-1 transition-transform" />
+                Back to {currentCategoryName}
+              </button>
             )}
 
             {/* 5. MAIN PRODUCT DISPLAY */}
