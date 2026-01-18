@@ -644,28 +644,19 @@ function AppContent() {
               </div>
             )}
 
-            {/* BRAND SECTION - LIMIT & TOGGLE */}
+            {/* BRAND SECTION - HORIZONTAL SCROLL */}
             {!selectedSubcategory && visibleBrands.length > 0 && (
               <div className="mb-8">
-                <div className="flex items-center justify-between mb-4 px-1">
+                <div className="flex items-center justify-between mb-3 px-1">
                   <h3 className="text-base sm:text-lg font-bold text-gray-800">
                     Browse by Brand
                   </h3>
-
-                  {/* Only show button if there are more than 8 brands */}
-                  {visibleBrands.length > 8 && (
-                    <button
-                      onClick={() => setShowAllBrands(!showAllBrands)}
-                      className="text-xs sm:text-sm font-medium text-emerald-600 hover:text-emerald-700 transition-colors"
-                    >
-                      {showAllBrands ? 'Show Less' : 'View All Brands'}
-                    </button>
-                  )}
+                  {/* Optional: Visual cue that it scrolls */}
+                  <span className="text-xs text-gray-400">Swipe for more &rarr;</span>
                 </div>
 
                 <BrandGrid
-                  // If showAll is true, show everything. If false, show only first 8.
-                  brands={showAllBrands ? visibleBrands : visibleBrands.slice(0, 8)}
+                  brands={visibleBrands} // Pass ALL brands, no slicing
                   onBrandClick={(brand) => setSelectedBrand(brand)}
                   isLoading={loadingBrands}
                 />
