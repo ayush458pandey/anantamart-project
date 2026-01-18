@@ -13,6 +13,7 @@ import ProductComparison from './components/ProductComparison';
 import ProductDetail from './components/ProductDetail';
 import AdvancedCheckout from './components/AdvancedCheckout';
 import OrdersList from './components/OrdersList';
+import AllBrands from './components/AllBrands';
 
 // Custom Components
 import SubcategoryGrid from './components/SubcategoryGrid';
@@ -644,19 +645,26 @@ function AppContent() {
               </div>
             )}
 
-            {/* BRAND SECTION - HORIZONTAL SCROLL */}
+            {/* BRAND SECTION - HORIZONTAL SCROLL WITH VIEW ALL */}
             {!selectedSubcategory && visibleBrands.length > 0 && (
               <div className="mb-8">
                 <div className="flex items-center justify-between mb-3 px-1">
                   <h3 className="text-base sm:text-lg font-bold text-gray-800">
                     Browse by Brand
                   </h3>
-                  {/* Optional: Visual cue that it scrolls */}
-                  <span className="text-xs text-gray-400">Swipe for more &rarr;</span>
+
+                  {/* The Button to open the full directory */}
+                  <button
+                    onClick={() => setCurrentView('all-brands')}
+                    className="text-xs sm:text-sm font-medium text-emerald-600 hover:text-emerald-700 transition-colors flex items-center gap-1"
+                  >
+                    View All <span className="text-lg">›</span>
+                  </button>
                 </div>
 
+                {/* Horizontal Scroll Grid */}
                 <BrandGrid
-                  brands={visibleBrands} // Pass ALL brands, no slicing
+                  brands={visibleBrands}
                   onBrandClick={(brand) => setSelectedBrand(brand)}
                   isLoading={loadingBrands}
                 />
@@ -710,6 +718,15 @@ function AppContent() {
         )}
 
         {currentView === 'orders' && <OrdersList />}
+
+        {/* NEW: Full Brand Directory View */}
+        {currentView === 'all-brands' && (
+          <AllBrands
+            brands={brands} // Pass the full list
+            onBrandClick={(brand) => setSelectedBrand(brand)}
+            onBack={() => setCurrentView('catalog')}
+          />
+        )}
 
         {currentView === 'profile' && <ProfileView user={user} onLogout={handleLogout} />}
 
