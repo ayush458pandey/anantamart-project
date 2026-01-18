@@ -673,24 +673,96 @@ function AppContent() {
 
             {(!showSubcategoryView || selectedCategory === 'all') && (
               <>
-                <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2.5 sm:gap-3 md:gap-4 pb-4">
-                  {filteredProducts.map((product) => (
-                    <ProductCard
-                      key={product.id}
-                      product={product}
-                      onAddToCart={addToCart}
-                      onViewDetails={() => setSelectedProduct(product)}
-                    />
-                  ))}
-                </div>
-                {filteredProducts.length === 0 && (
-                  <div className="text-center py-12 sm:py-16">
-                    <Package className="w-12 h-12 sm:w-16 sm:h-16 text-gray-300 mx-auto mb-3" />
-                    <p className="text-sm sm:text-base text-gray-500">No products found</p>
-                    {searchQuery && (
-                      <p className="text-xs sm:text-sm text-gray-400 mt-2">Try a different search term</p>
-                    )}
+                {/* SCENARIO 1: HOMEPAGE SHELVES (No Search, All Categories) */}
+                {selectedCategory === 'all' && !searchQuery ? (
+                  <div className="space-y-10 pb-10">
+                    {categories.map((category) => {
+                      // 1. Find products for this specific shelf
+                      const categoryProducts = products.filter(p =>
+                        String(p.category) === String(category.id) ||
+                        String(p.category?.id) === String(category.id)
+                      );
+
+                      // 2. Hide empty categories
+                      if (categoryProducts.length === 0) return null;
+
+                      return (
+                        <div key={category.id} className="border-b border-gray-100 pb-6 last:border-0">
+                          {/* Shelf Header */}
+                          <div className="flex items-center justify-between mb-4 px-1">
+                            <h3 className="text-lg sm:text-xl font-bold text-gray-800 flex items-center gap-2">
+                              {/* Try to render icon if available, otherwise just text */}
+                              {getCategoryIcon(category) && React.createElement(getCategoryIcon(category), { className: "w-5 h-5 text-emerald-600" })}
+                              {category.name}
+                            </h3>
+                            <button
+                              onClick={() => {
+                                setSelectedCategory(category.id);
+                                window.scrollTo({ top: 0, behavior: 'smooth' });
+                              }}
+                              className="text-xs sm:text-sm font-medium text-emerald-600 hover:text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full transition-colors"
+                            >
+                              View All
+                            </button>
+                          </div>
+
+                          {/* Horizontal Scroll Container (The Shelf) */}
+                          <div className="flex overflow-x-auto gap-3 sm:gap-4 pb-4 -mx-3 px-3 scrollbar-hide snap-x">
+                            {categoryProducts.slice(0, 8).map((product) => (
+                              <div key={product.id} className="flex-shrink-0 w-[160px] sm:w-[200px] snap-start">
+                                <ProductCard
+                                  product={product}
+                                  onAddToCart={addToCart}
+                                  onViewDetails={() => setSelectedProduct(product)}
+                                />
+                              </div>
+                            ))}
+
+                            {/* "See More" Card at end of scroll */}
+                            {categoryProducts.length > 8 && (
+                              <div className="flex-shrink-0 w-[100px] sm:w-[120px] flex items-center justify-center snap-start">
+                                <button
+                                  onClick={() => {
+                                    setSelectedCategory(category.id);
+                                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                                  }}
+                                  className="flex flex-col items-center gap-2 text-gray-500 hover:text-emerald-600"
+                                >
+                                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gray-100 flex items-center justify-center">
+                                    <span className="text-xl font-bold">→</span>
+                                  </div>
+                                  <span className="text-xs font-bold">See All</span>
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
+                ) : (
+                  /* SCENARIO 2: STANDARD GRID (Search Results or Specific Category) */
+                  <>
+                    <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2.5 sm:gap-3 md:gap-4 pb-4">
+                      {filteredProducts.map((product) => (
+                        <ProductCard
+                          key={product.id}
+                          product={product}
+                          onAddToCart={addToCart}
+                          onViewDetails={() => setSelectedProduct(product)}
+                        />
+                      ))}
+                    </div>
+                    {filteredProducts.length === 0 && (
+                      <div className="text-center py-12 sm:py-16">
+                        <Package className="w-12 h-12 sm:w-16 sm:h-16 text-gray-300 mx-auto mb-3" />
+                        <p className="text-sm sm:text-base text-gray-500">No products found</p>
+                        {searchQuery && (
+                          <p className="text-xs sm:text-sm text-gray-400 mt-2">Try a different search term</p>
+                        )}
+                      </div>
+                    )}
+                  </>
                 )}
               </>
             )}
