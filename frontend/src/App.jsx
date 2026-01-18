@@ -14,7 +14,7 @@ import ProductDetail from './components/ProductDetail';
 import AdvancedCheckout from './components/AdvancedCheckout';
 import OrdersList from './components/OrdersList';
 import AllBrands from './components/AllBrands';
-
+import Footer from './components/Footer';
 
 // Custom Components
 import SubcategoryGrid from './components/SubcategoryGrid';
@@ -795,6 +795,8 @@ function AppContent() {
         )}
 
         {currentView === 'orders' && <OrdersList />}
+
+        {currentView !== 'login' && <Footer />}
 
         {currentView === 'profile' && <ProfileView user={user} onLogout={handleLogout} />}
 
