@@ -5,7 +5,6 @@ import {
     Home, Grid, Package
 } from 'lucide-react';
 
-// Helper to get icons
 const getCategoryIcon = (categoryName) => {
     const name = categoryName?.toLowerCase() || '';
     if (name.includes('scissor') || name.includes('cut')) return Scissors;
@@ -22,16 +21,15 @@ const getCategoryIcon = (categoryName) => {
 
 const CategoryDirectory = ({ categories, onSelectCategory }) => {
     return (
-        <div className="pb-8">
-            {/* Section Header */}
+        <div className="pb-4">
             <div className="flex items-center justify-between mb-4 px-1">
-                <h3 className="text-lg sm:text-xl font-bold text-gray-800">
+                <h3 className="text-base sm:text-lg font-bold text-gray-800">
                     Shop by Category
                 </h3>
             </div>
 
-            {/* The Grid */}
-            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3 sm:gap-4">
+            {/* UPDATED GRID: Matches BrandGrid exactly (4 cols mobile, 8 cols desktop) */}
+            <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 gap-3 sm:gap-4">
                 {categories.map((category) => {
                     const Icon = getCategoryIcon(category.name);
 
@@ -39,21 +37,23 @@ const CategoryDirectory = ({ categories, onSelectCategory }) => {
                         <div
                             key={category.id}
                             onClick={() => onSelectCategory(category.id)}
-                            className="flex flex-col items-center gap-2 cursor-pointer group"
+                            className="group flex flex-col items-center cursor-pointer"
                         >
-                            <div className="w-full aspect-square bg-emerald-50 rounded-2xl flex items-center justify-center border border-emerald-100 group-hover:border-emerald-500 group-hover:shadow-md transition-all">
+                            {/* THE BOX: Exact match to BrandGrid size (w-20/w-24) */}
+                            <div className="w-20 h-20 sm:w-24 sm:h-24 bg-white border border-gray-200 rounded-xl flex items-center justify-center p-3 shadow-sm transition-all duration-200 group-hover:shadow-md group-hover:border-emerald-500 group-hover:-translate-y-1">
                                 {category.image ? (
                                     <img
                                         src={category.image}
                                         alt={category.name}
-                                        className="w-3/4 h-3/4 object-contain"
+                                        className="w-full h-full object-contain"
                                     />
                                 ) : (
-                                    <Icon className="w-10 h-10 sm:w-12 sm:h-12 text-emerald-600 group-hover:scale-110 transition-transform" />
+                                    <Icon className="w-8 h-8 sm:w-10 sm:h-10 text-emerald-600 group-hover:scale-110 transition-transform" />
                                 )}
                             </div>
 
-                            <span className="text-xs sm:text-sm font-bold text-gray-700 text-center leading-tight px-1 group-hover:text-emerald-700">
+                            {/* LABEL: Compact text below */}
+                            <span className="mt-2 text-[10px] sm:text-xs font-medium text-gray-600 text-center truncate w-full px-1 group-hover:text-emerald-700">
                                 {category.name}
                             </span>
                         </div>
