@@ -21,6 +21,7 @@ import SubcategoryGrid from './components/SubcategoryGrid';
 import BrandGrid from './components/BrandGrid';
 import BrandPage from './components/BrandPage';
 import { productService } from './api/services/productService';
+import CategoryDirectory from './components/CategoryDirectory';
 
 import './index.css';
 
@@ -689,71 +690,87 @@ function AppContent() {
             {/* 6. MAIN PRODUCT DISPLAY (Shelves vs Grid) */}
             {(!showSubcategoryView || selectedCategory === 'all') && (
               <>
-                {/* SCENARIO A: HOMEPAGE SHELVES (No Search, All Categories) */}
+                {/* SCENARIO A: HOMEPAGE (Category Grid + Product Shelves) */}
                 {selectedCategory === 'all' && !searchQuery ? (
-                  <div className="space-y-10 pb-10">
-                    {categories.map((category) => {
-                      const CategoryIcon = getCategoryIcon(category.name);
-                      const categoryProducts = products.filter(p =>
-                        String(p.category) === String(category.id) ||
-                        String(p.category?.id) === String(category.id)
-                      );
+                  <div className="space-y-8 pb-10">
 
-                      if (categoryProducts.length === 0) return null;
+                    {/* 1. SHOP BY CATEGORY (The Blinkit-Style Grid) */}
+                    <CategoryDirectory
+                      categories={categories}
+                      onSelectCategory={(id) => {
+                        setSelectedCategory(id);
+                        // This triggers the switch to Scenario B (Specific Category View)
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                      }}
+                    />
 
-                      return (
-                        <div key={category.id} className="border-b border-gray-100 pb-6 last:border-0">
-                          <div className="flex items-center justify-between mb-4 px-1">
-                            <h3 className="text-lg sm:text-xl font-bold text-gray-800 flex items-center gap-2">
-                              {CategoryIcon && <CategoryIcon className="w-5 h-5 text-emerald-600" />}
-                              {category.name}
-                            </h3>
-                            <button
-                              onClick={() => {
-                                setSelectedCategory(category.id);
-                                window.scrollTo({ top: 0, behavior: 'smooth' });
-                              }}
-                              className="text-xs sm:text-sm font-medium text-emerald-600 hover:text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full transition-colors"
-                            >
-                              View All
-                            </button>
+                    {/* 2. PRODUCT SHELVES (Horizontal Scrolling Rows) */}
+                    <div className="space-y-10 border-t border-gray-100 pt-8">
+                      {categories.map((category) => {
+                        const CategoryIcon = getCategoryIcon(category.name);
+                        const categoryProducts = products.filter(p =>
+                          String(p.category) === String(category.id) ||
+                          String(p.category?.id) === String(category.id)
+                        );
+
+                        if (categoryProducts.length === 0) return null;
+
+                        return (
+                          <div key={category.id} className="border-b border-gray-100 pb-6 last:border-0">
+                            {/* Shelf Header */}
+                            <div className="flex items-center justify-between mb-4 px-1">
+                              <h3 className="text-lg sm:text-xl font-bold text-gray-800 flex items-center gap-2">
+                                {CategoryIcon && <CategoryIcon className="w-5 h-5 text-emerald-600" />}
+                                {category.name}
+                              </h3>
+                              <button
+                                onClick={() => {
+                                  setSelectedCategory(category.id);
+                                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                                }}
+                                className="text-xs sm:text-sm font-medium text-emerald-600 hover:text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full transition-colors"
+                              >
+                                View All
+                              </button>
+                            </div>
+
+                            {/* Horizontal Scroll Container */}
+                            <div className="flex overflow-x-auto gap-3 sm:gap-4 pb-4 -mx-3 px-3 scrollbar-hide snap-x">
+                              {categoryProducts.slice(0, 8).map((product) => (
+                                <div key={product.id} className="flex-shrink-0 w-[160px] sm:w-[200px] snap-start">
+                                  <ProductCard
+                                    product={product}
+                                    onAddToCart={addToCart}
+                                    onViewDetails={() => setSelectedProduct(product)}
+                                  />
+                                </div>
+                              ))}
+                              {categoryProducts.length > 8 && (
+                                <div className="flex-shrink-0 w-[100px] sm:w-[120px] flex items-center justify-center snap-start">
+                                  <button
+                                    onClick={() => {
+                                      setSelectedCategory(category.id);
+                                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                                    }}
+                                    className="flex flex-col items-center gap-2 text-gray-500 hover:text-emerald-600"
+                                  >
+                                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gray-100 flex items-center justify-center">
+                                      <span className="text-xl font-bold">→</span>
+                                    </div>
+                                    <span className="text-xs font-bold">See All</span>
+                                  </button>
+                                </div>
+                              )}
+                            </div>
                           </div>
-
-                          <div className="flex overflow-x-auto gap-3 sm:gap-4 pb-4 -mx-3 px-3 scrollbar-hide snap-x">
-                            {categoryProducts.slice(0, 8).map((product) => (
-                              <div key={product.id} className="flex-shrink-0 w-[160px] sm:w-[200px] snap-start">
-                                <ProductCard
-                                  product={product}
-                                  onAddToCart={addToCart}
-                                  onViewDetails={() => setSelectedProduct(product)}
-                                />
-                              </div>
-                            ))}
-                            {categoryProducts.length > 8 && (
-                              <div className="flex-shrink-0 w-[100px] sm:w-[120px] flex items-center justify-center snap-start">
-                                <button
-                                  onClick={() => {
-                                    setSelectedCategory(category.id);
-                                    window.scrollTo({ top: 0, behavior: 'smooth' });
-                                  }}
-                                  className="flex flex-col items-center gap-2 text-gray-500 hover:text-emerald-600"
-                                >
-                                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gray-100 flex items-center justify-center">
-                                    <span className="text-xl font-bold">→</span>
-                                  </div>
-                                  <span className="text-xs font-bold">See All</span>
-                                </button>
-                              </div>
-                            )}
-                          </div>
+                        );
+                      })}
+                      {products.length === 0 && (
+                        <div className="text-center py-12">
+                          <p className="text-gray-500">No products found.</p>
                         </div>
-                      );
-                    })}
-                    {products.length === 0 && (
-                      <div className="text-center py-12">
-                        <p className="text-gray-500">No products found.</p>
-                      </div>
-                    )}
+                      )}
+                    </div>
                   </div>
                 ) : (
                   /* SCENARIO B: STANDARD GRID (Search Results or Specific Category) */
