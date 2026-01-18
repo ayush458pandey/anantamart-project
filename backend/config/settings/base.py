@@ -187,3 +187,6 @@ RAZORPAY_KEY_SECRET = os.environ.get('RAZORPAY_KEY_SECRET', '')
 # RAZORPAY_KEY_ID = 'rzp_test_xxxxxxxxxx'
 # RAZORPAY_KEY_SECRET = 'xxxxxxxxxxxxx'    
 
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
