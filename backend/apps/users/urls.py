@@ -1,7 +1,7 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
-# CRITICAL: Added 'get_addresses' to the import list
+# CRITICAL: We added 'get_addresses' to this import line
 from .views import AddressViewSet, RegisterView, ProfileView, get_addresses
 
 router = DefaultRouter()
@@ -14,8 +14,7 @@ urlpatterns = [
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('me/', ProfileView.as_view(), name='profile'),
     
-    # --- CRITICAL FIX: Ensure frontend can reach the list view ---
-    # This connects the function we wrote to the URL
+    # --- CRITICAL FIX: This URL was missing before ---
     path('get-addresses/', get_addresses, name='get_addresses'),
 
     # Address endpoints (from router)
