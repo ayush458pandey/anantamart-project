@@ -19,4 +19,4 @@ urlpatterns = [
 
     # Address endpoints (from router)
     path('', include(router.urls)),
-]
+] #force update
