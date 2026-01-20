@@ -316,7 +316,7 @@ export default function AdvancedCheckout({ cart, onClose, onPlaceOrder }) {
           {/* Header */}
           <div className="sticky top-0 bg-white border-b p-4 flex items-center justify-between z-10 rounded-t-xl">
             <div>
-              <h2 className="text-2xl font-bold">Checkout</h2>
+              <h2 className="text-2xl font-bold">Checkout (v2) </h2>
               <p className="text-sm text-gray-600">Complete your order</p>
             </div>
             <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-lg">
