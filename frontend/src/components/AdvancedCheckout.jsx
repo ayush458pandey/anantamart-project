@@ -96,42 +96,43 @@ export default function AdvancedCheckout({ cart, onClose, onPlaceOrder }) {
     loadAddresses();
   }, []);
 
-  // --- CRITICAL FIX: Safe Address Loading ---
   const loadAddresses = async () => {
     try {
       const data = await addressService.getAddresses();
 
-      // CRASH PREVENTION: Only run logic if data is actually an array
-      if (Array.isArray(data)) {
-        setAddresses(data);
-        // Only try to find default if the array is not empty
-        if (data.length > 0) {
-          const defaultAddr = data.find(a => a.is_default) || data[0];
-          if (defaultAddr) setSelectedAddress(defaultAddr.id);
-        }
-      } else {
-        console.error("API returned invalid address data:", data);
-        setAddresses([]); // Fallback to empty list to prevent crash
+      let addressList = [];
+
+      // CHECK 1: Is the data inside a "results" wrapper? (This is your case)
+      if (data.results && Array.isArray(data.results)) {
+        addressList = data.results;
       }
+      // CHECK 2: Is the data just a plain array?
+      else if (Array.isArray(data)) {
+        addressList = data;
+      }
+      else {
+        console.error("API returned unexpected format:", data);
+        setAddresses([]);
+        return;
+      }
+
+      // Success! Update the UI
+      setAddresses(addressList);
+
+      // Auto-select the first address
+      if (addressList.length > 0) {
+        const defaultAddr = addressList.find(a => a.is_default) || addressList[0];
+        if (defaultAddr) setSelectedAddress(defaultAddr.id);
+      }
+
     } catch (err) {
       console.error("Failed to load addresses", err);
       // Optional: Handle session expiry
       if (err.response && (err.response.status === 401 || err.response.status === 403)) {
-        alert("Your session has expired. Please log in again.");
-        // window.location.href = '/login'; // Uncomment if you want auto-redirect
+        // alert("Your session has expired."); 
       }
     } finally {
       setLoadingAddresses(false);
-    }
-  };
-
-  const handleSaveAddress = async (newAddressData) => {
-    try {
-      await addressService.addAddress(newAddressData);
-      await loadAddresses(); // Reload list after save
-      setShowAddressForm(false);
-    } catch (err) {
-      alert("Error saving address: " + err.message);
     }
   };
 
@@ -316,7 +317,7 @@ export default function AdvancedCheckout({ cart, onClose, onPlaceOrder }) {
           {/* Header */}
           <div className="sticky top-0 bg-white border-b p-4 flex items-center justify-between z-10 rounded-t-xl">
             <div>
-              <h2 className="text-2xl font-bold">Checkout (v2) </h2>
+              <h2 className="text-2xl font-bold">Checkout </h2>
               <p className="text-sm text-gray-600">Complete your order</p>
             </div>
             <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-lg">
