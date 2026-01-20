@@ -10,18 +10,16 @@ from rest_framework_simplejwt.views import (
 urlpatterns = [
     path('admin/', admin.site.urls),
     
-    # Auth Tokens
+    # --- Auth & User (MUST BE FIRST to avoid being blocked) ---
     path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    path('api/user/', include('apps.users.urls')), # <--- Moved to TOP
     
-    # App URLs
+    # --- Other Apps ---
     path('api/', include('apps.products.urls')),
     path('api/', include('apps.cart.urls')),
     path('api/', include('apps.orders.urls')),
     path('api/', include('core.urls')),
-    
-    # --- CRITICAL FIX: Changed back to 'user' (Singular) to match Frontend ---
-    path('api/user/', include('apps.users.urls')), 
 ]
 
 if settings.DEBUG:
