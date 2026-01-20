@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import {
-  X, CreditCard, Smartphone, Building2, FileText, Wallet,
-  CheckCircle, MapPin, Truck, Package, AlertCircle, Plus, Loader
+  X, CreditCard, Smartphone, Building2, Wallet,
+  CheckCircle, MapPin, Truck, Package, AlertCircle, Plus, Loader, FileText
 } from 'lucide-react';
 import InvoiceGenerator from './InvoiceGenerator';
 import AddressForm from './AddressForm';
@@ -96,14 +96,30 @@ export default function AdvancedCheckout({ cart, onClose, onPlaceOrder }) {
     loadAddresses();
   }, []);
 
+  // --- CRITICAL FIX: Safe Address Loading ---
   const loadAddresses = async () => {
     try {
       const data = await addressService.getAddresses();
-      setAddresses(data);
-      const defaultAddr = data.find(a => a.is_default) || data[0];
-      if (defaultAddr) setSelectedAddress(defaultAddr.id);
+
+      // CRASH PREVENTION: Only run logic if data is actually an array
+      if (Array.isArray(data)) {
+        setAddresses(data);
+        // Only try to find default if the array is not empty
+        if (data.length > 0) {
+          const defaultAddr = data.find(a => a.is_default) || data[0];
+          if (defaultAddr) setSelectedAddress(defaultAddr.id);
+        }
+      } else {
+        console.error("API returned invalid address data:", data);
+        setAddresses([]); // Fallback to empty list to prevent crash
+      }
     } catch (err) {
       console.error("Failed to load addresses", err);
+      // Optional: Handle session expiry
+      if (err.response && (err.response.status === 401 || err.response.status === 403)) {
+        alert("Your session has expired. Please log in again.");
+        // window.location.href = '/login'; // Uncomment if you want auto-redirect
+      }
     } finally {
       setLoadingAddresses(false);
     }
@@ -112,7 +128,7 @@ export default function AdvancedCheckout({ cart, onClose, onPlaceOrder }) {
   const handleSaveAddress = async (newAddressData) => {
     try {
       await addressService.addAddress(newAddressData);
-      await loadAddresses();
+      await loadAddresses(); // Reload list after save
       setShowAddressForm(false);
     } catch (err) {
       alert("Error saving address: " + err.message);
@@ -175,7 +191,14 @@ export default function AdvancedCheckout({ cart, onClose, onPlaceOrder }) {
     }
 
     setIsProcessing(true);
+
+    // Safety check for address
     const addressObj = addresses.find(a => a.id === selectedAddress);
+    if (!addressObj) {
+      alert("Selected address is invalid. Please select again.");
+      setIsProcessing(false);
+      return;
+    }
 
     try {
       // 1. Manual Advance - Skip Razorpay
@@ -201,6 +224,10 @@ export default function AdvancedCheckout({ cart, onClose, onPlaceOrder }) {
         },
         body: JSON.stringify({ amount: total })
       });
+
+      if (!orderResponse.ok) {
+        throw new Error(`Server error: ${orderResponse.status}`);
+      }
 
       const orderData = await orderResponse.json();
       if (orderData.error) throw new Error(orderData.error);
@@ -586,7 +613,7 @@ export default function AdvancedCheckout({ cart, onClose, onPlaceOrder }) {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="bg-gray-50 rounded-lg p-4">
                     <h4 className="font-bold mb-2 text-sm">Delivery Address</h4>
-                    {selectedAddress && (
+                    {selectedAddress && addresses.length > 0 && (
                       <>
                         <p className="text-sm text-gray-700">{addresses.find(a => a.id === selectedAddress)?.name}</p>
                         <p className="text-xs text-gray-600">{addresses.find(a => a.id === selectedAddress)?.city}</p>
