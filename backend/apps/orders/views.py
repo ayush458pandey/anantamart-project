@@ -5,6 +5,7 @@ from rest_framework.permissions import IsAuthenticated
 from .models import Order, OrderItem
 from .serializers import OrderSerializer
 from apps.products.models import Product
+from apps.cart.models import Cart, CartItem  # <--- NEW IMPORT
 import random
 import string
 from datetime import datetime
@@ -57,6 +58,15 @@ class OrderViewSet(viewsets.ModelViewSet):
                     total=product.base_price * item_data['quantity']
                 )
             
+            # --- CRITICAL FIX: EMPTY THE CART ---
+            # This deletes all items in the user's cart after order is placed
+            try:
+                cart = Cart.objects.get(user=user)
+                cart.items.all().delete()
+            except Cart.DoesNotExist:
+                pass # If no cart exists, just ignore
+            # ------------------------------------
+
             serializer = self.get_serializer(order)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
             
