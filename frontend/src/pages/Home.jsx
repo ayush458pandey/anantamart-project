@@ -6,25 +6,34 @@ import {
     ShoppingBag, Box, Tag, Grid, Layers, Mail, Phone,
     MapPin, Building, Edit, LogOut, Settings, ChevronLeft
 } from 'lucide-react';
-import { useProducts } from './hooks/useProducts';
-import { useCart } from './context/CartContext';
-import { ComparisonProvider, useComparison } from './context/ComparisonContext';
+
+// ✅ FIX: Go up one level (../) to find hooks and context
+import { useProducts } from '../hooks/useProducts';
+import { useCart } from '../context/CartContext';
+import { ComparisonProvider, useComparison } from '../context/ComparisonContext';
+
+// ✅ FIX: Go up one level (../) to find components
 import ProductComparison from '../components/ProductComparison';
 import ProductDetail from '../components/ProductDetail';
 import AdvancedCheckout from '../components/AdvancedCheckout';
 import OrdersList from '../components/OrdersList';
 import AllBrands from '../components/AllBrands';
 import Footer from '../components/Footer';
-import Login from './pages/Login';
 
-// Custom Components
+// ✅ FIX: Login is in the same folder (pages), so it is just ./Login
+// (Note: Since you have a Router now, you probably don't even need this import here, 
+// unless you are embedding the Login form directly on the Home page)
+import Login from './Login';
+
+// ✅ FIX: Go up one level (../)
 import SubcategoryGrid from '../components/SubcategoryGrid';
 import BrandGrid from '../components/BrandGrid';
 import BrandPage from '../components/BrandPage';
 import { productService } from '../api/services/productService';
 import CategoryDirectory from '../components/CategoryDirectory';
 
-import './index.css';
+// ✅ FIX: Go up one level to find the CSS
+import '../index.css';
 
 // Helper function to get icon for category
 const getCategoryIcon = (category) => {
