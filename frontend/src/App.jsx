@@ -2,7 +2,7 @@ import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 
 // 1. Import your 1300-line file (It is in the same folder, so path is ./)
-import Home from './Home';
+import Home from './pages/Home';
 
 // 2. Import the new pages
 import Login from './pages/Login';
