@@ -10,7 +10,7 @@ import {
 // ✅ FIX: Go up one level (../) to find hooks and context
 import { useProducts } from '../hooks/useProducts';
 import { useCart } from '../context/CartContext';
-import { ComparisonProvider, useComparison } from '../context/ComparisonContext';
+import { useComparison } from '../context/ComparisonContext';
 
 // ✅ FIX: Go up one level (../) to find components
 import ProductComparison from '../components/ProductComparison';
@@ -1302,8 +1302,7 @@ function NavButton({ icon: Icon, label, active, onClick, badge }) {
 
 export default function Home() {
     return (
-        <ComparisonProvider>
-            <AppContent />
-        </ComparisonProvider>
+        // Wrapper REMOVED. Main.jsx handles this now.
+        <AppContent />
     );
 }
