@@ -294,7 +294,7 @@ function LoginView({ onLogin, onCancel, message, hideSignup }) {
     );
 }
 
-function AppContent() {
+export default function Home() {
     const [currentView, setCurrentView] = useState('catalog');
     const [selectedCategory, setSelectedCategory] = useState('all');
     const [searchQuery, setSearchQuery] = useState('');
@@ -1300,9 +1300,3 @@ function NavButton({ icon: Icon, label, active, onClick, badge }) {
     );
 }
 
-export default function Home() {
-    return (
-
-        <AppContent />
-    );
-}
