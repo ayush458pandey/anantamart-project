@@ -1302,7 +1302,7 @@ function NavButton({ icon: Icon, label, active, onClick, badge }) {
 
 export default function Home() {
     return (
-        // Wrapper REMOVED. Main.jsx handles this now.
+
         <AppContent />
     );
 }
