@@ -20,10 +20,6 @@ import OrdersList from '../components/OrdersList';
 import AllBrands from '../components/AllBrands';
 import Footer from '../components/Footer';
 
-// ✅ FIX: Login is in the same folder (pages), so it is just ./Login
-// (Note: Since you have a Router now, you probably don't even need this import here, 
-// unless you are embedding the Login form directly on the Home page)
-import Login from './Login';
 
 // ✅ FIX: Go up one level (../)
 import SubcategoryGrid from '../components/SubcategoryGrid';
