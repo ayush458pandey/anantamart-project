@@ -2,17 +2,16 @@ import React, { useState, useEffect } from 'react';
 import {
     ShoppingCart, Search, Plus, Minus, Package,
     Coffee, Eye, FileText, User, X, CheckCircle, GitCompare,
-    Utensils, Droplet, Briefcase, Shirt, Home, Store,
+    Utensils, Droplet, Briefcase, Shirt, Home as HomeIcon, Store,
     ShoppingBag, Box, Tag, Grid, Layers, Mail, Phone,
     MapPin, Building, Edit, LogOut, Settings, ChevronLeft
 } from 'lucide-react';
 
-// ✅ FIX: Go up one level (../) to find hooks and context
+// --- FIXED PATHS (../) ---
 import { useProducts } from '../hooks/useProducts';
 import { useCart } from '../context/CartContext';
 import { useComparison } from '../context/ComparisonContext';
 
-// ✅ FIX: Go up one level (../) to find components
 import ProductComparison from '../components/ProductComparison';
 import ProductDetail from '../components/ProductDetail';
 import AdvancedCheckout from '../components/AdvancedCheckout';
@@ -20,64 +19,38 @@ import OrdersList from '../components/OrdersList';
 import AllBrands from '../components/AllBrands';
 import Footer from '../components/Footer';
 
-
-// ✅ FIX: Go up one level (../)
 import SubcategoryGrid from '../components/SubcategoryGrid';
 import BrandGrid from '../components/BrandGrid';
 import BrandPage from '../components/BrandPage';
 import { productService } from '../api/services/productService';
 import CategoryDirectory from '../components/CategoryDirectory';
 
-// ✅ FIX: Go up one level to find the CSS
 import '../index.css';
 
-// Helper function to get icon for category
+// --- HELPER FUNCTIONS ---
 const getCategoryIcon = (category) => {
     if (!category) return Package;
-
     const iconName = category.icon?.toLowerCase() || '';
     const categoryName = category.name?.toLowerCase() || '';
-
     const iconMap = {
-        'package': Package,
-        'box': Box,
-        'coffee': Coffee,
-        'food': Coffee,
-        'beverage': Coffee,
-        'utensils': Utensils,
-        'restaurant': Utensils,
-        'droplet': Droplet,
-        'cleaning': Droplet,
-        'briefcase': Briefcase,
-        'office': Briefcase,
-        'shirt': Shirt,
-        'apparel': Shirt,
-        'home': Home,
-        'store': Store,
-        'shopping': ShoppingBag,
-        'bag': ShoppingBag,
-        'tag': Tag,
-        'grid': Grid,
-        'layers': Layers,
+        'package': Package, 'box': Box, 'coffee': Coffee, 'food': Coffee,
+        'beverage': Coffee, 'utensils': Utensils, 'restaurant': Utensils,
+        'droplet': Droplet, 'cleaning': Droplet, 'briefcase': Briefcase,
+        'office': Briefcase, 'shirt': Shirt, 'apparel': Shirt,
+        'home': HomeIcon, 'store': Store, 'shopping': ShoppingBag,
+        'bag': ShoppingBag, 'tag': Tag, 'grid': Grid, 'layers': Layers,
     };
-
     for (const [key, icon] of Object.entries(iconMap)) {
-        if (iconName.includes(key) || categoryName.includes(key)) {
-            return icon;
-        }
+        if (iconName.includes(key) || categoryName.includes(key)) return icon;
     }
     return Package;
 };
 
-// --- UPDATED LOGIN VIEW (Supports Custom Messages) ---
+// --- LOGIN VIEW COMPONENT ---
 function LoginView({ onLogin, onCancel, message, hideSignup }) {
     const [isLogin, setIsLogin] = useState(true);
     const [formData, setFormData] = useState({
-        email: '',
-        password: '',
-        first_name: '',
-        last_name: '',
-        business_name: ''
+        email: '', password: '', first_name: '', last_name: '', business_name: ''
     });
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
@@ -103,10 +76,7 @@ function LoginView({ onLogin, onCancel, message, hideSignup }) {
             });
 
             const data = await response.json();
-
-            if (!response.ok) {
-                throw new Error(JSON.stringify(data));
-            }
+            if (!response.ok) throw new Error(JSON.stringify(data));
 
             if (!isLogin) {
                 setIsLogin(true);
@@ -133,10 +103,7 @@ function LoginView({ onLogin, onCancel, message, hideSignup }) {
                 const errObj = JSON.parse(err.message);
                 if (errObj.username) msg = "Please enter a valid email/username.";
                 if (errObj.detail) msg = errObj.detail;
-            } catch (e) {
-                msg = err.message;
-            }
-
+            } catch (e) { msg = err.message; }
             if (msg.includes('401')) msg = "Incorrect password or email.";
             setError(msg);
         } finally {
@@ -151,144 +118,55 @@ function LoginView({ onLogin, onCancel, message, hideSignup }) {
     return (
         <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 py-8">
             <div className="bg-white p-8 rounded-xl shadow-lg w-full max-w-md transition-all">
-
-                {/* Custom Message (Bouncer) */}
                 {message && (
                     <div className="bg-blue-50 text-blue-700 px-4 py-3 rounded-lg mb-6 text-sm text-center border border-blue-200 font-medium">
                         {message}
                     </div>
                 )}
-
-                {/* Header with Tabs (Hidden if hideSignup is true) */}
                 {!hideSignup ? (
                     <div className="flex mb-6 border-b border-gray-100">
-                        <button
-                            onClick={() => { setIsLogin(true); setError(''); }}
-                            className={`flex-1 pb-3 text-center font-bold text-lg border-b-2 transition-colors ${isLogin ? 'border-emerald-600 text-emerald-800' : 'border-transparent text-gray-400 hover:text-gray-600'}`}
-                        >
-                            Sign In
-                        </button>
-                        <button
-                            onClick={() => { setIsLogin(false); setError(''); }}
-                            className={`flex-1 pb-3 text-center font-bold text-lg border-b-2 transition-colors ${!isLogin ? 'border-emerald-600 text-emerald-800' : 'border-transparent text-gray-400 hover:text-gray-600'}`}
-                        >
-                            Sign Up
-                        </button>
+                        <button onClick={() => { setIsLogin(true); setError(''); }} className={`flex-1 pb-3 text-center font-bold text-lg border-b-2 transition-colors ${isLogin ? 'border-emerald-600 text-emerald-800' : 'border-transparent text-gray-400'}`}>Sign In</button>
+                        <button onClick={() => { setIsLogin(false); setError(''); }} className={`flex-1 pb-3 text-center font-bold text-lg border-b-2 transition-colors ${!isLogin ? 'border-emerald-600 text-emerald-800' : 'border-transparent text-gray-400'}`}>Sign Up</button>
                     </div>
                 ) : (
-                    <div className="mb-6 text-center">
-                        <h2 className="text-2xl font-bold text-gray-800">Sign In</h2>
-                    </div>
+                    <div className="mb-6 text-center"><h2 className="text-2xl font-bold text-gray-800">Sign In</h2></div>
                 )}
-
-                {error && (
-                    <div className="bg-red-50 text-red-600 p-3 rounded-lg mb-4 text-sm border border-red-200">
-                        {error}
-                    </div>
-                )}
+                {error && <div className="bg-red-50 text-red-600 p-3 rounded-lg mb-4 text-sm border border-red-200">{error}</div>}
 
                 <form onSubmit={handleSubmit} className="space-y-4">
-                    {/* Signup Fields (Only show if NOT hidden and NOT login mode) */}
                     {!isLogin && !hideSignup && (
                         <>
                             <div className="grid grid-cols-2 gap-3">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">First Name</label>
-                                    <input
-                                        type="text"
-                                        required
-                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
-                                        value={formData.first_name}
-                                        onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Last Name</label>
-                                    <input
-                                        type="text"
-                                        required
-                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
-                                        value={formData.last_name}
-                                        onChange={(e) => setFormData({ ...formData, last_name: e.target.value })}
-                                    />
-                                </div>
+                                <div><label className="block text-sm font-medium text-gray-700 mb-1">First Name</label><input type="text" required className="w-full px-4 py-2 border border-gray-300 rounded-lg outline-none" value={formData.first_name} onChange={(e) => setFormData({ ...formData, first_name: e.target.value })} /></div>
+                                <div><label className="block text-sm font-medium text-gray-700 mb-1">Last Name</label><input type="text" required className="w-full px-4 py-2 border border-gray-300 rounded-lg outline-none" value={formData.last_name} onChange={(e) => setFormData({ ...formData, last_name: e.target.value })} /></div>
                             </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Business Name (Optional)</label>
-                                <input
-                                    type="text"
-                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
-                                    value={formData.business_name}
-                                    onChange={(e) => setFormData({ ...formData, business_name: e.target.value })}
-                                    placeholder="e.g. Sharma Traders"
-                                />
-                            </div>
+                            <div><label className="block text-sm font-medium text-gray-700 mb-1">Business Name</label><input type="text" className="w-full px-4 py-2 border border-gray-300 rounded-lg outline-none" value={formData.business_name} onChange={(e) => setFormData({ ...formData, business_name: e.target.value })} /></div>
                         </>
                     )}
-
-                    {/* Common Fields */}
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                        <input
-                            type="email"
-                            required
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
-                            value={formData.email}
-                            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                            placeholder="name@company.com"
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
-                        <input
-                            type="password"
-                            required
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
-                            value={formData.password}
-                            onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                            placeholder="••••••••"
-                        />
-                    </div>
-
-                    <button
-                        type="submit"
-                        disabled={loading}
-                        className="w-full bg-emerald-600 text-white py-3 rounded-lg font-bold hover:bg-emerald-700 transition-colors disabled:opacity-50 shadow-md mt-2"
-                    >
+                    <div><label className="block text-sm font-medium text-gray-700 mb-1">Email</label><input type="email" required className="w-full px-4 py-2 border border-gray-300 rounded-lg outline-none" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} /></div>
+                    <div><label className="block text-sm font-medium text-gray-700 mb-1">Password</label><input type="password" required className="w-full px-4 py-2 border border-gray-300 rounded-lg outline-none" value={formData.password} onChange={(e) => setFormData({ ...formData, password: e.target.value })} /></div>
+                    <button type="submit" disabled={loading} className="w-full bg-emerald-600 text-white py-3 rounded-lg font-bold hover:bg-emerald-700 transition-colors disabled:opacity-50 mt-2">
                         {loading ? 'Processing...' : (isLogin || hideSignup ? 'Sign In' : 'Create Account')}
                     </button>
                 </form>
 
                 <div className="relative my-6">
-                    <div className="absolute inset-0 flex items-center">
-                        <div className="w-full border-t border-gray-300"></div>
-                    </div>
-                    <div className="relative flex justify-center text-sm">
-                        <span className="px-2 bg-white text-gray-500">Or continue with</span>
-                    </div>
+                    <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-gray-300"></div></div>
+                    <div className="relative flex justify-center text-sm"><span className="px-2 bg-white text-gray-500">Or continue with</span></div>
                 </div>
 
-                <button
-                    onClick={handleGoogleLogin}
-                    className="w-full flex items-center justify-center gap-3 bg-white border border-gray-300 text-gray-700 font-medium py-2.5 rounded-lg hover:bg-gray-50 transition-colors"
-                >
-                    {/* Google SVG */}
-                    <svg className="w-5 h-5" viewBox="0 0 24 24">
-                        <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
-                        <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
-                        <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" />
-                        <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
-                    </svg>
+                <button onClick={handleGoogleLogin} className="w-full flex items-center justify-center gap-3 bg-white border border-gray-300 text-gray-700 font-medium py-2.5 rounded-lg hover:bg-gray-50 transition-colors">
+                    <svg className="w-5 h-5" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" /><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" /><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" /><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" /></svg>
                     Google
                 </button>
 
-                <button onClick={onCancel} className="w-full mt-6 text-gray-400 text-sm hover:text-gray-600 transition-colors">
-                    Cancel and return to store
-                </button>
+                <button onClick={onCancel} className="w-full mt-6 text-gray-400 text-sm hover:text-gray-600 transition-colors">Cancel and return to store</button>
             </div>
         </div>
     );
 }
+
+// ⬇️ THIS IS WHERE YOUR 1300 LINES OF CODE WILL START ⬇️
 
 export default function Home() {
     const [currentView, setCurrentView] = useState('catalog');
