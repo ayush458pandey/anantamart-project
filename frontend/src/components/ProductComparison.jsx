@@ -1,3 +1,4 @@
+import React from 'react'; // Added React import just in case
 import { X, Plus, ShoppingCart, Star, Package } from 'lucide-react';
 import { useComparison } from '../context/ComparisonContext';
 import { useCart } from '../context/CartContext';
@@ -49,8 +50,8 @@ export default function ProductComparison({ onClose }) {
               >
                 Clear All
               </button>
-              <button 
-                onClick={onClose} 
+              <button
+                onClick={onClose}
                 className="p-2 hover:bg-gray-100 active:bg-gray-200 rounded-lg transition-colors touch-manipulation min-w-[44px] min-h-[44px] flex items-center justify-center"
                 aria-label="Close"
               >
@@ -186,13 +187,12 @@ export default function ProductComparison({ onClose }) {
                     values={compareList.map((p) => (
                       <div key={p.id} className="text-center">
                         <span
-                          className={`px-2 py-1 rounded-full text-[10px] font-bold inline-block ${
-                            p.stock_status === 'in-stock'
+                          className={`px-2 py-1 rounded-full text-[10px] font-bold inline-block ${p.stock_status === 'in-stock'
                               ? 'bg-green-100 text-green-700'
                               : p.stock_status === 'out-of-stock'
-                              ? 'bg-red-100 text-red-700'
-                              : 'bg-orange-100 text-orange-700'
-                          }`}
+                                ? 'bg-red-100 text-red-700'
+                                : 'bg-orange-100 text-orange-700'
+                            }`}
                         >
                           {p.stock_status === 'in-stock' ? 'In Stock' : p.stock_status === 'out-of-stock' ? 'Out' : 'Low'}
                         </span>
@@ -431,13 +431,12 @@ export default function ProductComparison({ onClose }) {
                   compareList={compareList}
                   values={compareList.map((p) => (
                     <div key={p.id} className="text-center">
-                      <span className={`text-xs px-3 py-1.5 rounded-full font-medium inline-block ${
-                        p.dietary_preference 
-                          ? p.dietary_preference.toLowerCase().includes('veg') 
+                      <span className={`text-xs px-3 py-1.5 rounded-full font-medium inline-block ${p.dietary_preference
+                          ? p.dietary_preference.toLowerCase().includes('veg')
                             ? 'bg-green-100 text-green-700'
                             : 'bg-orange-100 text-orange-700'
                           : 'bg-gray-100 text-gray-500'
-                      }`}>
+                        }`}>
                         {p.dietary_preference || 'N/A'}
                       </span>
                     </div>
@@ -493,13 +492,12 @@ export default function ProductComparison({ onClose }) {
                   values={compareList.map((p) => (
                     <div key={p.id} className="text-center">
                       <span
-                        className={`px-3 py-1.5 rounded-full text-sm font-bold inline-block ${
-                          p.stock_status === 'in-stock'
+                        className={`px-3 py-1.5 rounded-full text-sm font-bold inline-block ${p.stock_status === 'in-stock'
                             ? 'bg-green-100 text-green-700'
                             : p.stock_status === 'out-of-stock'
-                            ? 'bg-red-100 text-red-700'
-                            : 'bg-orange-100 text-orange-700'
-                        }`}
+                              ? 'bg-red-100 text-red-700'
+                              : 'bg-orange-100 text-orange-700'
+                          }`}
                       >
                         {p.stock_status === 'in-stock' ? 'In Stock' : p.stock_status === 'out-of-stock' ? 'Out of Stock' : 'Low Stock'}
                       </span>
@@ -573,8 +571,8 @@ function ComparisonRow({ label, values, compareList }) {
         {label}
       </td>
       {values.map((value, idx) => (
-        <td 
-          key={idx} 
+        <td
+          key={idx}
           className={`p-4 align-top border-r ${idx === compareList.length - 1 ? 'border-r-0' : 'border-gray-200'} bg-white group-hover:bg-gray-50`}
         >
           <div className="flex items-start justify-center min-h-[50px]">
@@ -596,8 +594,8 @@ function MobileComparisonRow({ label, values, compareList }) {
         {label}
       </td>
       {values.map((value, idx) => (
-        <td 
-          key={idx} 
+        <td
+          key={idx}
           className={`p-2 align-top border-r ${idx === compareList.length - 1 ? 'border-r-0' : 'border-gray-200'} bg-white group-hover:bg-gray-50`}
         >
           <div className="flex items-start justify-center min-h-[40px]">
