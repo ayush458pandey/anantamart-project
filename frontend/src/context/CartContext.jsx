@@ -1,97 +1,62 @@
-import { createContext, useState, useContext, useEffect } from 'react';
-import { cartService } from '../api/services/cartService';
+import axios from 'axios';
 
-const CartContext = createContext();
+const API_URL = 'https://api.ananta-mart.in/api';
 
-export const CartProvider = ({ children }) => {
-  const [cart, setCart] = useState({ items: [], total_items: 0, total_price: 0 });
-  const [loading, setLoading] = useState(false);
-
-  // Fetch cart on mount
-  useEffect(() => {
-    fetchCart();
-  }, []);
-
-  const fetchCart = async () => {
-    try {
-      setLoading(true);
-      // getCart now handles errors gracefully and always returns a cart object
-      const data = await cartService.getCart();
-      setCart(data || { items: [], total_items: 0, total_price: 0 });
-    } catch (error) {
-      // This should rarely happen now since getCart handles most errors
-      console.error('Unexpected error fetching cart:', error);
-      setCart({ items: [], total_items: 0, total_price: 0 });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const addToCart = async (productId, quantity = 1) => {
-    try {
-      const data = await cartService.addToCart(productId, quantity);
-      setCart(data || { items: [], total_items: 0, total_price: 0 });
-      return data;
-    } catch (error) {
-      console.error('Error adding to cart:', error);
-      throw error;
-    }
-  };
-
-  const removeFromCart = async (productId) => {
-    try {
-      const data = await cartService.removeFromCart(productId);
-      setCart(data || { items: [], total_items: 0, total_price: 0 });
-      return data;
-    } catch (error) {
-      console.error('Error removing from cart:', error);
-      throw error;
-    }
-  };
-
-  const updateQuantity = async (productId, quantity) => {
-    try {
-      const data = await cartService.updateQuantity(productId, quantity);
-      setCart(data || { items: [], total_items: 0, total_price: 0 });
-      return data;
-    } catch (error) {
-      console.error('Error updating quantity:', error);
-      throw error;
-    }
-  };
-
-  const clearCart = async () => {
-    try {
-      const data = await cartService.clearCart();
-      setCart(data || { items: [], total_items: 0, total_price: 0 });
-      return data;
-    } catch (error) {
-      console.error('Error clearing cart:', error);
-      throw error;
-    }
-  };
-
-  return (
-    <CartContext.Provider
-      value={{
-        cart,
-        loading,
-        addToCart,
-        removeFromCart,
-        updateQuantity,
-        clearCart,
-        fetchCart
-      }}
-    >
-      {children}
-    </CartContext.Provider>
-  );
+// Create an axios instance with the token automatically attached
+const getAuthHeader = () => {
+  const token = localStorage.getItem('access_token');
+  return token ? { Authorization: `Bearer ${token}` } : {};
 };
 
-export const useCart = () => {
-  const context = useContext(CartContext);
-  if (!context) {
-    throw new Error('useCart must be used within CartProvider');
+export const cartService = {
+  // ✅ FIX: Change 'cart/my_cart/' to 'cart/'
+  getCart: async () => {
+    try {
+      const response = await axios.get(`${API_URL}/cart/`, {
+        headers: getAuthHeader()
+      });
+      // If the backend returns a list, return the first item or empty
+      if (Array.isArray(response.data)) {
+        return response.data[0] || { items: [], total_items: 0, total_price: 0 };
+      }
+      return response.data;
+    } catch (error) {
+      // If 404 (No cart exists yet), return empty cart silently
+      if (error.response && error.response.status === 404) {
+        return { items: [], total_items: 0, total_price: 0 };
+      }
+      throw error;
+    }
+  },
+
+  addToCart: async (productId, quantity = 1) => {
+    const response = await axios.post(`${API_URL}/cart/add_item/`, {
+      product_id: productId,
+      quantity: quantity
+    }, { headers: getAuthHeader() });
+    return response.data;
+  },
+
+  removeFromCart: async (itemId) => {
+    const response = await axios.delete(`${API_URL}/cart/remove_item/`, {
+      data: { product_id: itemId }, // Pass ID in body for some backends, or modify URL if needed
+      headers: getAuthHeader()
+    });
+    return response.data;
+  },
+
+  updateQuantity: async (itemId, quantity) => {
+    const response = await axios.patch(`${API_URL}/cart/update_quantity/`, {
+      product_id: itemId,
+      quantity: quantity
+    }, { headers: getAuthHeader() });
+    return response.data;
+  },
+
+  clearCart: async () => {
+    const response = await axios.post(`${API_URL}/cart/clear/`, {}, {
+      headers: getAuthHeader()
+    });
+    return response.data;
   }
-  return context;
 };
