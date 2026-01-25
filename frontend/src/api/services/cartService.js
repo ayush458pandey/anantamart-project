@@ -1,4 +1,4 @@
-import axiosInstance from '../api/axios';
+import axiosInstance from '../axios';
 
 export const cartService = {
   // Get cart - Fixed URL
