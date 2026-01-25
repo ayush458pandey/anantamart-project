@@ -175,7 +175,7 @@ export default function InvoiceGenerator({ orderData, onClose }) {
                   )}
 
                   <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">CGST (9%):</span>
+                    <span className="text-gray-600">CGST:</span>
                     <span className="font-semibold">₹{orderData.pricing.cgst.toFixed(2)}</span>
                   </div>
 
@@ -281,14 +281,14 @@ function numberToWords(num) {
   const teens = ['Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen'];
 
   if (num === 0) return 'Zero';
-  
+
   const amount = Math.floor(num);
-  
+
   if (amount < 10) return ones[amount];
   if (amount < 20) return teens[amount - 10];
   if (amount < 100) return tens[Math.floor(amount / 10)] + ' ' + ones[amount % 10];
   if (amount < 1000) return ones[Math.floor(amount / 100)] + ' Hundred ' + numberToWords(amount % 100);
   if (amount < 100000) return numberToWords(Math.floor(amount / 1000)) + ' Thousand ' + numberToWords(amount % 1000);
-  
+
   return numberToWords(Math.floor(amount / 100000)) + ' Lakh ' + numberToWords(amount % 100000);
 }
