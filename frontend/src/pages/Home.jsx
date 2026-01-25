@@ -606,6 +606,8 @@ export default function Home() {
                                                                 <div key={product.id} className="flex-shrink-0 w-[160px] sm:w-[200px] snap-start">
                                                                     <ProductCard
                                                                         product={product}
+                                                                        cart={cart}  // 👈 ADD THIS LINE
+                                                                        removeFromCart={removeFromCart}
                                                                         onAddToCart={addToCart}
                                                                         onViewDetails={() => setSelectedProduct(product)}
                                                                     />
@@ -641,6 +643,8 @@ export default function Home() {
                                                 <ProductCard
                                                     key={product.id}
                                                     product={product}
+                                                    cart={cart}  // 👈 ADD THIS LINE
+                                                    removeFromCart={removeFromCart}
                                                     onAddToCart={addToCart}
                                                     onViewDetails={() => setSelectedProduct(product)}
                                                 />
@@ -802,9 +806,15 @@ export default function Home() {
 }
 
 // Product Card Component
-function ProductCard({ product, onAddToCart, onViewDetails }) {
-    const [quantity, setQuantity] = useState(product.moq || 1);
-    const [isInCart, setIsInCart] = useState(false);
+// Product Card Component - SMART VERSION
+// Product Card Component - SMART VERSION
+function ProductCard({ product, cart, onAddToCart, removeFromCart, onViewDetails }) {
+    // 1. Check if this specific product is already in the global cart
+    const cartItem = cart?.items?.find(item => item.product.id === product.id);
+
+    // 2. If in cart, use that quantity. If not, default to MOQ.
+    const quantity = cartItem ? cartItem.quantity : (product.moq || 1);
+
     const { addToCompare, removeFromCompare, compareList } = useComparison();
     const isInCompareList = compareList.some(p => p.id === product.id);
 
@@ -816,22 +826,30 @@ function ProductCard({ product, onAddToCart, onViewDetails }) {
         }
     };
 
+    // Add to cart (Initial Add)
     const handleAdd = () => {
-        onAddToCart(product.id, quantity);
-        setIsInCart(true);
+        onAddToCart(product.id, product.moq || 1);
     };
 
+    // Increase Quantity
     const handleIncrement = () => {
-        const newQty = quantity + product.moq;
-        setQuantity(newQty);
+        const step = product.moq || 1;
+        const newQty = quantity + step;
         onAddToCart(product.id, newQty);
     };
 
+    // Decrease Quantity
     const handleDecrement = () => {
-        const newQty = Math.max(product.moq, quantity - product.moq);
-        setQuantity(newQty);
-        if (newQty === product.moq) {
-            setIsInCart(false);
+        const step = product.moq || 1;
+
+        // If decreasing would go below MOQ, we remove the item
+        if (quantity <= step) {
+            if (cartItem && removeFromCart) {
+                removeFromCart(cartItem.id); // Remove using the Cart Item ID
+            }
+        } else {
+            // Otherwise, just lower the quantity
+            onAddToCart(product.id, quantity - step);
         }
     };
 
@@ -880,7 +898,8 @@ function ProductCard({ product, onAddToCart, onViewDetails }) {
                 </button>
 
                 <div className="absolute bottom-1.5 right-1.5 sm:bottom-2 sm:right-2 z-10">
-                    {!isInCart ? (
+                    {!cartItem ? (
+                        /* STATE 1: NOT IN CART - Show ADD Button */
                         <button
                             onClick={(e) => {
                                 e.stopPropagation();
@@ -891,6 +910,7 @@ function ProductCard({ product, onAddToCart, onViewDetails }) {
                             + ADD
                         </button>
                     ) : (
+                        /* STATE 2: IN CART - Show Counter */
                         <div className="flex items-center bg-white rounded-lg shadow-lg border-2 border-emerald-600">
                             <button
                                 onClick={(e) => {
