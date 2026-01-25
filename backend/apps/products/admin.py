@@ -1,13 +1,11 @@
 from django.contrib import admin
 from .models import Category, Product, PriceTier, ProductImage, Subcategory, Brand
 
-
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
     list_display = ['name', 'is_active', 'created_at']
     list_filter = ['is_active']
     search_fields = ['name', 'description']
-
 
 @admin.register(Subcategory)
 class SubcategoryAdmin(admin.ModelAdmin):
@@ -16,7 +14,6 @@ class SubcategoryAdmin(admin.ModelAdmin):
     search_fields = ['name', 'description', 'category__name']
     list_editable = ['is_active']
     fields = ['name', 'category', 'description', 'image', 'icon_name', 'is_active']
-
 
 @admin.register(Brand)
 class BrandAdmin(admin.ModelAdmin):
@@ -27,30 +24,26 @@ class BrandAdmin(admin.ModelAdmin):
     prepopulated_fields = {'slug': ('name',)}
     fields = ['name', 'slug', 'logo', 'description', 'is_active']
 
-
 class ProductImageInline(admin.TabularInline):
     model = ProductImage
     extra = 1
     fields = ['image', 'order', 'is_primary', 'alt_text']
-
 
 class PriceTierInline(admin.TabularInline):
     model = PriceTier
     extra = 1
     fields = ['min_quantity', 'max_quantity', 'price']
 
-
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
-    # Added 'tax_rate' to list_display
-    list_display = ['name', 'sku', 'brand_ref', 'category', 'subcategory', 'base_price', 'tax_rate', 'stock', 'stock_status', 'is_active']
+    # 🟢 Added 'hsn_code' to the list view
+    list_display = ['name', 'sku', 'brand_ref', 'category', 'subcategory', 'base_price', 'tax_rate', 'hsn_code', 'stock', 'stock_status', 'is_active']
     
-    # Added 'tax_rate' to filters
     list_filter = ['category', 'subcategory', 'brand_ref', 'is_active', 'stock_status', 'tax_rate', 'dietary_preference']
     
-    search_fields = ['name', 'sku', 'brand__name', 'brand_ref__name', 'description']
+    # 🟢 Added 'hsn_code' to search (so you can search by it)
+    search_fields = ['name', 'sku', 'hsn_code', 'brand__name', 'brand_ref__name', 'description']
     
-    # Added 'tax_rate' to editable list fields
     list_editable = ['stock', 'is_active', 'base_price', 'tax_rate']
     
     readonly_fields = ['created_at', 'updated_at']
@@ -67,8 +60,8 @@ class ProductAdmin(admin.ModelAdmin):
             'fields': ('usage_recommendation', 'storage_instruction')
         }),
         ('Pricing', {
-            # Added tax_rate here
-            'fields': ('mrp', 'base_price', 'tax_rate')
+            # 🟢 ADDED hsn_code HERE (It will appear right below tax_rate)
+            'fields': ('mrp', 'base_price', 'tax_rate', 'hsn_code')
         }),
         ('Stock', {
             'fields': ('stock', 'stock_status', 'moq', 'case_size')
@@ -89,14 +82,12 @@ class ProductAdmin(admin.ModelAdmin):
     
     inlines = [ProductImageInline, PriceTierInline]
 
-
 @admin.register(ProductImage)
 class ProductImageAdmin(admin.ModelAdmin):
     list_display = ['product', 'order', 'is_primary', 'created_at']
     list_filter = ['is_primary', 'created_at']
     search_fields = ['product__name', 'alt_text']
     list_editable = ['order', 'is_primary']
-
 
 @admin.register(PriceTier)
 class PriceTierAdmin(admin.ModelAdmin):
