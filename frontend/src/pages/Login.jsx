@@ -1,100 +1,110 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext'; // Import the new Auth hook
-import axios from 'axios';
-
-// Ensure this matches your Django URL
-const API_URL = 'https://api.ananta-mart.in/api';
+import axiosInstance from '../api/axios'; // 👈 IMPORT SHARED INSTANCE
+import { useAuth } from '../context/AuthContext';
 
 const Login = () => {
-    const [formData, setFormData] = useState({ email: '', password: '' });
+    const [formData, setFormData] = useState({
+        email: '',
+        password: ''
+    });
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
-
-    const { login } = useAuth(); // Get the login function
     const navigate = useNavigate();
+    const { login } = useAuth();
 
     const handleChange = (e) => {
-        setFormData({ ...formData, [e.target.name]: e.target.value });
+        setFormData({
+            ...formData,
+            [e.target.name]: e.target.value
+        });
+        // Clear error when user starts typing
+        if (error) setError('');
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setError('');
         setLoading(true);
+        setError('');
 
         try {
-            // 1. Send credentials to Django
-            const response = await axios.post(`${API_URL}/token/`, {
+            // 👇 Use axiosInstance (It already knows the Base URL)
+            const response = await axiosInstance.post('/token/', {
                 email: formData.email,
                 password: formData.password
             });
 
-            // 2. If successful, we get 'access' and 'refresh' tokens
-            const { access, refresh } = response.data;
+            console.log('Login success:', response.data);
 
-            // 3. Call our AuthContext to save them and update the app state
-            // (We pass the email as the user object for now)
-            login({ email: formData.email }, { access, refresh });
+            // Pass tokens to AuthContext
+            login(response.data.access, response.data.refresh);
 
-            // 4. Redirect to Home
             navigate('/');
-
         } catch (err) {
-            console.error("Login Error:", err);
-            setError('Invalid email or password. Please try again.');
+            console.error('Login error:', err);
+            const errorMessage = err.response?.data?.detail ||
+                'Invalid email or password. Please try again.';
+            setError(errorMessage);
         } finally {
             setLoading(false);
         }
     };
 
     return (
-        <div className="flex justify-center items-center min-h-screen bg-gray-100">
-            <div className="bg-white p-8 rounded shadow-md w-full max-w-md">
-                <h2 className="text-2xl font-bold mb-6 text-center text-primary">Login</h2>
-
+        <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+            <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-lg shadow-md">
+                <div>
+                    <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+                        Sign in to your account
+                    </h2>
+                </div>
                 {error && (
-                    <div className="bg-red-100 text-red-700 p-3 rounded mb-4 text-sm">
-                        {error}
+                    <div className="bg-red-50 border-l-4 border-red-500 p-4 text-red-700">
+                        <p>{error}</p>
                     </div>
                 )}
-
-                <form onSubmit={handleSubmit}>
-                    <div className="mb-4">
-                        <label className="block text-gray-700 mb-2">Email Address</label>
-                        <input
-                            type="email"
-                            name="email"
-                            value={formData.email}
-                            onChange={handleChange}
-                            className="w-full p-2 border rounded focus:outline-none focus:border-primary"
-                            required
-                        />
+                <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+                    <div className="rounded-md shadow-sm -space-y-px">
+                        <div className="mb-4">
+                            <label className="block text-gray-700 mb-2">Email Address</label>
+                            <input
+                                name="email"
+                                type="email"
+                                required
+                                className="appearance-none rounded relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                                placeholder="Email address"
+                                value={formData.email}
+                                onChange={handleChange}
+                            />
+                        </div>
+                        <div className="mb-6">
+                            <label className="block text-gray-700 mb-2">Password</label>
+                            <input
+                                name="password"
+                                type="password"
+                                required
+                                className="appearance-none rounded relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                                placeholder="Password"
+                                value={formData.password}
+                                onChange={handleChange}
+                            />
+                        </div>
                     </div>
 
-                    <div className="mb-6">
-                        <label className="block text-gray-700 mb-2">Password</label>
-                        <input
-                            type="password"
-                            name="password"
-                            value={formData.password}
-                            onChange={handleChange}
-                            className="w-full p-2 border rounded focus:outline-none focus:border-primary"
-                            required
-                        />
+                    <div>
+                        <button
+                            type="submit"
+                            disabled={loading}
+                            className={`group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white ${loading ? 'bg-indigo-400' : 'bg-indigo-600 hover:bg-indigo-700'
+                                } focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500`}
+                        >
+                            {loading ? 'Signing in...' : 'Sign in'}
+                        </button>
                     </div>
-
-                    <button
-                        type="submit"
-                        disabled={loading}
-                        className={`w-full bg-blue-600 text-white p-2 rounded hover:bg-blue-700 transition duration-200 ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
-                    >
-                        {loading ? 'Signing In...' : 'Sign In'}
-                    </button>
                 </form>
 
                 <p className="mt-4 text-center text-sm text-gray-600">
-                    Don't have an account? <Link to="/register" className="text-blue-600 hover:underline">Register</Link>
+                    Don't have an account? <Link to="/register" className="text-indigo-600 hover:text-indigo-500 font-medium">Register</Link>
                 </p>
             </div>
         </div>
