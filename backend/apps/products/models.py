@@ -101,6 +101,13 @@ class Product(models.Model):
         default=Decimal('18.00'), 
         help_text="Select applicable GST Slab"
     )
+
+    hsn_code = models.CharField(
+        max_length=20, 
+        blank=True, 
+        null=True, 
+        help_text="Harmonized System of Nomenclature code for GST"
+    )
     
     stock = models.PositiveIntegerField(default=0)
     stock_status = models.CharField(max_length=20, choices=STOCK_STATUS_CHOICES, default='in-stock')
