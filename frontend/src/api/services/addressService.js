@@ -1,36 +1,28 @@
-const BASE_URL = 'https://api.ananta-mart.in/api/user/addresses/';
-// const BASE_URL = 'http://127.0.0.1:8000/api/user/addresses/';
-
-const getHeaders = () => {
-    const token = localStorage.getItem('access_token');
-    return {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-    };
-};
+import axiosInstance from '../axios';
 
 export const addressService = {
-    // Get all addresses for the logged-in user
+    // Get all addresses
     getAddresses: async () => {
-        const response = await fetch(BASE_URL, {
-            method: 'GET',
-            headers: getHeaders(),
-        });
-        if (!response.ok) throw new Error('Failed to fetch addresses');
-        return await response.json();
+        // axiosInstance already knows the base URL and adds the token automatically
+        const response = await axiosInstance.get('/user/addresses/');
+        return response.data;
     },
 
     // Add a new address
     addAddress: async (addressData) => {
-        const response = await fetch(BASE_URL, {
-            method: 'POST',
-            headers: getHeaders(),
-            body: JSON.stringify(addressData)
-        });
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(JSON.stringify(errorData));
-        }
-        return await response.json();
+        const response = await axiosInstance.post('/user/addresses/', addressData);
+        return response.data;
+    },
+
+    // Optional: Delete address (useful for future)
+    deleteAddress: async (id) => {
+        await axiosInstance.delete(`/user/addresses/${id}/`);
+        return id;
+    },
+
+    // Optional: Update address
+    updateAddress: async (id, addressData) => {
+        const response = await axiosInstance.put(`/user/addresses/${id}/`, addressData);
+        return response.data;
     }
 };
