@@ -48,6 +48,7 @@ class PriceTierSerializer(serializers.ModelSerializer):
         model = PriceTier
         fields = ['min_quantity', 'max_quantity', 'price', 'mrp']
 
+# 🟢 THIS MUST BE DEFINED BEFORE ProductSerializer
 class ProductImageSerializer(serializers.ModelSerializer):
     image_url = serializers.SerializerMethodField()
     
@@ -69,14 +70,16 @@ class ProductSerializer(serializers.ModelSerializer):
     brand_name = serializers.SerializerMethodField()
     brand_logo = serializers.SerializerMethodField()
     stock_status = serializers.CharField(read_only=True)
+    
+    # This line caused the error because ProductImageSerializer wasn't found above it
     images = ProductImageSerializer(many=True, read_only=True)
+    
     key_features_list = serializers.SerializerMethodField()
     image_url = serializers.SerializerMethodField()
     
     # 🟢 MAPPING FIX: Map model's 'tax_rate' to frontend's expected 'gst_rate'
     gst_rate = serializers.DecimalField(source='tax_rate', max_digits=5, decimal_places=2, read_only=True)
     
-    # Optional: Include tiers if needed for frontend logic
     tiers = PriceTierSerializer(many=True, read_only=True)
 
     class Meta:
@@ -87,7 +90,7 @@ class ProductSerializer(serializers.ModelSerializer):
             'ingredients', 'packaging_type', 'dietary_preference',
             'storage_instruction', 'usage_recommendation', 'unit', 'weight',
             'image', 'image_url', 'images', 'mrp', 'base_price', 
-            'gst_rate', # 🟢 Correctly exposed now via the alias above
+            'gst_rate', # 🟢 Correctly exposed via the alias above
             'stock', 'stock_status',
             'moq', 'case_size', 'is_active', 'created_at', 'tiers'
         ]
