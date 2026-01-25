@@ -4,8 +4,7 @@ from .models import Product, Category, PriceTier, ProductImage, Subcategory, Bra
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
-        fields = ['id', 'name', 'description', 'icon','image', 'is_active']
-
+        fields = ['id', 'name', 'description', 'icon', 'image', 'is_active']
 
 class SubcategorySerializer(serializers.ModelSerializer):
     category_name = serializers.CharField(source='category.name', read_only=True)
@@ -26,7 +25,6 @@ class SubcategorySerializer(serializers.ModelSerializer):
     def get_product_count(self, obj):
         return obj.products.filter(is_active=True).count()
 
-
 class BrandSerializer(serializers.ModelSerializer):
     logo_url = serializers.SerializerMethodField()
     product_count = serializers.SerializerMethodField()
@@ -45,12 +43,10 @@ class BrandSerializer(serializers.ModelSerializer):
     def get_product_count(self, obj):
         return obj.products.filter(is_active=True).count()
 
-
 class PriceTierSerializer(serializers.ModelSerializer):
     class Meta:
         model = PriceTier
         fields = ['min_quantity', 'max_quantity', 'price', 'mrp']
-
 
 class ProductImageSerializer(serializers.ModelSerializer):
     image_url = serializers.SerializerMethodField()
@@ -66,7 +62,7 @@ class ProductImageSerializer(serializers.ModelSerializer):
                 return request.build_absolute_uri(obj.image.url)
         return None
 
-
+# 🟢 FINAL CORRECTED PRODUCT SERIALIZER
 class ProductSerializer(serializers.ModelSerializer):
     category_name = serializers.CharField(source='category.name', read_only=True)
     subcategory_name = serializers.CharField(source='subcategory.name', read_only=True, allow_null=True)
@@ -77,6 +73,12 @@ class ProductSerializer(serializers.ModelSerializer):
     key_features_list = serializers.SerializerMethodField()
     image_url = serializers.SerializerMethodField()
     
+    # 🟢 MAPPING FIX: Map model's 'tax_rate' to frontend's expected 'gst_rate'
+    gst_rate = serializers.DecimalField(source='tax_rate', max_digits=5, decimal_places=2, read_only=True)
+    
+    # Optional: Include tiers if needed for frontend logic
+    tiers = PriceTierSerializer(many=True, read_only=True)
+
     class Meta:
         model = Product
         fields = [
@@ -85,7 +87,7 @@ class ProductSerializer(serializers.ModelSerializer):
             'ingredients', 'packaging_type', 'dietary_preference',
             'storage_instruction', 'usage_recommendation', 'unit', 'weight',
             'image', 'image_url', 'images', 'mrp', 'base_price', 
-            'gst_rate', 'hsn_code',  # 🟢 ADDED THIS!
+            'gst_rate', # 🟢 Correctly exposed now via the alias above
             'stock', 'stock_status',
             'moq', 'case_size', 'is_active', 'created_at', 'tiers'
         ]
@@ -112,51 +114,5 @@ class ProductSerializer(serializers.ModelSerializer):
             request = self.context.get('request')
             if request:
                 return request.build_absolute_uri(obj.image.url)
-            return obj.image.url if obj.image else None
-        return None
-    category_name = serializers.CharField(source='category.name', read_only=True)
-    subcategory_name = serializers.CharField(source='subcategory.name', read_only=True, allow_null=True)
-    brand_name = serializers.SerializerMethodField()
-    brand_logo = serializers.SerializerMethodField()
-    stock_status = serializers.CharField(read_only=True)
-    images = ProductImageSerializer(many=True, read_only=True)
-    key_features_list = serializers.SerializerMethodField()
-    image_url = serializers.SerializerMethodField()
-    
-    class Meta:
-        model = Product
-        fields = [
-            'id', 'name', 'sku', 'category', 'category_name', 'subcategory', 'subcategory_name', 'description',
-            'brand', 'brand_ref', 'brand_name', 'brand_logo', 'product_type', 'key_features', 'key_features_list',
-            'ingredients', 'packaging_type', 'dietary_preference',
-            'storage_instruction', 'usage_recommendation', 'unit', 'weight',
-            'image', 'image_url', 'images', 'mrp', 'base_price', 'stock', 'stock_status',
-            'moq', 'case_size', 'is_active', 'created_at', 'tiers'
-        ]
-    
-    def get_brand_name(self, obj):
-        # Prefer brand_ref, fallback to brand CharField
-        if obj.brand_ref:
-            return obj.brand_ref.name
-        return obj.brand or 'Generic'
-    
-    def get_brand_logo(self, obj):
-        if obj.brand_ref and obj.brand_ref.logo:
-            request = self.context.get('request')
-            if request:
-                return request.build_absolute_uri(obj.brand_ref.logo.url)
-        return None
-    
-    def get_key_features_list(self, obj):
-        if obj.key_features:
-            return [f.strip() for f in obj.key_features.split('\n') if f.strip()]
-        return []
-    
-    def get_image_url(self, obj):
-        if obj.image:
-            request = self.context.get('request')
-            if request:
-                return request.build_absolute_uri(obj.image.url)
-            # Fallback if no request context
             return obj.image.url if obj.image else None
         return None
