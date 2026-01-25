@@ -41,7 +41,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'django_filters',
     'corsheaders',
-    'smart_selects'
+    'smart_selects' ,
     
     # Local apps
     'apps.products',
