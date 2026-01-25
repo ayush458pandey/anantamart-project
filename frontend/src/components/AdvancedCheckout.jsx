@@ -184,6 +184,23 @@ export default function AdvancedCheckout({ cart, onClose, onPlaceOrder }) {
     }
   };
 
+  // 👇 ADD THIS FUNCTION (It was missing)
+  const handleSaveAddress = async (newAddressData) => {
+    try {
+      setIsProcessing(true);
+      const savedAddress = await addressService.addAddress(newAddressData);
+
+      setAddresses((prev) => [...prev, savedAddress]);
+      setSelectedAddress(savedAddress.id);
+      setShowAddressForm(false);
+    } catch (error) {
+      console.error("Failed to save address:", error);
+      alert("Failed to add address. Please try again.");
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
   // Handle Place Order
   const handlePlaceOrder = async () => {
     if (!selectedPayment || !selectedAddress) {
