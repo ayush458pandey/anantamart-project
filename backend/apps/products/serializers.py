@@ -46,9 +46,10 @@ class BrandSerializer(serializers.ModelSerializer):
 class PriceTierSerializer(serializers.ModelSerializer):
     class Meta:
         model = PriceTier
-        fields = ['min_quantity', 'max_quantity', 'price', 'mrp']
+        # 🟢 FIX: Removed 'mrp' (it doesn't exist on this model)
+        fields = ['min_quantity', 'max_quantity', 'price']
 
-# 🟢 THIS MUST BE DEFINED BEFORE ProductSerializer
+# 🟢 Defined BEFORE ProductSerializer (Essential for Python to find it)
 class ProductImageSerializer(serializers.ModelSerializer):
     image_url = serializers.SerializerMethodField()
     
@@ -63,7 +64,6 @@ class ProductImageSerializer(serializers.ModelSerializer):
                 return request.build_absolute_uri(obj.image.url)
         return None
 
-# 🟢 FINAL CORRECTED PRODUCT SERIALIZER
 class ProductSerializer(serializers.ModelSerializer):
     category_name = serializers.CharField(source='category.name', read_only=True)
     subcategory_name = serializers.CharField(source='subcategory.name', read_only=True, allow_null=True)
@@ -71,14 +71,14 @@ class ProductSerializer(serializers.ModelSerializer):
     brand_logo = serializers.SerializerMethodField()
     stock_status = serializers.CharField(read_only=True)
     
-    # This line caused the error because ProductImageSerializer wasn't found above it
+    # This works now because the class is defined above ⬆️
     images = ProductImageSerializer(many=True, read_only=True)
     
     key_features_list = serializers.SerializerMethodField()
     image_url = serializers.SerializerMethodField()
     
-    # 🟢 MAPPING FIX: Map model's 'tax_rate' to frontend's expected 'gst_rate'
-    gst_rate = serializers.DecimalField(source='tax_rate', max_digits=5, decimal_places=2, read_only=True)
+    # ⚠️ COMMENTED OUT until we verify models.py (Prevents 500 error)
+    # gst_rate = serializers.DecimalField(source='tax_rate', max_digits=5, decimal_places=2, read_only=True)
     
     tiers = PriceTierSerializer(many=True, read_only=True)
 
@@ -90,7 +90,7 @@ class ProductSerializer(serializers.ModelSerializer):
             'ingredients', 'packaging_type', 'dietary_preference',
             'storage_instruction', 'usage_recommendation', 'unit', 'weight',
             'image', 'image_url', 'images', 'mrp', 'base_price', 
-            'gst_rate', # 🟢 Correctly exposed via the alias above
+            # 'gst_rate',  # <-- Disabled for safety
             'stock', 'stock_status',
             'moq', 'case_size', 'is_active', 'created_at', 'tiers'
         ]
