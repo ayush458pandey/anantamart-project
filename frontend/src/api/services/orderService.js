@@ -1,17 +1,22 @@
 import axiosInstance from '../axios';
 
 export const orderService = {
-  // Create new order (Matches AdvancedCheckout.jsx)
+  // 🟢 FIX: Changed '/orders/create/' back to '/orders/'
+  // This is the standard Django REST Framework endpoint for creating items.
   createOrder: async (orderData) => {
-    // ⚠️ IMPORTANT: If your backend url is just '/orders/', change this line. 
-    // But usually it is '/orders/create/' for explicit creation endpoints.
-    const response = await axiosInstance.post('/orders/create/', orderData);
-    return response.data;
+    try {
+      const response = await axiosInstance.post('/orders/', orderData);
+      return response.data;
+    } catch (error) {
+      // Log the full backend error to help debug if it fails again
+      console.error("Create Order Error:", error.response?.data || error.message);
+      throw error;
+    }
   },
 
-  // Get order history (Matches "My Orders" page)
+  // Get order history
   getAllOrders: async () => {
-    const response = await axiosInstance.get('/orders/history/'); // or '/orders/' depending on urls.py
+    const response = await axiosInstance.get('/orders/');
     return response.data;
   },
 
