@@ -28,15 +28,15 @@ const Login = () => {
         setError('');
 
         try {
+            // 🚨 FIX: Change 'email' to 'username'
+            // Django SimpleJWT expects 'username' by default, even if you log in with an email.
             const response = await axiosInstance.post('/token/', {
-                email: formData.email,
+                username: formData.email,
                 password: formData.password
             });
 
             console.log('Login success:', response.data);
 
-            // 🚨 FIX: Match AuthContext signature: login(userData, tokensObject)
-            // We create a temporary user object with the email since standard JWT only returns tokens
             const userPayload = { email: formData.email };
             const tokenPayload = {
                 access: response.data.access,
@@ -48,14 +48,15 @@ const Login = () => {
             navigate('/');
         } catch (err) {
             console.error('Login error:', err);
+            // Check if the backend sent a specific validation error
             const errorMessage = err.response?.data?.detail ||
+                err.response?.data?.username?.[0] || // Catch "This field is required" error
                 'Invalid email or password. Please try again.';
             setError(errorMessage);
         } finally {
             setLoading(false);
         }
     };
-
     return (
         <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
             <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-lg shadow-md">
