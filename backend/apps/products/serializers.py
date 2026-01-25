@@ -1,68 +1,9 @@
 from rest_framework import serializers
 from .models import Product, Category, PriceTier, ProductImage, Subcategory, Brand
 
-class CategorySerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Category
-        fields = ['id', 'name', 'description', 'icon', 'image', 'is_active']
+# ... [Keep your Category, Subcategory, Brand, PriceTier, ProductImage serializers exactly as they are] ...
+# (Only replace the ProductSerializer class below)
 
-class SubcategorySerializer(serializers.ModelSerializer):
-    category_name = serializers.CharField(source='category.name', read_only=True)
-    image_url = serializers.SerializerMethodField()
-    product_count = serializers.SerializerMethodField()
-    
-    class Meta:
-        model = Subcategory
-        fields = ['id', 'name', 'category', 'category_name', 'description', 'image', 'image_url', 'icon_name', 'product_count', 'is_active']
-    
-    def get_image_url(self, obj):
-        if obj.image:
-            request = self.context.get('request')
-            if request:
-                return request.build_absolute_uri(obj.image.url)
-        return None
-    
-    def get_product_count(self, obj):
-        return obj.products.filter(is_active=True).count()
-
-class BrandSerializer(serializers.ModelSerializer):
-    logo_url = serializers.SerializerMethodField()
-    product_count = serializers.SerializerMethodField()
-    
-    class Meta:
-        model = Brand
-        fields = ['id', 'name', 'slug', 'logo', 'logo_url', 'description', 'product_count', 'is_active']
-    
-    def get_logo_url(self, obj):
-        if obj.logo:
-            request = self.context.get('request')
-            if request:
-                return request.build_absolute_uri(obj.logo.url)
-        return None
-    
-    def get_product_count(self, obj):
-        return obj.products.filter(is_active=True).count()
-
-class PriceTierSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = PriceTier
-        fields = ['min_quantity', 'max_quantity', 'price', 'mrp']
-
-class ProductImageSerializer(serializers.ModelSerializer):
-    image_url = serializers.SerializerMethodField()
-    
-    class Meta:
-        model = ProductImage
-        fields = ['id', 'image', 'image_url', 'order', 'is_primary']
-    
-    def get_image_url(self, obj):
-        if obj.image:
-            request = self.context.get('request')
-            if request:
-                return request.build_absolute_uri(obj.image.url)
-        return None
-
-# 🟢 FINAL CORRECTED PRODUCT SERIALIZER
 class ProductSerializer(serializers.ModelSerializer):
     category_name = serializers.CharField(source='category.name', read_only=True)
     subcategory_name = serializers.CharField(source='subcategory.name', read_only=True, allow_null=True)
@@ -73,10 +14,10 @@ class ProductSerializer(serializers.ModelSerializer):
     key_features_list = serializers.SerializerMethodField()
     image_url = serializers.SerializerMethodField()
     
-    # 🟢 MAPPING FIX: Map model's 'tax_rate' to frontend's expected 'gst_rate'
+    # 🟢 MAPPING: This looks for 'tax_rate' in your database and sends it as 'gst_rate'
+    # If your model field is named something else (like 'gst'), change source='gst'
     gst_rate = serializers.DecimalField(source='tax_rate', max_digits=5, decimal_places=2, read_only=True)
     
-    # Optional: Include tiers if needed for frontend logic
     tiers = PriceTierSerializer(many=True, read_only=True)
 
     class Meta:
@@ -87,7 +28,8 @@ class ProductSerializer(serializers.ModelSerializer):
             'ingredients', 'packaging_type', 'dietary_preference',
             'storage_instruction', 'usage_recommendation', 'unit', 'weight',
             'image', 'image_url', 'images', 'mrp', 'base_price', 
-            'gst_rate', # 🟢 Correctly exposed now via the alias above
+            'gst_rate',  # 🟢 Only this alias is needed
+            # 'hsn_code', ❌ REMOVED: This causes a 500 error if not in your models.py!
             'stock', 'stock_status',
             'moq', 'case_size', 'is_active', 'created_at', 'tiers'
         ]
