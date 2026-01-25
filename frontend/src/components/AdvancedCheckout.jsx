@@ -7,6 +7,7 @@ import InvoiceGenerator from './InvoiceGenerator';
 import AddressForm from './AddressForm';
 import { orderService } from '../api/services/orderService';
 import { addressService } from '../api/services/addressService';
+import { cartService } from '../api/services/cartService';
 
 const paymentMethods = [
   {
@@ -169,15 +170,23 @@ export default function AdvancedCheckout({ cart, onClose, onPlaceOrder }) {
         transaction_id: paymentDetails.razorpay_payment_id || null
       };
 
+      // 1. Create the Order
       const createdOrder = await orderService.createOrder(orderPayload);
 
+      // 2. 🟢 CLEAR THE CART (This was missing)
+      // We wait for this to finish so the UI updates correctly
+      await cartService.clearCart();
+
+      // 3. Show Success Screen
       setCompletedOrder({
         ...createdOrder,
         delivery_address: addressObj,
         pricing: { subtotal, discount, cgst, sgst, delivery: deliveryCharges, total }
       });
       setOrderPlaced(true);
+
     } catch (err) {
+      console.error("Order processing error:", err);
       alert("Failed to save order: " + err.message);
     } finally {
       setIsProcessing(false);
