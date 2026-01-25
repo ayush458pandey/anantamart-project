@@ -9,19 +9,22 @@ from rest_framework_simplejwt.views import (
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('chaining/', include('smart_selects.urls')),
     
     # --- Auth & User ---
     path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('api/user/', include('apps.users.urls')), 
     
-    # --- Orders (Specific Path) ---
+    # --- Orders ---
     path('api/orders/', include('apps.orders.urls')),
 
-    # --- Other Apps ---
-    path('api/', include('apps.products.urls')),
+    # ✅ MOVED UP: Cart & Core must be checked BEFORE Products
     path('api/', include('apps.cart.urls')),
     path('api/', include('core.urls')),
+
+    # 👇 PRODUCTS MUST BE LAST (because it has "catch-all" patterns)
+    path('api/', include('apps.products.urls')),
 ]
 
 if settings.DEBUG:
