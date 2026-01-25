@@ -28,7 +28,6 @@ const Login = () => {
         setError('');
 
         try {
-            // 👇 Use axiosInstance (It already knows the Base URL)
             const response = await axiosInstance.post('/token/', {
                 email: formData.email,
                 password: formData.password
@@ -36,8 +35,15 @@ const Login = () => {
 
             console.log('Login success:', response.data);
 
-            // Pass tokens to AuthContext
-            login(response.data.access, response.data.refresh);
+            // 🚨 FIX: Match AuthContext signature: login(userData, tokensObject)
+            // We create a temporary user object with the email since standard JWT only returns tokens
+            const userPayload = { email: formData.email };
+            const tokenPayload = {
+                access: response.data.access,
+                refresh: response.data.refresh
+            };
+
+            login(userPayload, tokenPayload);
 
             navigate('/');
         } catch (err) {
