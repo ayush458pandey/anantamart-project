@@ -314,10 +314,13 @@ export default function AdvancedCheckout({ cart, onClose, onPlaceOrder }) {
                 View Invoice
               </button>
               <button
-                onClick={onClose}
+                onClick={() => {
+                  // 🟢 Force a redirect to Home, which reloads the cart data
+                  window.location.href = '/';
+                }}
                 className="flex-1 bg-emerald-600 text-white font-bold py-3 rounded-lg hover:bg-emerald-700"
               >
-                Continue
+                Continue Shopping
               </button>
             </div>
           </div>
