@@ -308,9 +308,18 @@ export default function Home() {
 
     const estimateSubtotal = cart?.items?.reduce((sum, item) =>
         sum + parseFloat(item.total_price), 0) || 0;
-    const cgst = estimateSubtotal * 0.09;
-    const sgst = estimateSubtotal * 0.09;
-    const estimateTotal = estimateSubtotal + cgst + sgst;
+
+    // 🟢 FIX: Calculate Tax per item based on its specific GST rate
+    const totalTaxAmount = cart?.items?.reduce((total, item) => {
+        const itemTotal = parseFloat(item.total_price);
+        // Use the product's GST rate, or default to 18% if missing
+        const itemRate = parseFloat(item.product.gst_rate || 18);
+        return total + (itemTotal * (itemRate / 100));
+    }, 0) || 0;
+
+    const cgst = totalTaxAmount / 2;
+    const sgst = totalTaxAmount / 2;
+    const estimateTotal = estimateSubtotal + totalTaxAmount;
 
     const currentCategoryName = categories.find(c => c.id === selectedCategory)?.name || 'All Products';
     const activeSubcategory = subcategories.find(s => s.id === selectedSubcategory);
