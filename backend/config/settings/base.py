@@ -181,3 +181,8 @@ if not DEBUG:
 # --- RAZORPAY PAYMENT GATEWAY CONFIGURATION ---
 RAZORPAY_KEY_ID = os.environ.get('RAZORPAY_KEY_ID', '')
 RAZORPAY_KEY_SECRET = os.environ.get('RAZORPAY_KEY_SECRET', '')
+
+# --- Smart Selects Configuration ---
+USE_DJANGO_JQUERY = True
+JQUERY_URL = False
+SMART_SELECTS_USE_BOOTSTRAP = False
