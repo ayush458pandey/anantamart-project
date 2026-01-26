@@ -108,6 +108,9 @@ class Product(models.Model):
         null=True, 
         help_text="Harmonized System of Nomenclature code for GST"
     )
+
+    # Simple Color Options (Comma separated e.g. "Red, Blue, Green")
+    available_colors = models.TextField(blank=True, help_text="Comma separated colors (e.g. Red, Blue, #FF0000)")
     
     stock = models.PositiveIntegerField(default=0)
     stock_status = models.CharField(max_length=20, choices=STOCK_STATUS_CHOICES, default='in-stock')
