@@ -280,6 +280,23 @@ export default function Home() {
         setShowSubcategoryView(true);
     };
 
+    // Navigation function for clicking on product location (📍 Category › Subcategory)
+    const navigateToCategory = (categoryId, subcategoryId) => {
+        setSearchQuery(''); // Clear search
+        setSelectedCategory(categoryId);
+        if (subcategoryId) {
+            setSelectedSubcategory(subcategoryId);
+            setShowSubcategoryView(false);
+        } else {
+            setSelectedSubcategory(null);
+            setShowSubcategoryView(true);
+        }
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    // Expose to window for ProductCard to use
+    window.navigateToCategory = navigateToCategory;
+
     const filteredProducts = products.filter(product => {
         // Enhanced search: matches name, sku, brand, description, category, key features
         const query = searchQuery.toLowerCase().trim();
@@ -997,9 +1014,18 @@ function ProductCard({ product, cart, onAddToCart, removeFromCart, onViewDetails
                     SKU: <span className="font-medium text-gray-700">{product.sku}</span>
                 </p>
 
-                {/* Show category/subcategory so users know where the product is */}
+                {/* Show category/subcategory so users know where the product is - CLICKABLE */}
                 {(product.category_name || product.subcategory_name) && (
-                    <p className="text-[10px] sm:text-[11px] text-emerald-600 mb-0.5 sm:mb-1 truncate">
+                    <p
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            // Clear search and navigate to category
+                            if (product.category && window.navigateToCategory) {
+                                window.navigateToCategory(product.category, product.subcategory);
+                            }
+                        }}
+                        className="text-[10px] sm:text-[11px] text-emerald-600 mb-0.5 sm:mb-1 truncate cursor-pointer hover:underline hover:text-emerald-700"
+                    >
                         📍 {product.category_name}{product.subcategory_name ? ` › ${product.subcategory_name}` : ''}
                     </p>
                 )}
