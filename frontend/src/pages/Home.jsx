@@ -1114,35 +1114,33 @@ function ProductCard({ product, cart, onAddToCart, removeFromCart, onViewDetails
                         )}
                     </div>
                 )}
-            </div>
+
+                {/* Show category/subcategory so users know where the product is - CLICKABLE */}
+                {(product.category_name || product.subcategory_name) && (
+                    <p
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            // Clear search and navigate to category
+                            if (product.category && window.navigateToCategory) {
+                                window.navigateToCategory(product.category, product.subcategory);
+                            }
+                        }}
+                        className="text-[10px] sm:text-[11px] text-emerald-600 mb-0.5 sm:mb-1 truncate cursor-pointer hover:underline hover:text-emerald-700"
+                    >
+                        📍 {product.category_name}{product.subcategory_name ? ` › ${product.subcategory_name}` : ''}
+                    </p>
                 )}
 
-            {/* Show category/subcategory so users know where the product is - CLICKABLE */}
-            {(product.category_name || product.subcategory_name) && (
-                <p
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        // Clear search and navigate to category
-                        if (product.category && window.navigateToCategory) {
-                            window.navigateToCategory(product.category, product.subcategory);
-                        }
-                    }}
-                    className="text-[10px] sm:text-[11px] text-emerald-600 mb-0.5 sm:mb-1 truncate cursor-pointer hover:underline hover:text-emerald-700"
-                >
-                    📍 {product.category_name}{product.subcategory_name ? ` › ${product.subcategory_name}` : ''}
+                <p className="text-[10px] sm:text-[11px] text-gray-600 mb-0.5 sm:mb-1">
+                    1 pack ({product.moq} {product.unit || 'ml'})
                 </p>
-            )}
 
-            <p className="text-[10px] sm:text-[11px] text-gray-600 mb-0.5 sm:mb-1">
-                1 pack ({product.moq} {product.unit || 'ml'})
-            </p>
-
-            <p className="text-[10px] sm:text-[11px] text-gray-600">
-                <span className="font-semibold text-emerald-600">MOQ: {product.moq}</span>
-                {' • '}
-                <span>Case: {product.case_size}</span>
-            </p>
-        </div>
+                <p className="text-[10px] sm:text-[11px] text-gray-600">
+                    <span className="font-semibold text-emerald-600">MOQ: {product.moq}</span>
+                    {' • '}
+                    <span>Case: {product.case_size}</span>
+                </p>
+            </div>
         </div >
     );
 }
