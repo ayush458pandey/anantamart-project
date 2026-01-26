@@ -117,6 +117,7 @@ class Product(models.Model):
     
     is_active = models.BooleanField(default=True)
     has_variants = models.BooleanField(default=False, help_text="Does this product have variants?")
+    variant_display_type = models.CharField(max_length=50, default='dropdown', blank=True, help_text="How to display variants")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
