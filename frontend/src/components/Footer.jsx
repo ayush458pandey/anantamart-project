@@ -55,7 +55,9 @@ const Footer = () => {
                             </li>
                             <li className="flex items-start gap-3">
                                 <Phone className="w-5 h-5 text-gray-400 flex-shrink-0" />
-                                <span>+91 6291467226</span>
+                                <a href="tel:+916291467226" className="hover:text-emerald-600 transition-colors">
+                                    +91 6291467226
+                                </a>
                             </li>
                             <li className="flex items-start gap-3">
                                 <svg viewBox="0 0 24 24" className="w-5 h-5 text-emerald-500 fill-current flex-shrink-0" xmlns="http://www.w3.org/2000/svg">
