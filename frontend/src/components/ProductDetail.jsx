@@ -13,42 +13,86 @@ export default function ProductDetail({ product, onClose, onAddToCart }) {
 
   const discount = Math.round(((product.mrp - product.base_price) / product.mrp) * 100);
 
+  // --- STATE FOR COLOR QUANTITIES ---
+  // Map of color -> quantity, e.g. { "Red": 2, "Blue": 1 }
+  const [colorQuantities, setColorQuantities] = useState({});
+  const hasColors = product.available_colors_list && product.available_colors_list.length > 0;
+
+  // Calculate total quantity from map or single state
+  const totalQuantity = hasColors
+    ? Object.values(colorQuantities).reduce((sum, q) => sum + q, 0)
+    : quantity;
+
+  const currentTotalPrice = parseFloat(product.base_price) * (totalQuantity || 0); // Handle 0 case
+
+  // Helper to update color quantity
+  const updateColorQty = (color, delta) => {
+    setColorQuantities(prev => {
+      const current = prev[color] || 0;
+      const newQty = Math.max(0, current + delta);
+      if (newQty === 0) {
+        const { [color]: removed, ...rest } = prev;
+        return rest;
+      }
+      return { ...prev, [color]: newQty };
+    });
+  };
+
+  // --- NEW HANDLE ADD TO CART ---
   // --- NEW HANDLE ADD TO CART ---
   const handleAddToCart = async () => {
-    try {
-      // 1. Get the Login Token (if user is logged in)
-      const token = localStorage.getItem('access_token');
+    // Validation
+    if (totalQuantity === 0) {
+      alert("Please select at least 1 item.");
+      return;
+    }
 
-      // 2. Prepare Headers (Attach the ID card if we have it)
-      const headers = {
-        'Content-Type': 'application/json',
-      };
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
+    // Verify MOQ
+    if (totalQuantity < product.moq) {
+      alert(`Minimum Order Quantity is ${product.moq}. Please add more items.`);
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('access_token');
+      const headers = { 'Content-Type': 'application/json' };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+
+      const itemsToAdd = [];
+
+      if (hasColors) {
+        // Prepare list of variants
+        Object.entries(colorQuantities).forEach(([color, qty]) => {
+          if (qty > 0) {
+            itemsToAdd.push({ product_id: product.id, quantity: qty, variant: color });
+          }
+        });
+      } else {
+        // Standard single item
+        itemsToAdd.push({ product_id: product.id, quantity: quantity, variant: '' });
       }
 
-      // 3. Send Request to Backend
-      // ⚠️ IMPORTANT: Verify this URL matches your backend/apps/cart/urls.py
-      const response = await fetch('https://api.ananta-mart.in/api/cart/add/', {
-        method: 'POST',
-        headers: headers,
-        body: JSON.stringify({
-          product_id: product.id,
-          quantity: quantity
+      // Send requests in parallel
+      const promises = itemsToAdd.map(item =>
+        fetch('https://api.ananta-mart.in/api/cart/add/', {
+          method: 'POST',
+          headers: headers,
+          body: JSON.stringify(item)
         })
-      });
+      );
 
-      const data = await response.json();
+      const responses = await Promise.all(promises);
+      const results = await Promise.all(responses.map(r => r.json()));
 
-      if (response.ok) {
-        // Success!
-        alert(`✅ Added ${quantity} units to cart!`);
-        if (onAddToCart) onAddToCart(data); // Update parent state if needed
-        onClose(); // Close the modal
+      const failed = results.filter((data, idx) => !responses[idx].ok);
+
+      if (failed.length === 0) {
+        alert(`✅ Added ${totalQuantity} units to cart!`);
+        if (onAddToCart) onAddToCart();
+        onClose();
       } else {
-        // Error from Backend
-        console.error("Cart Error:", data);
-        alert(`❌ Failed to add: ${data.error || 'Unknown error'}`);
+        console.error("Some items failed:", failed);
+        alert(`⚠️ Added some items, but ${failed.length} failed. Check console.`);
       }
 
     } catch (error) {
@@ -119,99 +163,92 @@ export default function ProductDetail({ product, onClose, onAddToCart }) {
                   <span className="text-sm text-gray-600">{product.category_name}</span>
                 </div>
 
-                {/* Available Colors */}
-                {product.available_colors_list && product.available_colors_list.length > 0 && (
-                  <div className="mb-6">
-                    <h4 className="text-sm font-semibold text-gray-700 mb-2">Available Colors:</h4>
-                    <div className="flex flex-wrap gap-2">
+                {/* --- SELECTION LOGIC --- */}
+                {hasColors ? (
+                  // MULTI-COLOR SELECTION
+                  <div className="mb-6 p-4 border border-gray-200 rounded-xl bg-gray-50">
+                    <h3 className="font-bold text-gray-800 mb-3">Select Colors & Quantities</h3>
+                    <div className="space-y-3 max-h-60 overflow-y-auto pr-2">
                       {product.available_colors_list.map((color, idx) => (
-                        <div key={idx} className="flex items-center gap-2">
-                          <span
-                            className="w-6 h-6 rounded-full border border-gray-200 shadow-sm block"
-                            style={{ backgroundColor: color }}
-                            title={color}
-                          />
-                          <span className="text-xs text-gray-600">{color}</span>
+                        <div key={idx} className="flex items-center justify-between bg-white p-3 rounded-lg border border-gray-100 shadow-sm">
+                          <div className="flex items-center gap-3">
+                            <span
+                              className="w-8 h-8 rounded-full border border-gray-200 shadow-sm block"
+                              style={{ backgroundColor: color }}
+                            />
+                            <span className="font-medium text-gray-700 capitalize">{color}</span>
+                          </div>
+
+                          <div className="flex items-center border border-gray-200 rounded-lg">
+                            <button
+                              onClick={() => updateColorQty(color, -1)}
+                              className="p-2 hover:bg-gray-100 text-gray-600"
+                            >
+                              <Minus className="w-4 h-4" />
+                            </button>
+                            <span className="w-10 text-center font-bold text-gray-800">
+                              {colorQuantities[color] || 0}
+                            </span>
+                            <button
+                              onClick={() => updateColorQty(color, 1)}
+                              className="p-2 hover:bg-gray-100 text-emerald-600"
+                            >
+                              <Plus className="w-4 h-4" />
+                            </button>
+                          </div>
                         </div>
                       ))}
                     </div>
                   </div>
+                ) : (
+                  // STANDARD QUANTITY SELECTION
+                  <div className="mb-6">
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Quantity (MOQ: {product.moq})
+                    </label>
+                    <div className="flex items-center gap-4">
+                      <div className="flex items-center border-2 border-gray-200 rounded-lg">
+                        <button
+                          onClick={() => setQuantity(Math.max(product.moq, quantity - product.moq))}
+                          className="p-3 hover:bg-gray-50 transition-colors"
+                        >
+                          <Minus className="w-5 h-5 text-gray-600" />
+                        </button>
+                        <input
+                          type="number"
+                          value={quantity}
+                          onChange={(e) => setQuantity(Math.max(product.moq, parseInt(e.target.value) || product.moq))}
+                          className="w-24 text-center font-bold text-lg border-none focus:outline-none"
+                          min={product.moq}
+                          step={product.moq}
+                        />
+                        <button
+                          onClick={() => setQuantity(quantity + product.moq)}
+                          className="p-3 hover:bg-gray-50 transition-colors"
+                        >
+                          <Plus className="w-5 h-5 text-gray-600" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
                 )}
 
-                {/* REVIEWS SECTION REMOVED */}
-
-                {/* Price */}
-                <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 mb-6">
-                  <div className="flex items-baseline gap-3 mb-2">
-                    <span className="text-4xl font-bold text-emerald-600">
-                      ₹{parseFloat(product.base_price).toFixed(2)}
-                    </span>
-                    <span className="text-xl text-gray-400 line-through">
-                      ₹{parseFloat(product.mrp).toFixed(2)}
-                    </span>
-                    {discount > 0 && (
-                      <span className="bg-emerald-600 text-white text-sm font-bold px-3 py-1 rounded-full">
-                        {discount}% OFF
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-sm text-emerald-700 font-semibold">
-                    You save ₹{(product.mrp - product.base_price).toFixed(2)} per {product.unit || 'unit'}
-                  </p>
-                </div>
-
-                {/* Stock Status */}
-                <div className="flex items-center gap-4 mb-6">
-                  <span className={`px-4 py-2 rounded-full text-sm font-bold ${product.stock_status === 'in-stock'
-                    ? 'bg-green-100 text-green-700'
-                    : 'bg-orange-100 text-orange-700'
-                    }`}>
-                    {product.stock_status === 'in-stock' ? '✓ In Stock' : '⚠ Low Stock'}
-                  </span>
-                  <span className="text-sm text-gray-600">SKU: {product.sku}</span>
-                </div>
-
-                {/* Quantity Selector */}
-                <div className="mb-6">
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Quantity (MOQ: {product.moq})
-                  </label>
-                  <div className="flex items-center gap-4">
-                    <div className="flex items-center border-2 border-gray-200 rounded-lg">
-                      <button
-                        onClick={() => setQuantity(Math.max(product.moq, quantity - product.moq))}
-                        className="p-3 hover:bg-gray-50 transition-colors"
-                      >
-                        <Minus className="w-5 h-5 text-gray-600" />
-                      </button>
-                      <input
-                        type="number"
-                        value={quantity}
-                        onChange={(e) => setQuantity(Math.max(product.moq, parseInt(e.target.value) || product.moq))}
-                        className="w-24 text-center font-bold text-lg border-none focus:outline-none"
-                        min={product.moq}
-                        step={product.moq}
-                      />
-                      <button
-                        onClick={() => setQuantity(quantity + product.moq)}
-                        className="p-3 hover:bg-gray-50 transition-colors"
-                      >
-                        <Plus className="w-5 h-5 text-gray-600" />
-                      </button>
-                    </div>
-                    <span className="text-sm text-gray-600">
-                      Total: ₹{(parseFloat(product.base_price) * quantity).toFixed(2)}
-                    </span>
-                  </div>
+                {/* Total Price Display */}
+                <div className="mb-6 flex justify-between items-center bg-gray-100 p-4 rounded-lg">
+                  <span className="text-gray-600 font-medium">Total Quantity: {totalQuantity} units</span>
+                  <span className="text-xl font-bold text-emerald-700">₹{currentTotalPrice.toFixed(2)}</span>
                 </div>
 
                 {/* Add to Cart Button */}
                 <button
                   onClick={handleAddToCart}
-                  className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-4 rounded-lg transition-colors flex items-center justify-center gap-2 mb-6"
+                  className={`w-full font-bold py-4 rounded-lg transition-colors flex items-center justify-center gap-2 mb-6 ${totalQuantity > 0
+                    ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                    : 'bg-gray-300 text-gray-500 cursor-not-allowed'}`}
+                  disabled={totalQuantity === 0}
                 >
                   <ShoppingCart className="w-6 h-6" />
-                  Add to Cart - ₹{(parseFloat(product.base_price) * quantity).toFixed(2)}
+                  {hasColors ? `Add Selected Items to Cart` : `Add to Cart`}
                 </button>
 
                 {/* Benefits */}
