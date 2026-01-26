@@ -990,6 +990,13 @@ function ProductCard({ product, cart, onAddToCart, removeFromCart, onViewDetails
                     SKU: <span className="font-medium text-gray-700">{product.sku}</span>
                 </p>
 
+                {/* Show category/subcategory so users know where the product is */}
+                {(product.category_name || product.subcategory_name) && (
+                    <p className="text-[10px] sm:text-[11px] text-emerald-600 mb-0.5 sm:mb-1 truncate">
+                        📍 {product.category_name}{product.subcategory_name ? ` › ${product.subcategory_name}` : ''}
+                    </p>
+                )}
+
                 <p className="text-[10px] sm:text-[11px] text-gray-600 mb-0.5 sm:mb-1">
                     1 pack ({product.moq} {product.unit || 'ml'})
                 </p>
