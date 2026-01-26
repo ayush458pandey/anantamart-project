@@ -74,6 +74,7 @@ class ProductSerializer(serializers.ModelSerializer):
     images = ProductImageSerializer(many=True, read_only=True)
     
     key_features_list = serializers.SerializerMethodField()
+    available_colors_list = serializers.SerializerMethodField()
     image_url = serializers.SerializerMethodField()
     
     # ✅ ENABLED: Maps your DB 'tax_rate' to Frontend 'gst_rate'
@@ -86,6 +87,7 @@ class ProductSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'name', 'sku', 'category', 'category_name', 'subcategory', 'subcategory_name', 'description',
             'brand', 'brand_ref', 'brand_name', 'brand_logo', 'product_type', 'key_features', 'key_features_list',
+            'available_colors', 'available_colors_list',
             'ingredients', 'packaging_type', 'dietary_preference',
             'storage_instruction', 'usage_recommendation', 'unit', 'weight',
             'image', 'image_url', 'images', 'mrp', 'base_price', 
@@ -109,6 +111,11 @@ class ProductSerializer(serializers.ModelSerializer):
     def get_key_features_list(self, obj):
         if obj.key_features:
             return [f.strip() for f in obj.key_features.split('\n') if f.strip()]
+        return []
+
+    def get_available_colors_list(self, obj):
+        if obj.available_colors:
+            return [c.strip() for c in obj.available_colors.split(',')]
         return []
     
     def get_image_url(self, obj):
