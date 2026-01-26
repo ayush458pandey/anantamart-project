@@ -116,6 +116,7 @@ class Product(models.Model):
     case_size = models.PositiveIntegerField(default=1, help_text="Units per case")
     
     is_active = models.BooleanField(default=True)
+    has_variants = models.BooleanField(default=False, help_text="Does this product have variants?")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
