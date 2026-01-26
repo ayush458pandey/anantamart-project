@@ -192,6 +192,9 @@ export default function Home() {
     const [selectedBrand, setSelectedBrand] = useState(null);
     const [loadingBrands, setLoadingBrands] = useState(false);
 
+    // Ref to track intentional navigation (e.g., clicking 📍 location)
+    const intentionalNavRef = React.useRef({ subcategoryId: null, navigating: false });
+
     const { products, categories, loading, error } = useProducts();
     const { cart, addToCart, removeFromCart, updateQuantity, clearCart } = useCart();
     const { compareList } = useComparison();
@@ -235,6 +238,37 @@ export default function Home() {
 
     // Fetch subcategories when category changes
     useEffect(() => {
+        // Check if this is an intentional navigation with subcategory
+        if (intentionalNavRef.current.navigating) {
+            const targetSubcat = intentionalNavRef.current.subcategoryId;
+            intentionalNavRef.current = { subcategoryId: null, navigating: false };
+
+            // Fetch subcategories but don't reset the selection
+            const fetchSubcategoriesOnly = async () => {
+                if (selectedCategory && selectedCategory !== 'all') {
+                    setLoadingSubcategories(true);
+                    try {
+                        const data = await productService.getSubcategoriesWithImages(selectedCategory);
+                        setSubcategories(data);
+                    } catch (err) {
+                        console.error('Failed to fetch subcategories:', err);
+                        setSubcategories([]);
+                    } finally {
+                        setLoadingSubcategories(false);
+                    }
+                }
+            };
+            fetchSubcategoriesOnly();
+
+            // Set the subcategory after a small delay to ensure state is ready
+            if (targetSubcat) {
+                setSelectedSubcategory(targetSubcat);
+                setShowSubcategoryView(false);
+            }
+            return;
+        }
+
+        // Normal category change - reset subcategory
         setSelectedSubcategory(null);
         const fetchSubcategories = async () => {
             if (selectedCategory && selectedCategory !== 'all') {
@@ -283,14 +317,20 @@ export default function Home() {
     // Navigation function for clicking on product location (📍 Category › Subcategory)
     const navigateToCategory = (categoryId, subcategoryId) => {
         setSearchQuery(''); // Clear search
-        setSelectedCategory(categoryId);
+
         if (subcategoryId) {
-            setSelectedSubcategory(subcategoryId);
-            setShowSubcategoryView(false);
-        } else {
+            // Mark this as intentional navigation so useEffect doesn't reset subcategory
+            intentionalNavRef.current = { subcategoryId: subcategoryId, navigating: true };
+        }
+
+        setSelectedCategory(categoryId);
+
+        if (!subcategoryId) {
             setSelectedSubcategory(null);
             setShowSubcategoryView(true);
         }
+        // Note: when subcategoryId exists, the useEffect will handle setting it
+
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
