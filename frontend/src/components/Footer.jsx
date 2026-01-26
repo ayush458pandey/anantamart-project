@@ -75,9 +75,9 @@ const Footer = () => {
                             <li className="flex items-start gap-3">
                                 <MapPin className="w-5 h-5 text-gray-400 flex-shrink-0" />
                                 <span>
-                                    12th Floor, Tech Park,<br />
-                                    Sector 5, Salt Lake,<br />
-                                    Kolkata, WB - 700091
+                                    76, Purusottam Roy Street,<br />
+                                    Khengra Patty, Strand Road,<br />
+                                    Kolkata, West Bengal - 700007
                                 </span>
                             </li>
                         </ul>
