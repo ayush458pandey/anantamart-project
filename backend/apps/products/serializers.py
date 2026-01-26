@@ -89,7 +89,7 @@ class ProductSerializer(serializers.ModelSerializer):
             'ingredients', 'packaging_type', 'dietary_preference',
             'storage_instruction', 'usage_recommendation', 'unit', 'weight',
             'image', 'image_url', 'images', 'mrp', 'base_price', 
-            'gst_rate', 'hsn_code',  # ✅ Correctly exposed to frontend
+            'tax_rate', 'gst_rate', 'hsn_code',  # ✅ tax_rate for writes, gst_rate for reads
             'stock', 'stock_status',
             'moq', 'case_size', 'is_active', 'created_at', 'tiers'
         ]
