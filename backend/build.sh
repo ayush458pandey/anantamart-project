@@ -13,6 +13,8 @@ python manage.py collectstatic --no-input
 python manage.py migrate products 0011 --fake || true
 python manage.py migrate products 0012 --fake || true
 python manage.py migrate products 0013 --fake || true
+# Fake cart migrations to avoid constraint sync issues
+python manage.py migrate cart --fake || true
 python manage.py migrate
 
 # Add this line to create the superuser automatically
