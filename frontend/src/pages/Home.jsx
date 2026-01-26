@@ -529,7 +529,14 @@ export default function Home() {
 
                         {/* 2. Page Title */}
                         <div className="mb-3 sm:mb-4 px-1">
-                            {selectedSubcategory && activeSubcategory ? (
+                            {searchQuery ? (
+                                <h2 className="text-base sm:text-lg font-bold text-gray-800">
+                                    Search Results for "{searchQuery}"
+                                    <span className="text-xs font-normal text-gray-500 bg-gray-100 px-2 py-1 rounded-full border border-gray-200 ml-2">
+                                        {filteredProducts.length} items
+                                    </span>
+                                </h2>
+                            ) : selectedSubcategory && activeSubcategory ? (
                                 <div>
                                     <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">
                                         {currentCategoryName}
