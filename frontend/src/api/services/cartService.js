@@ -26,11 +26,16 @@ export const cartService = {
   },
 
   // Add to cart
-  addToCart: async (productId, quantity) => {
-    const response = await axiosInstance.post('/cart/add/', {
+  // Add to cart
+  addToCart: async (productId, quantity, variant = null) => {
+    const payload = {
       product_id: productId,
       quantity: quantity
-    });
+    };
+    if (variant) {
+      payload.variant = variant;
+    }
+    const response = await axiosInstance.post('/cart/add/', payload);
     return response.data;
   },
 
