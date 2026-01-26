@@ -16,6 +16,7 @@ export default function ProductDetail({ product, onClose, onAddToCart }) {
   // --- STATE FOR COLOR QUANTITIES ---
   // Map of color -> quantity, e.g. { "Red": 2, "Blue": 1 }
   const [colorQuantities, setColorQuantities] = useState({});
+  const [searchTerm, setSearchTerm] = useState('');
   const hasColors = product.available_colors_list && product.available_colors_list.length > 0;
 
   // Calculate total quantity from map or single state
@@ -255,15 +256,18 @@ export default function ProductDetail({ product, onClose, onAddToCart }) {
                 </div>
 
                 {/* Add to Cart Button */}
+                {/* Add to Cart Button */}
                 <button
                   onClick={handleAddToCart}
                   className={`w-full font-bold py-4 rounded-lg transition-colors flex items-center justify-center gap-2 mb-6 ${totalQuantity > 0
                     ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
-                    : 'bg-gray-300 text-gray-500 cursor-not-allowed'}`}
+                    : 'bg-gray-200 text-gray-500 cursor-not-allowed'}`}
                   disabled={totalQuantity === 0}
                 >
                   <ShoppingCart className="w-6 h-6" />
-                  {hasColors ? `Add Selected Items to Cart` : `Add to Cart`}
+                  {hasColors
+                    ? (totalQuantity > 0 ? `Add ${totalQuantity} Items to Cart` : "Select variants to add")
+                    : `Add to Cart`}
                 </button>
 
                 {/* Benefits */}
