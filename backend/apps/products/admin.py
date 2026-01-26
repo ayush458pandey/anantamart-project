@@ -53,7 +53,7 @@ class ProductAdmin(admin.ModelAdmin):
             'fields': ('name', 'sku', 'category', 'subcategory', 'description', 'is_active')
         }),
         ('Product Details', {
-            'fields': ('brand_ref', 'product_type', 'key_features', 'ingredients', 
+            'fields': ('brand_ref', 'product_type', 'available_colors', 'key_features', 'ingredients', 
                        'packaging_type', 'dietary_preference', 'unit', 'weight')
         }),
         ('Usage & Storage', {
