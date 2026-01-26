@@ -17,14 +17,17 @@ class Cart(models.Model):
 class CartItem(models.Model):
     cart = models.ForeignKey(Cart, on_delete=models.CASCADE, related_name='items')
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    variant = models.CharField(max_length=100, blank=True, help_text="Selected variant (e.g. Color)")
     quantity = models.PositiveIntegerField(default=1)
     
     class Meta:
-        unique_together = ('cart', 'product')
+        unique_together = ('cart', 'product', 'variant')
     
     @property
     def total_price(self):
         return self.product.base_price * self.quantity
     
     def __str__(self):
+        if self.variant:
+            return f"{self.quantity}x {self.product.name} ({self.variant})"
         return f"{self.quantity}x {self.product.name}"

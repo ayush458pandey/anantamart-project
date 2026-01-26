@@ -8,7 +8,7 @@ class CartItemSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = CartItem
-        fields = ['id', 'product', 'quantity', 'total_price']
+        fields = ['id', 'product', 'variant', 'quantity', 'total_price']
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

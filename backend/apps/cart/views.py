@@ -36,6 +36,7 @@ def my_cart(request):
 def add_to_cart(request):
     cart = get_cart(request)
     product_id = request.data.get('product_id')
+    variant = request.data.get('variant', '').strip()  # 🆕 Handle Variant
     quantity = int(request.data.get('quantity', 1))
     
     if not product_id:
@@ -43,14 +44,17 @@ def add_to_cart(request):
     
     try:
         product = Product.objects.get(id=product_id)
+        
+        # Check specific variant item
         cart_item, created = CartItem.objects.get_or_create(
             cart=cart,
             product=product,
+            variant=variant,
             defaults={'quantity': quantity}
         )
         
         if not created:
-            cart_item.quantity = quantity  # Updates to new quantity
+            cart_item.quantity += quantity  # 🆕 Increment instead of replace
             cart_item.save()
         
         serializer = CartSerializer(cart, context={'request': request})
