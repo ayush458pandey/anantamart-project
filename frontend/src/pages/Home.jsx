@@ -1087,11 +1087,13 @@ function EstimateView({ cart, removeFromCart, updateQuantity, subtotal, cgst, sg
                         <span className="font-bold">₹{subtotal.toFixed(2)}</span>
                     </div>
                     <div className="flex justify-between">
-                        <span className="text-gray-600">CGST (9%):</span>
+                        {/* Removed hardcoded (9%) */}
+                        <span className="text-gray-600">CGST:</span>
                         <span className="font-bold">₹{cgst.toFixed(2)}</span>
                     </div>
                     <div className="flex justify-between">
-                        <span className="text-gray-600">SGST (9%):</span>
+                        {/* Removed hardcoded (9%) */}
+                        <span className="text-gray-600">SGST:</span>
                         <span className="font-bold">₹{sgst.toFixed(2)}</span>
                     </div>
                     <div className="flex justify-between text-base sm:text-lg font-bold text-emerald-600 border-t border-gray-200 pt-2 sm:pt-3 mt-2 sm:mt-3">

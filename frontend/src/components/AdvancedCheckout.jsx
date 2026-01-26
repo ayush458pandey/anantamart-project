@@ -632,7 +632,7 @@ export default function AdvancedCheckout({ cart, onClose, onPlaceOrder }) {
                     )}
 
                     <div className="flex justify-between">
-                      <span className="text-gray-700">CGST (9%):</span>
+                      <span className="text-gray-700">CGST:</span>
                       <span className="font-semibold">₹{cgst.toFixed(2)}</span>
                     </div>
 
