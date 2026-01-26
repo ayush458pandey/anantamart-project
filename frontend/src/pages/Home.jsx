@@ -67,7 +67,11 @@ function LoginView({ onLogin, onCancel, message, hideSignup }) {
         try {
             const payload = isLogin
                 ? { username: formData.email, password: formData.password }
-                : formData;
+                : {
+                    ...formData,
+                    username: formData.email,
+                    password2: formData.password
+                };
 
             const response = await fetch(url, {
                 method: 'POST',
