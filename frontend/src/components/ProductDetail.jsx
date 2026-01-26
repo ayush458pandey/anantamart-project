@@ -119,6 +119,25 @@ export default function ProductDetail({ product, onClose, onAddToCart }) {
                   <span className="text-sm text-gray-600">{product.category_name}</span>
                 </div>
 
+                {/* Available Colors */}
+                {product.available_colors_list && product.available_colors_list.length > 0 && (
+                  <div className="mb-6">
+                    <h4 className="text-sm font-semibold text-gray-700 mb-2">Available Colors:</h4>
+                    <div className="flex flex-wrap gap-2">
+                      {product.available_colors_list.map((color, idx) => (
+                        <div key={idx} className="flex items-center gap-2">
+                          <span
+                            className="w-6 h-6 rounded-full border border-gray-200 shadow-sm block"
+                            style={{ backgroundColor: color }}
+                            title={color}
+                          />
+                          <span className="text-xs text-gray-600">{color}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 {/* REVIEWS SECTION REMOVED */}
 
                 {/* Price */}
