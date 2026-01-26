@@ -548,8 +548,8 @@ export default function Home() {
                             )}
                         </div>
 
-                        {/* 3. Subcategory Grid (Only if not selected) */}
-                        {selectedCategory !== 'all' && showSubcategoryView && subcategories.length > 0 && (
+                        {/* 3. Subcategory Grid (Only if not selected AND not searching) */}
+                        {selectedCategory !== 'all' && showSubcategoryView && subcategories.length > 0 && !searchQuery && (
                             <div className="mb-6">
                                 <div className="flex items-center justify-between mb-3 px-1">
                                     <h3 className="text-sm sm:text-base font-bold text-gray-700">Browse by Subcategory</h3>
@@ -583,7 +583,7 @@ export default function Home() {
                         )}
 
                         {/* 5. MAIN PRODUCT DISPLAY */}
-                        {(!showSubcategoryView || selectedCategory === 'all') && (
+                        {(!showSubcategoryView || selectedCategory === 'all' || searchQuery) && (
                             <>
                                 {/* SCENARIO A: HOMEPAGE */}
                                 {selectedCategory === 'all' && !searchQuery ? (
