@@ -281,11 +281,27 @@ export default function Home() {
     };
 
     const filteredProducts = products.filter(product => {
+        // Enhanced search: matches name, sku, brand, description, category, key features
+        const query = searchQuery.toLowerCase().trim();
+
+        // When search is active, search ALL products (ignore category/subcategory filters)
+        if (query) {
+            return (
+                (product.name || '').toLowerCase().includes(query) ||
+                (product.sku || '').toLowerCase().includes(query) ||
+                (product.brand || '').toLowerCase().includes(query) ||
+                (product.brand_name || '').toLowerCase().includes(query) ||
+                (product.description || '').toLowerCase().includes(query) ||
+                (product.category_name || '').toLowerCase().includes(query) ||
+                (product.subcategory_name || '').toLowerCase().includes(query) ||
+                (product.key_features || '').toLowerCase().includes(query)
+            );
+        }
+
+        // When NOT searching, filter by category and subcategory
         const matchesCategory = selectedCategory === 'all' || String(product.category) === String(selectedCategory);
         const matchesSubcategory = !selectedSubcategory || String(product.subcategory) === String(selectedSubcategory);
-        const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            product.sku.toLowerCase().includes(searchQuery.toLowerCase());
-        return matchesCategory && matchesSubcategory && matchesSearch;
+        return matchesCategory && matchesSubcategory;
     });
 
     const visibleBrands = brands.filter(brand => {
