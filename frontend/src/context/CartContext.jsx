@@ -61,10 +61,10 @@ export const CartProvider = ({ children }) => {
     }
   };
 
-  const updateQuantity = async (productId, quantity) => {
+  const updateQuantity = async (itemId, quantity) => {
     try {
       setLoading(true);
-      const data = await cartService.updateQuantity(productId, quantity);
+      const data = await cartService.updateCartItem(itemId, quantity);
       setCart(data);
     } catch (err) {
       console.error('Error updating quantity:', err);

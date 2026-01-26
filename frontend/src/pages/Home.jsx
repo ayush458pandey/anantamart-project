@@ -1083,6 +1083,24 @@ function ProductCard({ product, cart, onAddToCart, removeFromCart, onViewDetails
                     SKU: <span className="font-medium text-gray-700">{product.sku}</span>
                 </p>
 
+                {/* Color Options */}
+                {product.available_colors_list && product.available_colors_list.length > 0 && (
+                    <div className="flex flex-wrap gap-1 mb-1">
+                        {product.available_colors_list.map((color, idx) => {
+                            // Check if color is a hex code or name
+                            const isHex = color.startsWith('#');
+                            return (
+                                <span
+                                    key={idx}
+                                    className="w-3 h-3 rounded-full border border-gray-200 shadow-sm"
+                                    style={{ backgroundColor: color }}
+                                    title={color}
+                                />
+                            );
+                        })}
+                    </div>
+                )}
+
                 {/* Show category/subcategory so users know where the product is - CLICKABLE */}
                 {(product.category_name || product.subcategory_name) && (
                     <p
@@ -1125,16 +1143,18 @@ function EstimateView({ cart, removeFromCart, updateQuantity, subtotal, cgst, sg
         );
     }
 
-    const handleDecrease = (product, currentQty) => {
-        const moq = product.moq || 1;
-        const newQty = Math.max(moq, currentQty - moq);
-        updateQuantity(product.id, newQty);
+    const handleDecrease = (item, currentQty) => {
+        const moq = item.product.moq || 1;
+        const newQty = currentQty - 1; // Decrease by 1
+        if (newQty < moq) {
+            removeFromCart(item.id);
+        } else {
+            updateQuantity(item.id, newQty);
+        }
     };
 
-    const handleIncrease = (product, currentQty) => {
-        const moq = product.moq || 1;
-        const newQty = currentQty + moq;
-        updateQuantity(product.id, newQty);
+    const handleIncrease = (item, currentQty) => {
+        updateQuantity(item.id, currentQty + 1); // Increase by 1
     };
 
     return (
@@ -1160,7 +1180,14 @@ function EstimateView({ cart, removeFromCart, updateQuantity, subtotal, cgst, sg
                                 </div>
 
                                 <div className="flex-1 min-w-0">
-                                    <h4 className="font-bold text-sm sm:text-base line-clamp-2">{item.product.name}</h4>
+                                    <h4 className="font-bold text-sm sm:text-base line-clamp-2">
+                                        {item.product.name}
+                                        {item.variant && (
+                                            <span className="ml-2 inline-block text-xs font-normal text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100">
+                                                {item.variant}
+                                            </span>
+                                        )}
+                                    </h4>
                                     <p className="text-xs sm:text-sm text-gray-500">SKU: {item.product.sku}</p>
                                     <p className="text-xs sm:text-sm text-gray-600 mt-0.5 sm:mt-1">MOQ: {item.product.moq} units</p>
                                     <p className="font-bold text-emerald-600 mt-1 text-sm sm:text-base">
@@ -1172,7 +1199,7 @@ function EstimateView({ cart, removeFromCart, updateQuantity, subtotal, cgst, sg
                             <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto justify-between sm:justify-start">
                                 <div className="flex items-center gap-2 bg-gray-50 rounded-lg p-1">
                                     <button
-                                        onClick={() => handleDecrease(item.product, item.quantity)}
+                                        onClick={() => handleDecrease(item, item.quantity)}
                                         className="p-2 hover:bg-gray-100 active:bg-gray-200 rounded-lg transition-colors touch-manipulation min-w-[40px] min-h-[40px] flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
                                         disabled={item.quantity <= item.product.moq}
                                     >
@@ -1182,7 +1209,7 @@ function EstimateView({ cart, removeFromCart, updateQuantity, subtotal, cgst, sg
                                         {item.quantity}
                                     </span>
                                     <button
-                                        onClick={() => handleIncrease(item.product, item.quantity)}
+                                        onClick={() => handleIncrease(item, item.quantity)}
                                         className="p-2 hover:bg-gray-100 active:bg-gray-200 rounded-lg transition-colors touch-manipulation min-w-[40px] min-h-[40px] flex items-center justify-center"
                                     >
                                         <Plus className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600" />
