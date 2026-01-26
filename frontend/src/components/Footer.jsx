@@ -74,11 +74,16 @@ const Footer = () => {
                             </li>
                             <li className="flex items-start gap-3">
                                 <MapPin className="w-5 h-5 text-gray-400 flex-shrink-0" />
-                                <span>
+                                <a
+                                    href="https://www.google.com/maps/search/?api=1&query=76+Purusottam+Roy+Street+Khengra+Patty+Strand+Road+Kolkata+West+Bengal+700007"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="hover:text-emerald-600 transition-colors"
+                                >
                                     76, Purusottam Roy Street,<br />
                                     Khengra Patty, Strand Road,<br />
                                     Kolkata, West Bengal - 700007
-                                </span>
+                                </a>
                             </li>
                         </ul>
                     </div>
