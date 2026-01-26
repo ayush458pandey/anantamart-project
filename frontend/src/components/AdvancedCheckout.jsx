@@ -606,7 +606,14 @@ export default function AdvancedCheckout({ cart, onClose, onPlaceOrder }) {
                           <Package className="w-8 h-8 text-gray-400" />
                         </div>
                         <div className="flex-1">
-                          <div className="font-bold text-sm">{item.product.name}</div>
+                          <div className="font-bold text-sm">
+                            {item.product.name}
+                            {item.variant && (
+                              <span className="ml-1 text-emerald-600 text-xs font-normal">
+                                ({item.variant})
+                              </span>
+                            )}
+                          </div>
                           <div className="text-xs text-gray-500">Qty: {item.quantity}</div>
                         </div>
                         <div className="font-bold">₹{parseFloat(item.total_price).toFixed(2)}</div>

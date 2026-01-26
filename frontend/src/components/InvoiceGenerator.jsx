@@ -141,7 +141,10 @@ export default function InvoiceGenerator({ orderData, onClose }) {
                     <tr key={item.id} className="border-b border-gray-200">
                       <td className="py-3 px-4 text-sm">{index + 1}</td>
                       <td className="py-3 px-4">
-                        <div className="font-semibold text-sm">{item.product.name}</div>
+                        <div className="font-semibold text-sm">
+                          {item.product.name}
+                          {item.variant && <span className="ml-1 font-normal text-gray-600">({item.variant})</span>}
+                        </div>
                         <div className="text-xs text-gray-600">SKU: {item.product.sku}</div>
                       </td>
                       <td className="py-3 px-4 text-sm">1234 5678</td>
