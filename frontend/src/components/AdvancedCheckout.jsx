@@ -181,7 +181,8 @@ export default function AdvancedCheckout({ cart, onClose, onPlaceOrder }) {
       const orderPayload = {
         items: cart.items.map(item => ({
           product_id: item.product.id,
-          quantity: item.quantity
+          quantity: item.quantity,
+          variant: item.variant
         })),
         payment_method: selectedPayment,
         delivery_option: deliveryOptions.find(d => d.id === selectedDelivery)?.name,

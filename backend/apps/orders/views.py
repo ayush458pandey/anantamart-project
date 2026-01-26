@@ -54,6 +54,7 @@ class OrderViewSet(viewsets.ModelViewSet):
                     order=order,
                     product=product,
                     quantity=item_data['quantity'],
+                    variant=item_data.get('variant'),
                     price=product.base_price,
                     total=product.base_price * item_data['quantity']
                 )
