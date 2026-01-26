@@ -1,7 +1,7 @@
 import React from 'react';
 import {
     Package, Facebook, Twitter, Linkedin, Instagram,
-    Mail, Phone, MapPin
+    Mail, Phone, MapPin, MessageCircle
 } from 'lucide-react';
 
 const Footer = () => {
@@ -55,7 +55,18 @@ const Footer = () => {
                             </li>
                             <li className="flex items-start gap-3">
                                 <Phone className="w-5 h-5 text-gray-400 flex-shrink-0" />
-                                <span>+91 1800-202-9999</span>
+                                <span>+91 6291467226</span>
+                            </li>
+                            <li className="flex items-start gap-3">
+                                <MessageCircle className="w-5 h-5 text-gray-400 flex-shrink-0" />
+                                <a
+                                    href="https://wa.me/916291467226"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="hover:text-emerald-600 transition-colors"
+                                >
+                                    Chat on WhatsApp
+                                </a>
                             </li>
                             <li className="flex items-start gap-3">
                                 <MapPin className="w-5 h-5 text-gray-400 flex-shrink-0" />
