@@ -169,35 +169,50 @@ export default function ProductDetail({ product, onClose, onAddToCart }) {
                   <div className="mb-6 p-4 border border-gray-200 rounded-xl bg-gray-50">
                     <h3 className="font-bold text-gray-800 mb-3">Select Colors & Quantities</h3>
                     <div className="space-y-3 max-h-60 overflow-y-auto pr-2">
-                      {product.available_colors_list.map((color, idx) => (
-                        <div key={idx} className="flex items-center justify-between bg-white p-3 rounded-lg border border-gray-100 shadow-sm">
-                          <div className="flex items-center gap-3">
-                            <span
-                              className="w-8 h-8 rounded-full border border-gray-200 shadow-sm block"
-                              style={{ backgroundColor: color }}
-                            />
-                            <span className="font-medium text-gray-700 capitalize">{color}</span>
-                          </div>
+                      {product.available_colors_list.map((color, idx) => {
+                        // Simple heuristic: if it looks like a hex or common color name, render swatch.
+                        // Otherwise render text badge (for Shade Card codes like 00006).
+                        const isHex = color.startsWith('#');
+                        const commonColors = ['red', 'blue', 'green', 'black', 'white', 'yellow', 'orange', 'purple', 'pink', 'gray', 'brown', 'teal', 'indigo', 'cyan', 'lime', 'maroon', 'navy', 'olive', 'silver', 'gold', 'beige'];
+                        const isCommonColor = commonColors.includes(color.toLowerCase());
+                        const isColor = isHex || isCommonColor;
 
-                          <div className="flex items-center border border-gray-200 rounded-lg">
-                            <button
-                              onClick={() => updateColorQty(color, -1)}
-                              className="p-2 hover:bg-gray-100 text-gray-600"
-                            >
-                              <Minus className="w-4 h-4" />
-                            </button>
-                            <span className="w-10 text-center font-bold text-gray-800">
-                              {colorQuantities[color] || 0}
-                            </span>
-                            <button
-                              onClick={() => updateColorQty(color, 1)}
-                              className="p-2 hover:bg-gray-100 text-emerald-600"
-                            >
-                              <Plus className="w-4 h-4" />
-                            </button>
+                        return (
+                          <div key={idx} className="flex items-center justify-between bg-white p-3 rounded-lg border border-gray-100 shadow-sm">
+                            <div className="flex items-center gap-3">
+                              {isColor ? (
+                                <span
+                                  className="w-8 h-8 rounded-full border border-gray-200 shadow-sm block"
+                                  style={{ backgroundColor: color }}
+                                />
+                              ) : (
+                                <span className="px-2 py-1 bg-gray-100 border border-gray-200 rounded text-xs font-mono font-bold text-gray-700 min-w-[3rem] text-center">
+                                  {color}
+                                </span>
+                              )}
+                              <span className="font-medium text-gray-700 capitalize">{color}</span>
+                            </div>
+
+                            <div className="flex items-center border border-gray-200 rounded-lg">
+                              <button
+                                onClick={() => updateColorQty(color, -1)}
+                                className="p-2 hover:bg-gray-100 text-gray-600"
+                              >
+                                <Minus className="w-4 h-4" />
+                              </button>
+                              <span className="w-10 text-center font-bold text-gray-800">
+                                {colorQuantities[color] || 0}
+                              </span>
+                              <button
+                                onClick={() => updateColorQty(color, 1)}
+                                className="p-2 hover:bg-gray-100 text-emerald-600"
+                              >
+                                <Plus className="w-4 h-4" />
+                              </button>
+                            </div>
                           </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   </div>
                 ) : (

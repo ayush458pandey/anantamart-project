@@ -1085,49 +1085,65 @@ function ProductCard({ product, cart, onAddToCart, removeFromCart, onViewDetails
 
                 {/* Color Options */}
                 {product.available_colors_list && product.available_colors_list.length > 0 && (
-                    <div className="flex flex-wrap gap-1 mb-1">
-                        {product.available_colors_list.map((color, idx) => {
-                            // Check if color is a hex code or name
+                    <div className="flex flex-wrap gap-1 mb-1 items-center">
+                        {product.available_colors_list.slice(0, 5).map((color, idx) => {
                             const isHex = color.startsWith('#');
-                            return (
-                                <span
-                                    key={idx}
-                                    className="w-3 h-3 rounded-full border border-gray-200 shadow-sm"
-                                    style={{ backgroundColor: color }}
-                                    title={color}
-                                />
-                            );
+                            const commonColors = ['red', 'blue', 'green', 'black', 'white', 'yellow', 'orange', 'purple', 'pink', 'gray', 'brown', 'teal', 'indigo', 'cyan', 'lime', 'maroon', 'navy', 'olive', 'silver', 'gold', 'beige'];
+                            const isCommonColor = commonColors.includes(color.toLowerCase());
+                            const isColor = isHex || isCommonColor;
+
+                            if (isColor) {
+                                return (
+                                    <span
+                                        key={idx}
+                                        className="w-3 h-3 rounded-full border border-gray-200 shadow-sm block"
+                                        style={{ backgroundColor: color }}
+                                        title={color}
+                                    />
+                                );
+                            } else {
+                                return (
+                                    <span key={idx} className="px-1 py-0.5 bg-gray-100 border border-gray-200 rounded text-[9px] font-mono font-bold text-gray-600 leading-none">
+                                        {color}
+                                    </span>
+                                );
+                            }
                         })}
+                        {product.available_colors_list.length > 5 && (
+                            <span className="text-[10px] text-gray-400">+{product.available_colors_list.length - 5}</span>
+                        )}
                     </div>
                 )}
-
-                {/* Show category/subcategory so users know where the product is - CLICKABLE */}
-                {(product.category_name || product.subcategory_name) && (
-                    <p
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            // Clear search and navigate to category
-                            if (product.category && window.navigateToCategory) {
-                                window.navigateToCategory(product.category, product.subcategory);
-                            }
-                        }}
-                        className="text-[10px] sm:text-[11px] text-emerald-600 mb-0.5 sm:mb-1 truncate cursor-pointer hover:underline hover:text-emerald-700"
-                    >
-                        📍 {product.category_name}{product.subcategory_name ? ` › ${product.subcategory_name}` : ''}
-                    </p>
+            </div>
                 )}
 
-                <p className="text-[10px] sm:text-[11px] text-gray-600 mb-0.5 sm:mb-1">
-                    1 pack ({product.moq} {product.unit || 'ml'})
+            {/* Show category/subcategory so users know where the product is - CLICKABLE */}
+            {(product.category_name || product.subcategory_name) && (
+                <p
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        // Clear search and navigate to category
+                        if (product.category && window.navigateToCategory) {
+                            window.navigateToCategory(product.category, product.subcategory);
+                        }
+                    }}
+                    className="text-[10px] sm:text-[11px] text-emerald-600 mb-0.5 sm:mb-1 truncate cursor-pointer hover:underline hover:text-emerald-700"
+                >
+                    📍 {product.category_name}{product.subcategory_name ? ` › ${product.subcategory_name}` : ''}
                 </p>
+            )}
 
-                <p className="text-[10px] sm:text-[11px] text-gray-600">
-                    <span className="font-semibold text-emerald-600">MOQ: {product.moq}</span>
-                    {' • '}
-                    <span>Case: {product.case_size}</span>
-                </p>
-            </div>
+            <p className="text-[10px] sm:text-[11px] text-gray-600 mb-0.5 sm:mb-1">
+                1 pack ({product.moq} {product.unit || 'ml'})
+            </p>
+
+            <p className="text-[10px] sm:text-[11px] text-gray-600">
+                <span className="font-semibold text-emerald-600">MOQ: {product.moq}</span>
+                {' • '}
+                <span>Case: {product.case_size}</span>
+            </p>
         </div>
+        </div >
     );
 }
 
