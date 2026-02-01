@@ -198,8 +198,13 @@ function LoginView({ onLogin, onCancel, message, hideSignup }) {
 // ⬇️ THIS IS WHERE YOUR 1300 LINES OF CODE WILL START ⬇️
 
 export default function Home() {
-    const [currentView, setCurrentView] = useState('catalog');
-    const [selectedCategory, setSelectedCategory] = useState('all');
+    // Restore state from sessionStorage on mount
+    const [currentView, setCurrentView] = useState(() => {
+        return sessionStorage.getItem('currentView') || 'catalog';
+    });
+    const [selectedCategory, setSelectedCategory] = useState(() => {
+        return sessionStorage.getItem('selectedCategory') || 'all';
+    });
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedProduct, setSelectedProduct] = useState(null);
     const [showCheckout, setShowCheckout] = useState(false);
@@ -214,9 +219,13 @@ export default function Home() {
 
     // Visual browsing state
     const [subcategories, setSubcategories] = useState([]);
-    const [selectedSubcategory, setSelectedSubcategory] = useState(null);
+    const [selectedSubcategory, setSelectedSubcategory] = useState(() => {
+        return sessionStorage.getItem('selectedSubcategory') || null;
+    });
     const [loadingSubcategories, setLoadingSubcategories] = useState(false);
-    const [showSubcategoryView, setShowSubcategoryView] = useState(true);
+    const [showSubcategoryView, setShowSubcategoryView] = useState(() => {
+        return sessionStorage.getItem('showSubcategoryView') !== 'false';
+    });
     const [brands, setBrands] = useState([]);
     const [selectedBrand, setSelectedBrand] = useState(null);
     const [loadingBrands, setLoadingBrands] = useState(false);
@@ -229,6 +238,27 @@ export default function Home() {
     const { compareList } = useComparison();
     // Add this new state for toggling brands
     const [showAllBrands, setShowAllBrands] = useState(false);
+
+    // Persist navigation state to sessionStorage
+    useEffect(() => {
+        sessionStorage.setItem('currentView', currentView);
+    }, [currentView]);
+
+    useEffect(() => {
+        sessionStorage.setItem('selectedCategory', selectedCategory);
+    }, [selectedCategory]);
+
+    useEffect(() => {
+        if (selectedSubcategory) {
+            sessionStorage.setItem('selectedSubcategory', selectedSubcategory);
+        } else {
+            sessionStorage.removeItem('selectedSubcategory');
+        }
+    }, [selectedSubcategory]);
+
+    useEffect(() => {
+        sessionStorage.setItem('showSubcategoryView', showSubcategoryView);
+    }, [showSubcategoryView]);
 
     // Check for login token on load
     useEffect(() => {
