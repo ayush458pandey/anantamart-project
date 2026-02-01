@@ -121,9 +121,20 @@ export default function SearchWithSuggestions({
                     {/* Recent Searches */}
                     {!searchQuery && recentSearches.length > 0 && (
                         <div className="p-2.5 border-b border-gray-100">
-                            <div className="flex items-center gap-1.5 text-[11px] text-gray-400 mb-2">
-                                <TrendingUp className="w-3 h-3" />
-                                <span>Recent</span>
+                            <div className="flex items-center justify-between mb-2">
+                                <div className="flex items-center gap-1.5 text-[11px] text-gray-400">
+                                    <TrendingUp className="w-3 h-3" />
+                                    <span>Recent</span>
+                                </div>
+                                <button
+                                    onClick={() => {
+                                        setRecentSearches([]);
+                                        localStorage.removeItem('recentSearches');
+                                    }}
+                                    className="text-[11px] text-red-500 hover:text-red-600 active:text-red-700 font-medium touch-manipulation"
+                                >
+                                    Clear
+                                </button>
                             </div>
                             <div className="flex flex-wrap gap-1.5">
                                 {recentSearches.map((term, idx) => (
