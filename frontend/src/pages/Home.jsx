@@ -255,6 +255,58 @@ export default function Home() {
         checkAuth();
     }, []);
 
+    // --- BROWSER BACK BUTTON SUPPORT ---
+    // Handle browser back button for mobile users
+    useEffect(() => {
+        const handlePopState = (event) => {
+            // Close modals/overlays in order of priority
+            if (showCheckout) {
+                setShowCheckout(false);
+                return;
+            }
+            if (selectedProduct) {
+                setSelectedProduct(null);
+                return;
+            }
+            if (showComparison) {
+                setShowComparison(false);
+                return;
+            }
+            if (selectedBrand) {
+                setSelectedBrand(null);
+                return;
+            }
+            if (currentView === 'all-brands') {
+                setCurrentView('catalog');
+                return;
+            }
+            if (currentView !== 'catalog') {
+                setCurrentView('catalog');
+                return;
+            }
+            if (selectedSubcategory) {
+                setSelectedSubcategory(null);
+                setShowSubcategoryView(true);
+                return;
+            }
+            if (selectedCategory !== 'all') {
+                setSelectedCategory('all');
+                return;
+            }
+        };
+
+        window.addEventListener('popstate', handlePopState);
+        return () => window.removeEventListener('popstate', handlePopState);
+    }, [showCheckout, selectedProduct, showComparison, selectedBrand, currentView, selectedSubcategory, selectedCategory]);
+
+    // Push history state when modals/views open
+    useEffect(() => {
+        if (selectedProduct || showCheckout || showComparison || selectedBrand ||
+            currentView !== 'catalog' || selectedSubcategory || selectedCategory !== 'all') {
+            window.history.pushState({ modal: true }, '');
+        }
+    }, [selectedProduct, showCheckout, showComparison, selectedBrand, currentView, selectedSubcategory, selectedCategory]);
+
     const handleLogout = () => {
         localStorage.removeItem('access_token');
         localStorage.removeItem('refresh_token');
