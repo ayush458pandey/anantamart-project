@@ -68,6 +68,12 @@ class OrderViewSet(viewsets.ModelViewSet):
                 pass # If no cart exists, just ignore
             # ------------------------------------
 
+            # ------------------------------------
+
+            # Send Email Confirmation (Async in production, sync for now)
+            from .utils import send_order_confirmation_email
+            send_order_confirmation_email(order)
+
             serializer = self.get_serializer(order)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
             
