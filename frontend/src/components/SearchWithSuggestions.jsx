@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Search, X, Package, TrendingUp } from 'lucide-react';
+import { Search, X, Package, TrendingUp, ArrowLeft } from 'lucide-react';
 
 export default function SearchWithSuggestions({
     products,
@@ -11,6 +11,7 @@ export default function SearchWithSuggestions({
     const [showSuggestions, setShowSuggestions] = useState(false);
     const [suggestions, setSuggestions] = useState([]);
     const [recentSearches, setRecentSearches] = useState([]);
+    const [isMobileExpanded, setIsMobileExpanded] = useState(false);
     const inputRef = useRef(null);
     const containerRef = useRef(null);
 
@@ -33,14 +34,14 @@ export default function SearchWithSuggestions({
                     p.sku?.toLowerCase().includes(query) ||
                     p.category_name?.toLowerCase().includes(query)
                 )
-                .slice(0, 8); // Limit to 8 suggestions
+                .slice(0, 8);
             setSuggestions(filtered);
         } else {
             setSuggestions([]);
         }
     }, [searchQuery, products]);
 
-    // Close suggestions when clicking outside
+    // Close suggestions when clicking outside (desktop only)
     useEffect(() => {
         const handleClickOutside = (e) => {
             if (containerRef.current && !containerRef.current.contains(e.target)) {
@@ -51,13 +52,41 @@ export default function SearchWithSuggestions({
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
+    // Handle body scroll lock on mobile
+    useEffect(() => {
+        if (isMobileExpanded) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = '';
+        }
+        return () => {
+            document.body.style.overflow = '';
+        };
+    }, [isMobileExpanded]);
+
+    const handleFocus = () => {
+        setShowSuggestions(true);
+        // On mobile, expand to fullscreen
+        if (window.innerWidth < 640) {
+            setIsMobileExpanded(true);
+        }
+    };
+
+    const handleClose = () => {
+        setShowSuggestions(false);
+        setIsMobileExpanded(false);
+        setSearchQuery('');
+        inputRef.current?.blur();
+    };
+
     const handleSelectProduct = (product) => {
-        // Save to recent searches
         const updated = [product.name, ...recentSearches.filter(s => s !== product.name)].slice(0, 5);
         setRecentSearches(updated);
         localStorage.setItem('recentSearches', JSON.stringify(updated));
 
         setShowSuggestions(false);
+        setIsMobileExpanded(false);
+        setSearchQuery('');
         if (onProductSelect) {
             onProductSelect(product);
         }
@@ -65,12 +94,12 @@ export default function SearchWithSuggestions({
 
     const handleSearch = (query) => {
         if (query.trim()) {
-            // Save search term
             const updated = [query, ...recentSearches.filter(s => s !== query)].slice(0, 5);
             setRecentSearches(updated);
             localStorage.setItem('recentSearches', JSON.stringify(updated));
         }
         setShowSuggestions(false);
+        setIsMobileExpanded(false);
         if (onSearch) {
             onSearch(query);
         }
@@ -78,7 +107,6 @@ export default function SearchWithSuggestions({
 
     const handleRecentClick = (term) => {
         setSearchQuery(term);
-        handleSearch(term);
     };
 
     const clearSearch = () => {
@@ -87,6 +115,130 @@ export default function SearchWithSuggestions({
         inputRef.current?.focus();
     };
 
+    // Mobile fullscreen search
+    if (isMobileExpanded) {
+        return (
+            <div className="fixed inset-0 bg-white z-[100] flex flex-col">
+                {/* Mobile Search Header */}
+                <div className="flex items-center gap-3 p-3 border-b border-gray-200 bg-white">
+                    <button
+                        onClick={handleClose}
+                        className="p-2 -ml-1 hover:bg-gray-100 rounded-full transition-colors touch-manipulation"
+                    >
+                        <ArrowLeft className="w-5 h-5 text-gray-600" />
+                    </button>
+                    <div className="flex-1 relative">
+                        <input
+                            ref={inputRef}
+                            type="text"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                    handleSearch(searchQuery);
+                                }
+                            }}
+                            placeholder="Search products, brands..."
+                            className="w-full py-2.5 px-4 bg-gray-100 rounded-xl text-base focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                            autoFocus
+                        />
+                        {searchQuery && (
+                            <button
+                                onClick={clearSearch}
+                                className="absolute right-3 top-1/2 transform -translate-y-1/2 p-1.5 hover:bg-gray-200 rounded-full"
+                            >
+                                <X className="w-4 h-4 text-gray-500" />
+                            </button>
+                        )}
+                    </div>
+                </div>
+
+                {/* Mobile Suggestions List */}
+                <div className="flex-1 overflow-y-auto">
+                    {/* Recent Searches */}
+                    {!searchQuery && recentSearches.length > 0 && (
+                        <div className="p-4 border-b border-gray-100">
+                            <div className="flex items-center gap-2 text-sm text-gray-500 mb-3">
+                                <TrendingUp className="w-4 h-4" />
+                                <span className="font-medium">Recent Searches</span>
+                            </div>
+                            <div className="flex flex-wrap gap-2">
+                                {recentSearches.map((term, idx) => (
+                                    <button
+                                        key={idx}
+                                        onClick={() => handleRecentClick(term)}
+                                        className="px-4 py-2.5 bg-gray-100 active:bg-emerald-100 rounded-full text-sm font-medium transition-colors touch-manipulation"
+                                    >
+                                        {term}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Product Suggestions */}
+                    {suggestions.length > 0 && (
+                        <div className="divide-y divide-gray-100">
+                            {suggestions.map((product) => (
+                                <button
+                                    key={product.id}
+                                    onClick={() => handleSelectProduct(product)}
+                                    className="w-full p-4 flex items-center gap-4 active:bg-gray-50 transition-colors text-left touch-manipulation"
+                                >
+                                    {/* Product Image */}
+                                    <div className="w-16 h-16 bg-gray-100 rounded-xl flex items-center justify-center flex-shrink-0 overflow-hidden">
+                                        {product.image ? (
+                                            <img
+                                                src={product.image}
+                                                alt={product.name}
+                                                className="w-full h-full object-contain p-1"
+                                            />
+                                        ) : (
+                                            <Package className="w-8 h-8 text-gray-300" />
+                                        )}
+                                    </div>
+
+                                    {/* Product Info */}
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-base font-medium text-gray-800 line-clamp-2">
+                                            {product.name}
+                                        </p>
+                                        <p className="text-sm text-gray-500 mt-0.5">
+                                            {product.brand && <span>{product.brand} • </span>}
+                                            {product.category_name}
+                                        </p>
+                                        <p className="text-base font-bold text-emerald-600 mt-1">
+                                            ₹{parseFloat(product.base_price).toFixed(0)}
+                                        </p>
+                                    </div>
+                                </button>
+                            ))}
+                        </div>
+                    )}
+
+                    {/* No Results */}
+                    {searchQuery.length >= 2 && suggestions.length === 0 && (
+                        <div className="p-8 text-center">
+                            <Package className="w-16 h-16 text-gray-200 mx-auto mb-4" />
+                            <p className="text-gray-500">No products found</p>
+                            <p className="text-sm text-gray-400 mt-1">Try a different search term</p>
+                        </div>
+                    )}
+
+                    {/* Empty State */}
+                    {!searchQuery && recentSearches.length === 0 && (
+                        <div className="p-8 text-center">
+                            <Search className="w-16 h-16 text-gray-200 mx-auto mb-4" />
+                            <p className="text-gray-500">Search for products</p>
+                            <p className="text-sm text-gray-400 mt-1">By name, brand, or category</p>
+                        </div>
+                    )}
+                </div>
+            </div>
+        );
+    }
+
+    // Desktop view
     return (
         <div ref={containerRef} className="relative w-full">
             {/* Search Input */}
@@ -97,7 +249,7 @@ export default function SearchWithSuggestions({
                     type="text"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    onFocus={() => setShowSuggestions(true)}
+                    onFocus={handleFocus}
                     onKeyDown={(e) => {
                         if (e.key === 'Enter') {
                             handleSearch(searchQuery);
@@ -116,7 +268,7 @@ export default function SearchWithSuggestions({
                 )}
             </div>
 
-            {/* Suggestions Dropdown */}
+            {/* Desktop Suggestions Dropdown */}
             {showSuggestions && (suggestions.length > 0 || recentSearches.length > 0) && (
                 <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-xl border border-gray-100 z-50 max-h-[70vh] overflow-y-auto">
 
