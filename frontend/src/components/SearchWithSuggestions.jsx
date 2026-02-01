@@ -89,12 +89,12 @@ export default function SearchWithSuggestions({
         <div ref={containerRef} className="relative w-full">
             {/* Search Input */}
             <div className="relative">
-                {/* Clickable Search Icon */}
+                {/* Clickable Search Icon - just closes dropdown */}
                 <button
                     type="button"
-                    onClick={() => {
-                        setSearchQuery('');
-                        setSuggestions([]);
+                    onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
                         setShowSuggestions(false);
                         inputRef.current?.blur();
                     }}

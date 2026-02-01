@@ -694,8 +694,8 @@ export default function Home() {
 
                 {currentView === 'catalog' && !selectedBrand && (
                     <div>
-                        {/* 1. Brand Horizontal Scroll */}
-                        {!selectedSubcategory && visibleBrands.length > 0 && (
+                        {/* 1. Brand Horizontal Scroll - Hide when searching */}
+                        {!selectedSubcategory && visibleBrands.length > 0 && !searchQuery && (
                             <div className="mb-8">
                                 <div className="flex items-center justify-between mb-3 px-1">
                                     <h3 className="text-base sm:text-lg font-bold text-gray-800">
