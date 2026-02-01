@@ -84,8 +84,7 @@ export default function ProductDetail({ product, onClose, onAddToCart }) {
       // Refresh the global cart state so UI updates
       await fetchCart();
 
-      // If we reach here, all requests succeeded
-      alert(`✅ Added ${totalQuantity} units to cart!`);
+      // Close the modal - no alert needed
       if (onAddToCart) onAddToCart();
       onClose();
 

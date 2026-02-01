@@ -1230,67 +1230,60 @@ function EstimateView({ cart, removeFromCart, updateQuantity, subtotal, cgst, sg
             <div className="bg-white rounded-lg sm:rounded-xl shadow-md mb-4 sm:mb-6 overflow-hidden">
                 {cart.items.map((item, idx) => {
                     return (
-                        <div key={item.id} className={`p-3 sm:p-4 flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 ${idx !== cart.items.length - 1 ? 'border-b border-gray-200' : ''}`}>
-                            <div className="flex items-center gap-3 sm:gap-4 flex-1 w-full sm:w-auto">
-                                <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden">
-                                    {item.product?.image ? (
-                                        <img
-                                            src={item.product.image}
-                                            alt={item.product.name}
-                                            className="w-full h-full object-contain p-2 sm:p-3"
-                                            loading="lazy"
-                                        />
-                                    ) : (
-                                        <Package className="w-8 h-8 sm:w-10 sm:h-10 text-emerald-400" />
-                                    )}
-                                </div>
-
-                                <div className="flex-1 min-w-0">
-                                    <h4 className="font-bold text-sm sm:text-base line-clamp-2">
-                                        {item.product.name}
-                                        {item.variant && (
-                                            <span className="ml-2 inline-block text-xs font-normal text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100">
-                                                {item.variant}
-                                            </span>
-                                        )}
-                                    </h4>
-                                    <p className="text-xs sm:text-sm text-gray-500">SKU: {item.product.sku}</p>
-                                    <p className="text-xs sm:text-sm text-gray-600 mt-0.5 sm:mt-1">MOQ: {item.product.moq} units</p>
-                                    <p className="font-bold text-emerald-600 mt-1 text-sm sm:text-base">
-                                        ₹{parseFloat(item.product.base_price).toFixed(2)}
-                                    </p>
-                                </div>
+                        <div key={item.id} className={`p-2 sm:p-3 flex items-center gap-2 sm:gap-3 ${idx !== cart.items.length - 1 ? 'border-b border-gray-100' : ''}`}>
+                            {/* Compact Image */}
+                            <div className="w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden">
+                                {item.product?.image ? (
+                                    <img
+                                        src={item.product.image}
+                                        alt={item.product.name}
+                                        className="w-full h-full object-contain p-1"
+                                        loading="lazy"
+                                    />
+                                ) : (
+                                    <Package className="w-6 h-6 text-emerald-400" />
+                                )}
                             </div>
 
-                            <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto justify-between sm:justify-start">
-                                <div className="flex items-center gap-2 bg-gray-50 rounded-lg p-1">
-                                    <button
-                                        onClick={() => handleDecrease(item, item.quantity)}
-                                        className="p-2 hover:bg-gray-100 active:bg-gray-200 rounded-lg transition-colors touch-manipulation min-w-[40px] min-h-[40px] flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
-                                        disabled={item.quantity <= item.product.moq}
-                                    >
-                                        <Minus className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600" />
-                                    </button>
-                                    <span className="w-12 sm:w-16 text-center font-bold text-emerald-600 text-sm sm:text-base">
-                                        {item.quantity}
-                                    </span>
-                                    <button
-                                        onClick={() => handleIncrease(item, item.quantity)}
-                                        className="p-2 hover:bg-gray-100 active:bg-gray-200 rounded-lg transition-colors touch-manipulation min-w-[40px] min-h-[40px] flex items-center justify-center"
-                                    >
-                                        <Plus className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600" />
-                                    </button>
-                                </div>
+                            {/* Product Info - Compact */}
+                            <div className="flex-1 min-w-0">
+                                <h4 className="font-semibold text-xs sm:text-sm line-clamp-1">
+                                    {item.product.name}
+                                    {item.variant && (
+                                        <span className="ml-1 text-[10px] text-emerald-600">({item.variant})</span>
+                                    )}
+                                </h4>
+                                <p className="text-[10px] sm:text-xs text-gray-500">₹{parseFloat(item.product.base_price).toFixed(0)} × {item.quantity}</p>
+                            </div>
 
-                                <div className="text-right sm:text-left">
-                                    <p className="font-bold text-base sm:text-lg">₹{parseFloat(item.total_price).toFixed(2)}</p>
-                                    <button
-                                        onClick={() => removeFromCart(item.id)}
-                                        className="text-red-600 text-xs sm:text-sm hover:underline active:text-red-700 mt-1 font-medium touch-manipulation"
-                                    >
-                                        Remove
-                                    </button>
-                                </div>
+                            {/* Quantity Controls - Compact */}
+                            <div className="flex items-center border border-gray-200 rounded-lg">
+                                <button
+                                    onClick={() => handleDecrease(item, item.quantity)}
+                                    className="p-1.5 hover:bg-gray-50 active:bg-gray-100 transition-colors"
+                                >
+                                    <Minus className="w-3 h-3 text-gray-500" />
+                                </button>
+                                <span className="w-8 text-center font-bold text-emerald-600 text-xs">
+                                    {item.quantity}
+                                </span>
+                                <button
+                                    onClick={() => handleIncrease(item, item.quantity)}
+                                    className="p-1.5 hover:bg-gray-50 active:bg-gray-100 transition-colors"
+                                >
+                                    <Plus className="w-3 h-3 text-gray-500" />
+                                </button>
+                            </div>
+
+                            {/* Total & Remove */}
+                            <div className="text-right flex-shrink-0">
+                                <p className="font-bold text-sm text-gray-800">₹{parseFloat(item.total_price).toFixed(0)}</p>
+                                <button
+                                    onClick={() => removeFromCart(item.id)}
+                                    className="text-red-500 text-[10px] hover:underline"
+                                >
+                                    Remove
+                                </button>
                             </div>
                         </div>
                     );
