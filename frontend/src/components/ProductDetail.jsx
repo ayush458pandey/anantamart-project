@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import { X, Plus, Minus, ShoppingCart, Package, Truck, Shield } from 'lucide-react';
+import { useCart } from '../context/CartContext';
 
 export default function ProductDetail({ product, onClose, onAddToCart }) {
+  const { fetchCart } = useCart();
   const [quantity, setQuantity] = useState(product.moq || 1);
   const [selectedImage, setSelectedImage] = useState(0);
 
@@ -79,7 +81,10 @@ export default function ProductDetail({ product, onClose, onAddToCart }) {
 
       await Promise.all(promises);
 
-      // If we reach here, all requests succeeded (cartService checks validation)
+      // Refresh the global cart state so UI updates
+      await fetchCart();
+
+      // If we reach here, all requests succeeded
       alert(`✅ Added ${totalQuantity} units to cart!`);
       if (onAddToCart) onAddToCart();
       onClose();
