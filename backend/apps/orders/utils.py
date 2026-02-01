@@ -8,10 +8,14 @@ logger = logging.getLogger(__name__)
 
 def send_order_confirmation_email(order):
     """
-    Sends an order confirmation email to the customer and admin using a simple HTML string construction.
-    We avoid Django templates here for simplicity in this utility file, but templates are better long-term.
+    Sends an order confirmation email to the customer and admin.
     """
     try:
+        # Prevent crash if credentials are missing
+        if not settings.EMAIL_HOST_USER:
+            logger.warning("EMAIL_HOST_USER not set. Skipping email.")
+            return False
+
         subject = f"Order Confirmation - {order.order_number}"
         
         # --- HTML EMAIL CONSTRUCTION ---
