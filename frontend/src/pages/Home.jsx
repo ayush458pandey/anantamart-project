@@ -347,6 +347,9 @@ export default function Home() {
         setShowCheckout(false);
     };
 
+    // Ref to track initial mount (for sessionStorage restoration)
+    const isInitialMountRef = React.useRef(true);
+
     // Fetch subcategories when category changes
     useEffect(() => {
         // Check if this is an intentional navigation with subcategory
@@ -376,6 +379,30 @@ export default function Home() {
                 setSelectedSubcategory(targetSubcat);
                 setShowSubcategoryView(false);
             }
+            return;
+        }
+
+        // On initial mount, don't reset if we have saved state
+        if (isInitialMountRef.current) {
+            isInitialMountRef.current = false;
+
+            // Still need to fetch subcategories if we have a saved category
+            const fetchSubcategoriesOnMount = async () => {
+                if (selectedCategory && selectedCategory !== 'all') {
+                    setLoadingSubcategories(true);
+                    try {
+                        const data = await productService.getSubcategoriesWithImages(selectedCategory);
+                        setSubcategories(data);
+                    } catch (err) {
+                        console.error('Failed to fetch subcategories:', err);
+                        setSubcategories([]);
+                    } finally {
+                        setLoadingSubcategories(false);
+                    }
+                }
+            };
+            fetchSubcategoriesOnMount();
+            // Don't reset selectedSubcategory or showSubcategoryView on mount
             return;
         }
 
