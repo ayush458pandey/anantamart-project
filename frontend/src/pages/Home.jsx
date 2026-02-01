@@ -18,6 +18,7 @@ import AdvancedCheckout from '../components/AdvancedCheckout';
 import OrdersList from '../components/OrdersList';
 import AllBrands from '../components/AllBrands';
 import Footer from '../components/Footer';
+import SearchWithSuggestions from '../components/SearchWithSuggestions';
 
 import SubcategoryGrid from '../components/SubcategoryGrid';
 import BrandGrid from '../components/BrandGrid';
@@ -576,17 +577,14 @@ export default function Home() {
                             </div>
                         </div>
 
+                        {/* Desktop Search with Auto-Suggestions */}
                         <div className="hidden sm:flex flex-1 max-w-2xl min-w-0">
-                            <div className="flex items-center bg-gray-100 rounded-lg px-3 py-2 w-full">
-                                <Search className="w-5 h-5 text-gray-400 flex-shrink-0" />
-                                <input
-                                    type="text"
-                                    placeholder="Search products..."
-                                    value={searchQuery}
-                                    onChange={(e) => setSearchQuery(e.target.value)}
-                                    className="flex-1 ml-2 bg-transparent outline-none text-base min-w-0"
-                                />
-                            </div>
+                            <SearchWithSuggestions
+                                products={products}
+                                searchQuery={searchQuery}
+                                setSearchQuery={setSearchQuery}
+                                onProductSelect={(product) => setSelectedProduct(product)}
+                            />
                         </div>
 
                         <button
@@ -622,17 +620,14 @@ export default function Home() {
                         </button>
                     </div>
 
+                    {/* Mobile Search with Auto-Suggestions */}
                     <div className="sm:hidden mb-3">
-                        <div className="flex items-center bg-gray-100 rounded-lg px-3 py-2.5">
-                            <Search className="w-5 h-5 text-gray-400 flex-shrink-0" />
-                            <input
-                                type="text"
-                                placeholder="Search products..."
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                className="flex-1 ml-2 bg-transparent outline-none text-base min-w-0"
-                            />
-                        </div>
+                        <SearchWithSuggestions
+                            products={products}
+                            searchQuery={searchQuery}
+                            setSearchQuery={setSearchQuery}
+                            onProductSelect={(product) => setSelectedProduct(product)}
+                        />
                     </div>
 
                     <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide -mx-3 sm:mx-0 px-3 sm:px-0">

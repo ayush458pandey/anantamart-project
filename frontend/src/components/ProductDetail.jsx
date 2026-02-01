@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { X, Plus, Minus, ShoppingCart, Package, Truck, Shield } from 'lucide-react';
 import { useCart } from '../context/CartContext';
+import { useToast } from '../context/ToastContext';
 
 export default function ProductDetail({ product, onClose, onAddToCart }) {
   const { fetchCart } = useCart();
+  const toast = useToast();
   const [quantity, setQuantity] = useState(product.moq || 1);
   const [selectedImage, setSelectedImage] = useState(0);
 
@@ -41,18 +43,17 @@ export default function ProductDetail({ product, onClose, onAddToCart }) {
     });
   };
 
-  // --- NEW HANDLE ADD TO CART ---
-  // --- NEW HANDLE ADD TO CART ---
+  // --- HANDLE ADD TO CART ---
   const handleAddToCart = async () => {
     // Validation
     if (totalQuantity === 0) {
-      alert("Please select at least 1 item.");
+      toast.error("Please select at least 1 item");
       return;
     }
 
     // Verify MOQ
     if (totalQuantity < product.moq) {
-      alert(`Minimum Order Quantity is ${product.moq}. Please add more items.`);
+      toast.error(`Minimum order quantity is ${product.moq}`);
       return;
     }
 
@@ -84,15 +85,15 @@ export default function ProductDetail({ product, onClose, onAddToCart }) {
       // Refresh the global cart state so UI updates
       await fetchCart();
 
-      // Close the modal - no alert needed
+      // Show toast and close modal
+      toast.cart(`Added ${totalQuantity} item${totalQuantity > 1 ? 's' : ''} to cart`);
       if (onAddToCart) onAddToCart();
       onClose();
 
     } catch (error) {
       console.error("Add to cart error:", error);
-      // cartService logic might throw, showing the error message in alert would be nice
       const msg = error.response?.data?.error || error.message || "Could not add to cart.";
-      alert(`❌ Failed: ${msg}`);
+      toast.error(msg);
     }
   };
 
