@@ -89,7 +89,20 @@ export default function SearchWithSuggestions({
         <div ref={containerRef} className="relative w-full">
             {/* Search Input */}
             <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
+                {/* Clickable Search Icon */}
+                <button
+                    type="button"
+                    onClick={() => {
+                        if (searchQuery.trim()) {
+                            handleSearch(searchQuery);
+                        } else {
+                            inputRef.current?.focus();
+                        }
+                    }}
+                    className="absolute left-2 top-1/2 transform -translate-y-1/2 p-1 hover:bg-gray-200 active:bg-gray-300 rounded-full transition-colors touch-manipulation z-10"
+                >
+                    <Search className="w-5 h-5 text-gray-500" />
+                </button>
                 <input
                     ref={inputRef}
                     type="text"
@@ -106,7 +119,7 @@ export default function SearchWithSuggestions({
                         }
                     }}
                     placeholder="Search products..."
-                    className="w-full pl-10 pr-12 py-2.5 bg-gray-100 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
+                    className="w-full pl-11 pr-12 py-2.5 bg-gray-100 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
                 />
                 {searchQuery && (
                     <button
