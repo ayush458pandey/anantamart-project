@@ -1256,22 +1256,22 @@ function EstimateView({ cart, removeFromCart, updateQuantity, subtotal, cgst, sg
                                 <p className="text-[10px] sm:text-xs text-gray-500">₹{parseFloat(item.product.base_price).toFixed(0)} × {item.quantity}</p>
                             </div>
 
-                            {/* Quantity Controls - Compact */}
-                            <div className="flex items-center border border-gray-200 rounded-lg">
+                            {/* Quantity Controls - Touch Friendly */}
+                            <div className="flex items-center border border-gray-200 rounded-lg bg-gray-50">
                                 <button
                                     onClick={() => handleDecrease(item, item.quantity)}
-                                    className="p-1.5 hover:bg-gray-50 active:bg-gray-100 transition-colors"
+                                    className="p-2 min-w-[36px] min-h-[36px] flex items-center justify-center hover:bg-gray-100 active:bg-gray-200 transition-colors touch-manipulation rounded-l-lg"
                                 >
-                                    <Minus className="w-3 h-3 text-gray-500" />
+                                    <Minus className="w-4 h-4 text-gray-600" />
                                 </button>
-                                <span className="w-8 text-center font-bold text-emerald-600 text-xs">
+                                <span className="w-10 text-center font-bold text-emerald-600 text-sm">
                                     {item.quantity}
                                 </span>
                                 <button
                                     onClick={() => handleIncrease(item, item.quantity)}
-                                    className="p-1.5 hover:bg-gray-50 active:bg-gray-100 transition-colors"
+                                    className="p-2 min-w-[36px] min-h-[36px] flex items-center justify-center hover:bg-gray-100 active:bg-gray-200 transition-colors touch-manipulation rounded-r-lg"
                                 >
-                                    <Plus className="w-3 h-3 text-gray-500" />
+                                    <Plus className="w-4 h-4 text-gray-600" />
                                 </button>
                             </div>
 
