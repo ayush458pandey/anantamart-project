@@ -77,11 +77,11 @@ export default function InvoiceGenerator({ orderData, onClose }) {
                   </div>
                 </div>
                 <div className="text-sm text-gray-600 space-y-1">
-                  <p>123 Industrial Area, Sector 5</p>
-                  <p>Mumbai, Maharashtra - 400001</p>
-                  <p>Phone: +91 98765 43210</p>
-                  <p>Email: sales@anantamart.com</p>
-                  <p className="font-semibold">GSTIN: 27AAAAA0000A1Z5</p>
+                  <p>76 Pandit Purushottam Roy Street</p>
+                  <p>Khengra Patty, Kolkata - 700007</p>
+                  <p>Phone: +91 6291467226</p>
+                  <p>Email: ayush458pandey@gmail.com</p>
+                  <p className="font-semibold">GSTIN: 19EHXPP0921F1ZW</p>
                 </div>
               </div>
 
@@ -221,9 +221,10 @@ export default function InvoiceGenerator({ orderData, onClose }) {
               <h3 className="font-bold text-sm mb-2">Payment Information</h3>
               <div className="text-sm space-y-1 text-gray-700">
                 <p><span className="font-semibold">Payment Method:</span> {orderData.payment_method}</p>
-                <p><span className="font-semibold">Bank Name:</span> HDFC Bank</p>
-                <p><span className="font-semibold">Account Number:</span> 1234567890</p>
-                <p><span className="font-semibold">IFSC Code:</span> HDFC0001234</p>
+                <p><span className="font-semibold">Bank Name:</span> Canara Bank</p>
+                <p><span className="font-semibold">Account Holder:</span> Tailoring Mart</p>
+                <p><span className="font-semibold">Account Number:</span> 125008896654</p>
+                <p><span className="font-semibold">IFSC Code:</span> CNRB0000303</p>
               </div>
             </div>
 
@@ -234,7 +235,7 @@ export default function InvoiceGenerator({ orderData, onClose }) {
                 <li>Payment is due within 30 days of invoice date</li>
                 <li>Please quote invoice number when making payment</li>
                 <li>Goods once sold will not be taken back or exchanged</li>
-                <li>All disputes are subject to Mumbai jurisdiction only</li>
+                <li>All disputes are subject to Kolkata jurisdiction only</li>
                 <li>Interest @ 18% p.a. will be charged on delayed payments</li>
               </ul>
             </div>
