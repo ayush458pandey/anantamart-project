@@ -18,29 +18,21 @@ export const AuthProvider = ({ children }) => {
 
         if (storedToken && storedUser) {
             try {
-                // Try to parse stored user data first for quick render
+                // Render cached user IMMEDIATELY (no blocking API call)
                 setUser(JSON.parse(storedUser));
+            } catch {
+                logout();
+            }
 
-                // Then fetch fresh profile data in the background
-                const response = await axiosInstance.get('/user/me/');
+            // Refresh profile in background (non-blocking)
+            axiosInstance.get('/user/me/').then(response => {
                 const freshUser = response.data;
                 setUser(freshUser);
                 localStorage.setItem('user', JSON.stringify(freshUser));
-            } catch (error) {
-                console.error("Failed to verify user session:", error);
-                // If the token is invalid, the axios interceptor will handle refresh/logout
-                // Only clear if it's a parsing error or non-401 error
-                if (!error.response || error.response.status !== 401) {
-                    const storedUserFallback = localStorage.getItem('user');
-                    if (storedUserFallback) {
-                        try {
-                            setUser(JSON.parse(storedUserFallback));
-                        } catch {
-                            logout();
-                        }
-                    }
-                }
-            }
+            }).catch(() => {
+                // Token refresh is handled by axios interceptor
+                // If it still fails, user gets logged out there
+            });
         }
         setLoading(false);
     };
@@ -66,5 +58,4 @@ export const AuthProvider = ({ children }) => {
     );
 };
 
-// Hook to use auth easily
 export const useAuth = () => useContext(AuthContext);
