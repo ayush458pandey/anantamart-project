@@ -43,12 +43,12 @@ export default function SubcategoryGrid({
                     className="group flex flex-col items-center cursor-pointer"
                 >
                     {/* Compact Box Container */}
-                    <div className="w-20 h-20 sm:w-24 sm:h-24 bg-white border border-gray-200 rounded-xl flex items-center justify-center p-2 shadow-sm transition-all duration-200 group-hover:shadow-md group-hover:border-emerald-500 group-hover:-translate-y-1">
+                    <div className={`w-20 h-20 sm:w-24 sm:h-24 bg-white border border-gray-200 rounded-xl flex items-center justify-center shadow-sm transition-all duration-200 group-hover:shadow-md group-hover:border-emerald-500 group-hover:-translate-y-1 overflow-hidden ${subcategory.image_url ? '' : 'p-2'}`}>
                         {subcategory.image_url ? (
                             <img
                                 src={subcategory.image_url}
                                 alt={subcategory.name}
-                                className="w-full h-full object-contain rounded-lg"
+                                className="w-full h-full object-cover"
                                 loading="lazy"
                             />
                         ) : (
