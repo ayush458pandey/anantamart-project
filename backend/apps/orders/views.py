@@ -5,7 +5,8 @@ from rest_framework.permissions import IsAuthenticated
 from .models import Order, OrderItem
 from .serializers import OrderSerializer
 from apps.products.models import Product
-from apps.cart.models import Cart, CartItem  # <--- NEW IMPORT
+from apps.cart.models import Cart, CartItem
+from django.db.models import F
 import random
 import string
 from datetime import datetime
@@ -20,8 +21,27 @@ class OrderViewSet(viewsets.ModelViewSet):
         return Order.objects.filter(user=self.request.user).prefetch_related('items__product')
     
     def create(self, request):
-        """Create a new order"""
+        """Create a new order with stock validation and deduction"""
         try:
+            items_data = request.data.get('items', [])
+            
+            # --- STOCK VALIDATION ---
+            for item_data in items_data:
+                try:
+                    product = Product.objects.get(id=item_data['product_id'])
+                except Product.DoesNotExist:
+                    return Response(
+                        {'error': f'Product with ID {item_data["product_id"]} not found'},
+                        status=status.HTTP_404_NOT_FOUND
+                    )
+                
+                if hasattr(product, 'stock') and product.stock is not None:
+                    if product.stock < item_data['quantity']:
+                        return Response(
+                            {'error': f'Insufficient stock for "{product.name}". Available: {product.stock}, Requested: {item_data["quantity"]}'},
+                            status=status.HTTP_400_BAD_REQUEST
+                        )
+            
             # Generate order number
             order_number = 'ORD' + ''.join(random.choices(string.digits, k=8))
             
@@ -47,8 +67,8 @@ class OrderViewSet(viewsets.ModelViewSet):
                 courier_partner='BlueDart Express'
             )
             
-            # Create order items
-            for item_data in request.data.get('items', []):
+            # Create order items and deduct stock
+            for item_data in items_data:
                 product = Product.objects.get(id=item_data['product_id'])
                 OrderItem.objects.create(
                     order=order,
@@ -58,19 +78,27 @@ class OrderViewSet(viewsets.ModelViewSet):
                     price=product.base_price,
                     total=product.base_price * item_data['quantity']
                 )
+                
+                # --- STOCK DEDUCTION (atomic) ---
+                if hasattr(product, 'stock') and product.stock is not None:
+                    Product.objects.filter(id=product.id).update(
+                        stock=F('stock') - item_data['quantity']
+                    )
+                    # Refresh and update stock status
+                    product.refresh_from_db()
+                    if product.stock <= 0:
+                        Product.objects.filter(id=product.id).update(stock_status='out-of-stock')
+                    elif product.stock <= 5:
+                        Product.objects.filter(id=product.id).update(stock_status='low-stock')
             
-            # --- CRITICAL FIX: EMPTY THE CART ---
-            # This deletes all items in the user's cart after order is placed
+            # Empty the cart after order
             try:
                 cart = Cart.objects.get(user=user)
                 cart.items.all().delete()
             except Cart.DoesNotExist:
-                pass # If no cart exists, just ignore
-            # ------------------------------------
+                pass
 
-            # ------------------------------------
-
-            # Send Email Confirmation (Async in production, sync for now)
+            # Send Email Confirmation
             from .utils import send_order_confirmation_email
             send_order_confirmation_email(order)
 
@@ -90,9 +118,23 @@ class OrderViewSet(viewsets.ModelViewSet):
     
     @action(detail=True, methods=['post'])
     def update_status(self, request, pk=None):
-        """Update order status"""
+        """Update order status with stock restoration on cancellation"""
         order = self.get_object()
         new_status = request.data.get('status')
+        
+        # --- STOCK RESTORATION on cancellation ---
+        if new_status == 'cancelled' and order.status != 'cancelled':
+            for item in order.items.all():
+                if hasattr(item.product, 'stock') and item.product.stock is not None:
+                    Product.objects.filter(id=item.product.id).update(
+                        stock=F('stock') + item.quantity
+                    )
+                    # Refresh and update stock status
+                    item.product.refresh_from_db()
+                    if item.product.stock > 5:
+                        Product.objects.filter(id=item.product.id).update(stock_status='in-stock')
+                    elif item.product.stock > 0:
+                        Product.objects.filter(id=item.product.id).update(stock_status='low-stock')
         
         order.status = new_status
         

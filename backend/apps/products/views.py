@@ -1,6 +1,7 @@
 from rest_framework import viewsets, filters
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from rest_framework.permissions import AllowAny
 from django_filters.rest_framework import DjangoFilterBackend
 from django.db.models import Count, Q
 from .models import Product, Category, Subcategory, Brand
@@ -9,6 +10,7 @@ from .serializers import ProductSerializer, CategorySerializer, SubcategorySeria
 class ProductViewSet(viewsets.ModelViewSet):
     queryset = Product.objects.filter(is_active=True).select_related('category', 'subcategory').prefetch_related('tiers', 'images')
     serializer_class = ProductSerializer
+    permission_classes = [AllowAny]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     
     # Add brand and subcategory to filterset_fields
@@ -107,6 +109,7 @@ class ProductViewSet(viewsets.ModelViewSet):
 class CategoryViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
+    permission_classes = [AllowAny]
     
     @action(detail=True, methods=['get'])
     def subcategories(self, request, pk=None):
@@ -121,6 +124,7 @@ class SubcategoryViewSet(viewsets.ReadOnlyModelViewSet):
     """ViewSet for viewing subcategories"""
     queryset = Subcategory.objects.filter(is_active=True)
     serializer_class = SubcategorySerializer
+    permission_classes = [AllowAny]
     filter_backends = [DjangoFilterBackend]
     filterset_fields = ['category']
     
@@ -135,6 +139,7 @@ class BrandViewSet(viewsets.ReadOnlyModelViewSet):
     """ViewSet for viewing brands with logos"""
     queryset = Brand.objects.filter(is_active=True)
     serializer_class = BrandSerializer
+    permission_classes = [AllowAny]
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ['name', 'description']
     ordering_fields = ['name', 'created_at']
