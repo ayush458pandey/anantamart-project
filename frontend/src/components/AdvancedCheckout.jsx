@@ -215,7 +215,8 @@ export default function AdvancedCheckout({ cart, onClose, onPlaceOrder }) {
 
     } catch (err) {
       console.error("Order processing error:", err);
-      alert("Failed to save order: " + err.message);
+      const serverError = err.response?.data?.error || err.message;
+      alert("Failed to save order: " + serverError);
     } finally {
       setIsProcessing(false);
     }
