@@ -1,4 +1,5 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
+import axiosInstance from '../api/axios';
 
 const AuthContext = createContext();
 
@@ -6,30 +7,46 @@ export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
 
-    // 1. CHECK LOCAL STORAGE ON PAGE LOAD (The Fix)
+    // Check localStorage on page load
     useEffect(() => {
         checkUserLoggedIn();
     }, []);
 
-    const checkUserLoggedIn = () => {
+    const checkUserLoggedIn = async () => {
         const storedToken = localStorage.getItem('access_token');
         const storedUser = localStorage.getItem('user');
 
         if (storedToken && storedUser) {
             try {
+                // Try to parse stored user data first for quick render
                 setUser(JSON.parse(storedUser));
+
+                // Then fetch fresh profile data in the background
+                const response = await axiosInstance.get('/user/me/');
+                const freshUser = response.data;
+                setUser(freshUser);
+                localStorage.setItem('user', JSON.stringify(freshUser));
             } catch (error) {
-                console.error("User data corrupted, logging out");
-                logout();
+                console.error("Failed to verify user session:", error);
+                // If the token is invalid, the axios interceptor will handle refresh/logout
+                // Only clear if it's a parsing error or non-401 error
+                if (!error.response || error.response.status !== 401) {
+                    const storedUserFallback = localStorage.getItem('user');
+                    if (storedUserFallback) {
+                        try {
+                            setUser(JSON.parse(storedUserFallback));
+                        } catch {
+                            logout();
+                        }
+                    }
+                }
             }
         }
-        setLoading(false); // Done checking
+        setLoading(false);
     };
 
     const login = (userData, tokens) => {
-        // Save to State
         setUser(userData);
-        // Save to Storage
         localStorage.setItem('user', JSON.stringify(userData));
         localStorage.setItem('access_token', tokens.access);
         localStorage.setItem('refresh_token', tokens.refresh);
@@ -37,13 +54,13 @@ export const AuthProvider = ({ children }) => {
 
     const logout = () => {
         setUser(null);
-        localStorage.clear();
-        window.location.href = '/login';
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('refresh_token');
+        localStorage.removeItem('user');
     };
 
     return (
         <AuthContext.Provider value={{ user, login, logout, loading }}>
-            {/* Don't render App until we know if user is logged in */}
             {!loading && children}
         </AuthContext.Provider>
     );

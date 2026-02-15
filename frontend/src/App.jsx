@@ -1,34 +1,38 @@
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 
-// 1. Import your 1300-line file (It is in the same folder, so path is ./)
+import Layout from './components/Layout';
 import Home from './pages/Home';
-
-// 2. Import the new pages
 import Login from './pages/Login';
-import AdvancedCheckout from './components/AdvancedCheckout';
+import CartPage from './pages/CartPage';
+import OrdersPage from './pages/OrdersPage';
+import ProfilePage from './pages/ProfilePage';
+import ComparePage from './pages/ComparePage';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
 
-// 3. Import Layouts (Only if they aren't already inside Home.jsx)
-// Since your Home.jsx is massive, it likely already contains Navbar/Footer.
-// So we don't import them here to avoid double headers.
+import './App.css';
 
 function App() {
   return (
-    <div className="app-container">
-      <Routes>
-        {/* The "Home" route now loads your massive file */}
+    <Routes>
+      {/* Pages with Layout (Navbar + Footer + BottomNav) */}
+      <Route element={<Layout />}>
         <Route path="/" element={<Home />} />
+        <Route path="/cart" element={<CartPage />} />
+        <Route path="/orders" element={<OrdersPage />} />
+        <Route path="/profile" element={<ProfilePage />} />
+        <Route path="/compare" element={<ComparePage />} />
+      </Route>
 
-        {/* The "Login" route loads the new login page */}
-        <Route path="/login" element={<Login />} />
+      {/* Standalone pages (no Layout) */}
+      <Route path="/login" element={<Login />} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/reset-password" element={<ResetPassword />} />
 
-        {/* The "Checkout" route */}
-        <Route path="/checkout" element={<AdvancedCheckout />} />
-
-        {/* Catch-all: Send unknown links to Home */}
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </div>
+      {/* Catch-all redirect */}
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
   );
 }
 
