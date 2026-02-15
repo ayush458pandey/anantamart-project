@@ -44,7 +44,7 @@ const CategoryDirectory = ({ categories, onSelectCategory }) => {
                                     <img
                                         src={category.image}
                                         alt={category.name}
-                                        className="w-full h-full object-contain rounded-lg"
+                                        className="w-full h-full object-cover rounded-lg"
                                     />
                                 ) : (
                                     <Icon className="w-8 h-8 sm:w-10 sm:h-10 text-emerald-600 group-hover:scale-110 transition-transform" />
