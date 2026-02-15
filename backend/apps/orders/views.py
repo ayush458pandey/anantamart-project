@@ -47,6 +47,11 @@ class OrderViewSet(viewsets.ModelViewSet):
             
             user = request.user
             
+            # Sanitize scheduled_date (empty string -> None)
+            scheduled_date = request.data.get('scheduled_date')
+            if not scheduled_date:
+                scheduled_date = None
+            
             # Create order
             order = Order.objects.create(
                 user=user,
@@ -59,7 +64,7 @@ class OrderViewSet(viewsets.ModelViewSet):
                 total=request.data.get('total'),
                 delivery_address=request.data.get('delivery_address'),
                 delivery_option=request.data.get('delivery_option'),
-                scheduled_date=request.data.get('scheduled_date'),
+                scheduled_date=scheduled_date,
                 payment_method=request.data.get('payment_method'),
                 payment_status=request.data.get('payment_status', 'Pending'),
                 transaction_id=request.data.get('transaction_id'),
@@ -99,8 +104,11 @@ class OrderViewSet(viewsets.ModelViewSet):
                 pass
 
             # Send Email Confirmation
-            from .utils import send_order_confirmation_email
-            send_order_confirmation_email(order)
+            try:
+                from .utils import send_order_confirmation_email
+                send_order_confirmation_email(order)
+            except Exception:
+                pass  # Don't fail the order if email fails
 
             serializer = self.get_serializer(order)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -111,9 +119,11 @@ class OrderViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_404_NOT_FOUND
             )
         except Exception as e:
+            import traceback
+            traceback.print_exc()
             return Response(
                 {'error': str(e)},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                status=status.HTTP_400_BAD_REQUEST
             )
     
     @action(detail=True, methods=['post'])
