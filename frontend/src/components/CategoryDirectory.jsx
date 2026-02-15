@@ -39,12 +39,12 @@ const CategoryDirectory = ({ categories, onSelectCategory }) => {
                             className="group flex flex-col items-center cursor-pointer"
                         >
                             {/* SQUARE CONTAINER */}
-                            <div className="w-20 h-20 sm:w-24 sm:h-24 bg-white border border-gray-200 rounded-xl flex items-center justify-center p-3 shadow-sm transition-all duration-200 group-hover:shadow-md group-hover:border-emerald-500 group-hover:-translate-y-1">
+                            <div className={`w-20 h-20 sm:w-24 sm:h-24 bg-white border border-gray-200 rounded-xl flex items-center justify-center shadow-sm transition-all duration-200 group-hover:shadow-md group-hover:border-emerald-500 group-hover:-translate-y-1 overflow-hidden ${category.image ? '' : 'p-3'}`}>
                                 {category.image ? (
                                     <img
                                         src={category.image}
                                         alt={category.name}
-                                        className="w-full h-full object-cover rounded-lg"
+                                        className="w-full h-full object-cover"
                                     />
                                 ) : (
                                     <Icon className="w-8 h-8 sm:w-10 sm:h-10 text-emerald-600 group-hover:scale-110 transition-transform" />
