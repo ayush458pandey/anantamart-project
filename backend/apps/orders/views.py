@@ -21,26 +21,9 @@ class OrderViewSet(viewsets.ModelViewSet):
         return Order.objects.filter(user=self.request.user).prefetch_related('items__product')
     
     def create(self, request):
-        """Create a new order with stock validation and deduction"""
+        """Create a new order (no stock blocking - B2B accepts all orders)"""
         try:
             items_data = request.data.get('items', [])
-            
-            # --- STOCK VALIDATION ---
-            for item_data in items_data:
-                try:
-                    product = Product.objects.get(id=item_data['product_id'])
-                except Product.DoesNotExist:
-                    return Response(
-                        {'error': f'Product with ID {item_data["product_id"]} not found'},
-                        status=status.HTTP_404_NOT_FOUND
-                    )
-                
-                if hasattr(product, 'stock') and product.stock is not None:
-                    if product.stock < item_data['quantity']:
-                        return Response(
-                            {'error': f'Insufficient stock for "{product.name}". Available: {product.stock}, Requested: {item_data["quantity"]}'},
-                            status=status.HTTP_400_BAD_REQUEST
-                        )
             
             # Generate order number
             order_number = 'ORD' + ''.join(random.choices(string.digits, k=8))
