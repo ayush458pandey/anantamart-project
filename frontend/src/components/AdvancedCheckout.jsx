@@ -91,6 +91,7 @@ export default function AdvancedCheckout({ cart, onClose, onPlaceOrder }) {
   const [showInvoice, setShowInvoice] = useState(false);
   const [completedOrder, setCompletedOrder] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [stockWarning, setStockWarning] = useState(null); // {items: [...], addressObj}
 
   // Load Addresses on Mount
   useEffect(() => {
@@ -175,7 +176,7 @@ export default function AdvancedCheckout({ cart, onClose, onPlaceOrder }) {
   const total = subtotalAfterDiscount + totalTaxAmount + deliveryCharges;
 
   // Place Final Order Function
-  const placeFinalOrder = async (addressObj, paymentStatus, paymentDetails = {}) => {
+  const placeFinalOrder = async (addressObj, paymentStatus, paymentDetails = {}, allowBackorder = false) => {
     try {
       setIsProcessing(true);
       const orderPayload = {
@@ -184,7 +185,7 @@ export default function AdvancedCheckout({ cart, onClose, onPlaceOrder }) {
           quantity: item.quantity,
           variant: item.variant
         })),
-        payment_method: selectedPayment,
+        payment_method: allowBackorder ? 'advance' : selectedPayment,
         delivery_option: deliveryOptions.find(d => d.id === selectedDelivery)?.name,
         delivery_address: `${addressObj.name}, ${addressObj.street_address}, ${addressObj.city} - ${addressObj.pincode}`,
         scheduled_date: scheduledDate || null,
@@ -195,7 +196,8 @@ export default function AdvancedCheckout({ cart, onClose, onPlaceOrder }) {
         delivery_charges: deliveryCharges,
         total: total,
         payment_status: paymentStatus,
-        transaction_id: paymentDetails.razorpay_payment_id || null
+        transaction_id: paymentDetails.razorpay_payment_id || null,
+        allow_backorder: allowBackorder
       };
 
       // 1. Create the Order
@@ -274,7 +276,12 @@ export default function AdvancedCheckout({ cart, onClose, onPlaceOrder }) {
 
       if (!stockResponse.ok) {
         const stockData = await stockResponse.json();
-        alert(stockData.error || 'Some items are out of stock. Please update your cart.');
+        // Show stock warning dialog with option to proceed via advance payment
+        setStockWarning({
+          items: stockData.out_of_stock || [],
+          message: stockData.error,
+          addressObj: addressObj
+        });
         setIsProcessing(false);
         return;
       }
@@ -756,6 +763,60 @@ export default function AdvancedCheckout({ cart, onClose, onPlaceOrder }) {
           onCancel={() => setShowAddressForm(false)}
           onSave={handleSaveAddress}
         />
+      )}
+
+      {/* Stock Warning Modal */}
+      {stockWarning && (
+        <div className="fixed inset-0 bg-black bg-opacity-60 z-[60] flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl max-w-md w-full p-6 animate-scale-in">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center">
+                <AlertCircle className="w-7 h-7 text-amber-600" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-gray-800">Stock Unavailable</h3>
+                <p className="text-sm text-gray-500">Some items are currently out of stock</p>
+              </div>
+            </div>
+
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-4">
+              {stockWarning.items.map((item, idx) => (
+                <div key={idx} className="flex justify-between text-sm py-1">
+                  <span className="text-gray-700 font-medium">{item.name}</span>
+                  <span className="text-amber-700">
+                    Available: {item.available} / Requested: {item.requested}
+                  </span>
+                </div>
+              ))}
+            </div>
+
+            <p className="text-sm text-gray-600 mb-5">
+              Would you like to place this order as an <strong>Advance Payment</strong>?
+              The items will be delivered once they are back in stock.
+            </p>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => setStockWarning(null)}
+                className="flex-1 bg-gray-100 text-gray-700 font-bold py-3 rounded-lg hover:bg-gray-200"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={async () => {
+                  const addr = stockWarning.addressObj;
+                  setStockWarning(null);
+                  await placeFinalOrder(addr, 'Pending', {}, true);
+                }}
+                disabled={isProcessing}
+                className="flex-1 bg-emerald-600 text-white font-bold py-3 rounded-lg hover:bg-emerald-700 flex items-center justify-center gap-2"
+              >
+                <Wallet className="w-5 h-5" />
+                Advance Payment
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
