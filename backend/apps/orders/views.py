@@ -159,6 +159,51 @@ class OrderViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
 
+# 🆕 STOCK VALIDATION BEFORE PAYMENT
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def validate_stock(request):
+    """
+    Validate that all items have sufficient stock before initiating payment.
+    Endpoint: POST /api/orders/validate-stock/
+    Body: { "items": [{"product_id": 1, "quantity": 2}, ...] }
+    """
+    try:
+        items = request.data.get('items', [])
+        if not items:
+            return Response({'error': 'No items provided'}, status=status.HTTP_400_BAD_REQUEST)
+
+        out_of_stock = []
+        for item in items:
+            try:
+                product = Product.objects.get(id=item['product_id'])
+                qty = item.get('quantity', 1)
+                if product.stock < qty:
+                    out_of_stock.append({
+                        'name': product.name,
+                        'available': product.stock,
+                        'requested': qty
+                    })
+            except Product.DoesNotExist:
+                out_of_stock.append({
+                    'name': f"Product #{item['product_id']}",
+                    'available': 0,
+                    'requested': item.get('quantity', 1)
+                })
+
+        if out_of_stock:
+            names = ', '.join([f"{i['name']} (available: {i['available']}, requested: {i['requested']})" for i in out_of_stock])
+            return Response(
+                {'error': f'Insufficient stock for: {names}', 'out_of_stock': out_of_stock},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        return Response({'status': 'ok', 'message': 'All items in stock'}, status=status.HTTP_200_OK)
+
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
 # 🆕 RAZORPAY PAYMENT INTEGRATION
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
