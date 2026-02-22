@@ -806,7 +806,57 @@ export default function AdvancedCheckout({ cart, onClose, onPlaceOrder }) {
                 onClick={async () => {
                   const addr = stockWarning.addressObj;
                   setStockWarning(null);
-                  await placeFinalOrder(addr, 'Pending', {}, true);
+                  setIsProcessing(true);
+
+                  try {
+                    // Load Razorpay
+                    const loaded = await loadRazorpay("https://checkout.razorpay.com/v1/checkout.js");
+                    if (!loaded) {
+                      alert("Razorpay SDK failed to load. Are you online?");
+                      setIsProcessing(false);
+                      return;
+                    }
+
+                    // Create Razorpay order
+                    const token = localStorage.getItem('access_token');
+                    const orderResponse = await fetch('https://api.ananta-mart.in/api/orders/payment/create/', {
+                      method: 'POST',
+                      headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                      },
+                      body: JSON.stringify({ amount: total })
+                    });
+
+                    if (!orderResponse.ok) throw new Error(`Server error: ${orderResponse.status}`);
+                    const orderData = await orderResponse.json();
+                    if (orderData.error) throw new Error(orderData.error);
+
+                    // Open Razorpay payment
+                    const options = {
+                      key: orderData.key_id,
+                      amount: orderData.amount,
+                      currency: "INR",
+                      name: "Ananta Mart",
+                      description: "Advance Payment for Order",
+                      order_id: orderData.order_id,
+                      handler: async function (response) {
+                        // Payment successful — now create backorder
+                        await placeFinalOrder(addr, 'Paid', response, true);
+                      },
+                      prefill: { contact: addr.phone_number },
+                      theme: { color: "#10b981" }
+                    };
+
+                    const paymentObject = new window.Razorpay(options);
+                    paymentObject.open();
+                    setIsProcessing(false);
+
+                  } catch (error) {
+                    console.error("Advance Payment Error:", error);
+                    alert("Payment failed: " + error.message);
+                    setIsProcessing(false);
+                  }
                 }}
                 disabled={isProcessing}
                 className="flex-1 bg-emerald-600 text-white font-bold py-3 rounded-lg hover:bg-emerald-700 flex items-center justify-center gap-2"
