@@ -240,7 +240,7 @@ export default function Home() {
         <>
             {/* Search + Category Tabs - rendered inside header via portal */}
             {document.getElementById('header-extension') && createPortal(
-                <div className="px-3 sm:px-4 pb-2 pt-1 bg-white">
+                <div className="px-3 sm:px-4 pb-2 pt-1 bg-white sm:hidden">
                     {/* Search Bar */}
                     <div className="flex items-center bg-gray-100 rounded-lg px-3 py-2 mb-2">
                         <Search className="w-5 h-5 text-gray-400 flex-shrink-0" />
