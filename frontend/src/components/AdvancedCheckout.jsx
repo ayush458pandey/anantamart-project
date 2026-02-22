@@ -257,6 +257,29 @@ export default function AdvancedCheckout({ cart, onClose, onPlaceOrder }) {
     }
 
     try {
+      // 🆕 STEP 0: Validate stock BEFORE initiating any payment
+      const token = localStorage.getItem('access_token');
+      const stockCheckItems = cart.items.map(item => ({
+        product_id: item.product.id,
+        quantity: item.quantity
+      }));
+
+      const stockResponse = await fetch('https://api.ananta-mart.in/api/orders/validate-stock/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ items: stockCheckItems })
+      });
+
+      if (!stockResponse.ok) {
+        const stockData = await stockResponse.json();
+        alert(stockData.error || 'Some items are out of stock. Please update your cart.');
+        setIsProcessing(false);
+        return;
+      }
+
       // 1. Manual Advance - Skip Razorpay
       if (selectedPayment === 'advance') {
         await placeFinalOrder(addressObj, 'Pending');
@@ -271,7 +294,6 @@ export default function AdvancedCheckout({ cart, onClose, onPlaceOrder }) {
         return;
       }
 
-      const token = localStorage.getItem('access_token');
       const orderResponse = await fetch('https://api.ananta-mart.in/api/orders/payment/create/', {
         method: 'POST',
         headers: {

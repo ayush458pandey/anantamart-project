@@ -11,6 +11,8 @@ import string
 from datetime import datetime
 import razorpay
 from django.conf import settings
+from django.db import transaction
+from django.db.models import F
 
 class OrderViewSet(viewsets.ModelViewSet):
     serializer_class = OrderSerializer
@@ -22,51 +24,104 @@ class OrderViewSet(viewsets.ModelViewSet):
     def create(self, request):
         """Create a new order"""
         try:
-            # Generate order number
-            order_number = 'ORD' + ''.join(random.choices(string.digits, k=8))
-            
-            user = request.user
-            
-            # Create order
-            order = Order.objects.create(
-                user=user,
-                order_number=order_number,
-                subtotal=request.data.get('subtotal'),
-                discount=request.data.get('discount', 0),
-                cgst=request.data.get('cgst'),
-                sgst=request.data.get('sgst'),
-                delivery_charges=request.data.get('delivery_charges', 0),
-                total=request.data.get('total'),
-                delivery_address=request.data.get('delivery_address'),
-                delivery_option=request.data.get('delivery_option'),
-                scheduled_date=request.data.get('scheduled_date'),
-                payment_method=request.data.get('payment_method'),
-                payment_status=request.data.get('payment_status', 'Pending'),
-                transaction_id=request.data.get('transaction_id'),
-                tracking_number='TRK' + ''.join(random.choices(string.digits, k=10)),
-                courier_partner='BlueDart Express'
-            )
-            
-            # Create order items
-            for item_data in request.data.get('items', []):
-                product = Product.objects.get(id=item_data['product_id'])
-                OrderItem.objects.create(
-                    order=order,
-                    product=product,
-                    quantity=item_data['quantity'],
-                    variant=item_data.get('variant'),
-                    price=product.base_price,
-                    total=product.base_price * item_data['quantity']
+            items_data = request.data.get('items', [])
+            if not items_data:
+                return Response(
+                    {'error': 'No items provided'},
+                    status=status.HTTP_400_BAD_REQUEST
                 )
-            
-            # --- CRITICAL FIX: EMPTY THE CART ---
-            # This deletes all items in the user's cart after order is placed
-            try:
-                cart = Cart.objects.get(user=user)
-                cart.items.all().delete()
-            except Cart.DoesNotExist:
-                pass # If no cart exists, just ignore
-            # ------------------------------------
+
+            user = request.user
+
+            # Use an atomic transaction so stock changes roll back on failure
+            with transaction.atomic():
+                # --- STEP 1: Validate stock for ALL items before creating anything ---
+                product_ids = [item['product_id'] for item in items_data]
+                # Lock the product rows to prevent concurrent stock modifications
+                products = {
+                    p.id: p for p in Product.objects.select_for_update().filter(id__in=product_ids)
+                }
+
+                # Check all products exist
+                for item_data in items_data:
+                    pid = item_data['product_id']
+                    if pid not in products:
+                        return Response(
+                            {'error': f'Product with id {pid} not found'},
+                            status=status.HTTP_404_NOT_FOUND
+                        )
+
+                # Check sufficient stock for every item
+                out_of_stock_items = []
+                for item_data in items_data:
+                    product = products[item_data['product_id']]
+                    qty = item_data['quantity']
+                    if product.stock < qty:
+                        out_of_stock_items.append(
+                            f"{product.name} (available: {product.stock}, requested: {qty})"
+                        )
+
+                if out_of_stock_items:
+                    return Response(
+                        {'error': f'Insufficient stock for: {", ".join(out_of_stock_items)}'},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+
+                # --- STEP 2: Create the order ---
+                order_number = 'ORD' + ''.join(random.choices(string.digits, k=8))
+
+                order = Order.objects.create(
+                    user=user,
+                    order_number=order_number,
+                    subtotal=request.data.get('subtotal'),
+                    discount=request.data.get('discount', 0),
+                    cgst=request.data.get('cgst'),
+                    sgst=request.data.get('sgst'),
+                    delivery_charges=request.data.get('delivery_charges', 0),
+                    total=request.data.get('total'),
+                    delivery_address=request.data.get('delivery_address'),
+                    delivery_option=request.data.get('delivery_option'),
+                    scheduled_date=request.data.get('scheduled_date'),
+                    payment_method=request.data.get('payment_method'),
+                    payment_status=request.data.get('payment_status', 'Pending'),
+                    transaction_id=request.data.get('transaction_id'),
+                    tracking_number='TRK' + ''.join(random.choices(string.digits, k=10)),
+                    courier_partner='BlueDart Express'
+                )
+
+                # --- STEP 3: Create order items AND decrement stock ---
+                for item_data in items_data:
+                    product = products[item_data['product_id']]
+                    qty = item_data['quantity']
+
+                    OrderItem.objects.create(
+                        order=order,
+                        product=product,
+                        quantity=qty,
+                        variant=item_data.get('variant'),
+                        price=product.base_price,
+                        total=product.base_price * qty
+                    )
+
+                    # Atomically decrement stock
+                    Product.objects.filter(id=product.id).update(stock=F('stock') - qty)
+
+                    # Refresh and update stock_status
+                    product.refresh_from_db()
+                    if product.stock == 0:
+                        product.stock_status = 'out-of-stock'
+                    elif product.stock <= 5:
+                        product.stock_status = 'low-stock'
+                    else:
+                        product.stock_status = 'in-stock'
+                    product.save(update_fields=['stock_status'])
+
+                # --- STEP 4: Empty the cart ---
+                try:
+                    cart = Cart.objects.get(user=user)
+                    cart.items.all().delete()
+                except Cart.DoesNotExist:
+                    pass
 
             serializer = self.get_serializer(order)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -102,6 +157,51 @@ class OrderViewSet(viewsets.ModelViewSet):
         order.save()
         serializer = self.get_serializer(order)
         return Response(serializer.data)
+
+
+# 🆕 STOCK VALIDATION BEFORE PAYMENT
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def validate_stock(request):
+    """
+    Validate that all items have sufficient stock before initiating payment.
+    Endpoint: POST /api/orders/validate-stock/
+    Body: { "items": [{"product_id": 1, "quantity": 2}, ...] }
+    """
+    try:
+        items = request.data.get('items', [])
+        if not items:
+            return Response({'error': 'No items provided'}, status=status.HTTP_400_BAD_REQUEST)
+
+        out_of_stock = []
+        for item in items:
+            try:
+                product = Product.objects.get(id=item['product_id'])
+                qty = item.get('quantity', 1)
+                if product.stock < qty:
+                    out_of_stock.append({
+                        'name': product.name,
+                        'available': product.stock,
+                        'requested': qty
+                    })
+            except Product.DoesNotExist:
+                out_of_stock.append({
+                    'name': f"Product #{item['product_id']}",
+                    'available': 0,
+                    'requested': item.get('quantity', 1)
+                })
+
+        if out_of_stock:
+            names = ', '.join([f"{i['name']} (available: {i['available']}, requested: {i['requested']})" for i in out_of_stock])
+            return Response(
+                {'error': f'Insufficient stock for: {names}', 'out_of_stock': out_of_stock},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        return Response({'status': 'ok', 'message': 'All items in stock'}, status=status.HTTP_200_OK)
+
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 # 🆕 RAZORPAY PAYMENT INTEGRATION
