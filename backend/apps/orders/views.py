@@ -32,6 +32,7 @@ class OrderViewSet(viewsets.ModelViewSet):
                 )
 
             user = request.user
+            allow_backorder = request.data.get('allow_backorder', False)
 
             # Use an atomic transaction so stock changes roll back on failure
             with transaction.atomic():
@@ -51,21 +52,22 @@ class OrderViewSet(viewsets.ModelViewSet):
                             status=status.HTTP_404_NOT_FOUND
                         )
 
-                # Check sufficient stock for every item
-                out_of_stock_items = []
-                for item_data in items_data:
-                    product = products[item_data['product_id']]
-                    qty = item_data['quantity']
-                    if product.stock < qty:
-                        out_of_stock_items.append(
-                            f"{product.name} (available: {product.stock}, requested: {qty})"
-                        )
+                # Check sufficient stock (skip if backorder is allowed)
+                if not allow_backorder:
+                    out_of_stock_items = []
+                    for item_data in items_data:
+                        product = products[item_data['product_id']]
+                        qty = item_data['quantity']
+                        if product.stock < qty:
+                            out_of_stock_items.append(
+                                f"{product.name} (available: {product.stock}, requested: {qty})"
+                            )
 
-                if out_of_stock_items:
-                    return Response(
-                        {'error': f'Insufficient stock for: {", ".join(out_of_stock_items)}'},
-                        status=status.HTTP_400_BAD_REQUEST
-                    )
+                    if out_of_stock_items:
+                        return Response(
+                            {'error': f'Insufficient stock for: {", ".join(out_of_stock_items)}'},
+                            status=status.HTTP_400_BAD_REQUEST
+                        )
 
                 # --- STEP 2: Create the order ---
                 order_number = 'ORD' + ''.join(random.choices(string.digits, k=8))
@@ -103,18 +105,19 @@ class OrderViewSet(viewsets.ModelViewSet):
                         total=product.base_price * qty
                     )
 
-                    # Atomically decrement stock
-                    Product.objects.filter(id=product.id).update(stock=F('stock') - qty)
+                    # Only decrement stock if the product actually has enough
+                    if product.stock >= qty:
+                        Product.objects.filter(id=product.id).update(stock=F('stock') - qty)
 
-                    # Refresh and update stock_status
-                    product.refresh_from_db()
-                    if product.stock == 0:
-                        product.stock_status = 'out-of-stock'
-                    elif product.stock <= 5:
-                        product.stock_status = 'low-stock'
-                    else:
-                        product.stock_status = 'in-stock'
-                    product.save(update_fields=['stock_status'])
+                        # Refresh and update stock_status
+                        product.refresh_from_db()
+                        if product.stock == 0:
+                            product.stock_status = 'out-of-stock'
+                        elif product.stock <= 5:
+                            product.stock_status = 'low-stock'
+                        else:
+                            product.stock_status = 'in-stock'
+                        product.save(update_fields=['stock_status'])
 
                 # --- STEP 4: Empty the cart ---
                 try:
