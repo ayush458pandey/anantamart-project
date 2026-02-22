@@ -237,8 +237,8 @@ export default function Home() {
 
     return (
         <>
-            {/* Search + Category Tabs - part of header on mobile */}
-            <div className="sticky top-[44px] sm:top-[72px] z-30 bg-white -mx-3 px-3 sm:-mx-4 sm:px-4 pb-2 pt-1 shadow-md">
+            {/* Search + Category Tabs - fixed on mobile, sticky on desktop */}
+            <div className="fixed sm:sticky top-[44px] sm:top-[72px] left-0 right-0 sm:left-auto sm:right-auto z-30 bg-white px-3 sm:-mx-4 sm:px-4 pb-2 pt-1 shadow-md">
                 {/* Search Bar */}
                 <div className="flex items-center bg-gray-100 rounded-lg px-3 py-2 mb-2">
                     <Search className="w-5 h-5 text-gray-400 flex-shrink-0" />
@@ -293,6 +293,8 @@ export default function Home() {
                     })}
                 </div>
             </div>
+            {/* Spacer for fixed header on mobile */}
+            <div className="h-[88px] sm:h-0"></div>
 
             {/* Brand Horizontal Scroll */}
             {!selectedSubcategory && visibleBrands.length > 0 && (
