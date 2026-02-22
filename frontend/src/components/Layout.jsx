@@ -35,11 +35,13 @@ export default function Layout() {
                             </div>
                         </div>
 
-                        <div className="hidden sm:flex flex-1 max-w-2xl min-w-0">
-                            <div className="flex items-center bg-gray-100 rounded-lg px-3 py-2 w-full cursor-pointer" onClick={() => navigate('/')}>
-                                <Search className="w-5 h-5 text-gray-400 flex-shrink-0" />
-                                <span className="flex-1 ml-2 text-gray-400 text-base">Search products...</span>
-                            </div>
+                        <div className="hidden sm:flex flex-1 max-w-2xl min-w-0" id="desktop-search-container">
+                            {location.pathname !== '/' && (
+                                <div className="flex items-center bg-gray-100 rounded-lg px-3 py-2 w-full cursor-pointer" onClick={() => navigate('/')}>
+                                    <Search className="w-5 h-5 text-gray-400 flex-shrink-0" />
+                                    <span className="flex-1 ml-2 text-gray-400 text-base">Search products...</span>
+                                </div>
+                            )}
                         </div>
 
                         <button
