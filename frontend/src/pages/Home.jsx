@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import {
     Search, Package,
     Coffee, Utensils, Droplet, Briefcase, Shirt, Home as HomeIcon, Store,
@@ -237,64 +238,65 @@ export default function Home() {
 
     return (
         <>
-            {/* Search + Category Tabs - fixed on mobile, sticky on desktop */}
-            <div className="fixed sm:sticky top-[44px] sm:top-[72px] left-0 right-0 sm:left-auto sm:right-auto z-30 bg-white px-3 sm:-mx-4 sm:px-4 pb-2 pt-1 shadow-md">
-                {/* Search Bar */}
-                <div className="flex items-center bg-gray-100 rounded-lg px-3 py-2 mb-2">
-                    <Search className="w-5 h-5 text-gray-400 flex-shrink-0" />
-                    <input
-                        type="text"
-                        placeholder="Search products..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        className="flex-1 ml-2 bg-transparent outline-none text-base min-w-0"
-                    />
-                </div>
+            {/* Search + Category Tabs - rendered inside header via portal */}
+            {document.getElementById('header-extension') && createPortal(
+                <div className="px-3 sm:px-4 pb-2 pt-1 bg-white">
+                    {/* Search Bar */}
+                    <div className="flex items-center bg-gray-100 rounded-lg px-3 py-2 mb-2">
+                        <Search className="w-5 h-5 text-gray-400 flex-shrink-0" />
+                        <input
+                            type="text"
+                            placeholder="Search products..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="flex-1 ml-2 bg-transparent outline-none text-base min-w-0"
+                        />
+                    </div>
 
-                {/* Category Tabs */}
-                <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
-                    <button
-                        onClick={() => {
-                            setSelectedCategory('all');
-                            setSelectedBrand(null);
-                            setSelectedSubcategory(null);
-                            setShowSubcategoryView(true);
-                        }}
-                        className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 rounded-lg font-medium text-xs sm:text-sm whitespace-nowrap transition-all touch-manipulation ${selectedCategory === 'all'
-                            ? 'bg-emerald-600 text-white shadow-md'
-                            : 'bg-gray-200 text-gray-700 active:bg-gray-300'
-                            }`}
-                    >
-                        <Package className={`w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0 ${selectedCategory === 'all' ? 'text-white' : 'text-emerald-600'}`} />
-                        <span>All Products</span>
-                    </button>
+                    {/* Category Tabs */}
+                    <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+                        <button
+                            onClick={() => {
+                                setSelectedCategory('all');
+                                setSelectedBrand(null);
+                                setSelectedSubcategory(null);
+                                setShowSubcategoryView(true);
+                            }}
+                            className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 rounded-lg font-medium text-xs sm:text-sm whitespace-nowrap transition-all touch-manipulation ${selectedCategory === 'all'
+                                ? 'bg-emerald-600 text-white shadow-md'
+                                : 'bg-gray-200 text-gray-700 active:bg-gray-300'
+                                }`}
+                        >
+                            <Package className={`w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0 ${selectedCategory === 'all' ? 'text-white' : 'text-emerald-600'}`} />
+                            <span>All Products</span>
+                        </button>
 
-                    {categories && categories.map((category) => {
-                        const CategoryIcon = getCategoryIcon(category);
-                        const isActive = selectedCategory === category.id;
-                        return (
-                            <button
-                                key={category.id}
-                                onClick={() => {
-                                    setSelectedCategory(category.id);
-                                    setSelectedBrand(null);
-                                    setSelectedSubcategory(null);
-                                    setShowSubcategoryView(true);
-                                }}
-                                className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 rounded-lg font-medium text-xs sm:text-sm whitespace-nowrap transition-all touch-manipulation ${isActive
-                                    ? 'bg-emerald-600 text-white shadow-md'
-                                    : 'bg-gray-200 text-gray-700 active:bg-gray-300'
-                                    }`}
-                            >
-                                <CategoryIcon className={`w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0 ${isActive ? 'text-white' : 'text-emerald-600'}`} />
-                                <span>{category.name}</span>
-                            </button>
-                        );
-                    })}
-                </div>
-            </div>
-            {/* Spacer for fixed header on mobile */}
-            <div className="h-[88px] sm:h-0"></div>
+                        {categories && categories.map((category) => {
+                            const CategoryIcon = getCategoryIcon(category);
+                            const isActive = selectedCategory === category.id;
+                            return (
+                                <button
+                                    key={category.id}
+                                    onClick={() => {
+                                        setSelectedCategory(category.id);
+                                        setSelectedBrand(null);
+                                        setSelectedSubcategory(null);
+                                        setShowSubcategoryView(true);
+                                    }}
+                                    className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 rounded-lg font-medium text-xs sm:text-sm whitespace-nowrap transition-all touch-manipulation ${isActive
+                                        ? 'bg-emerald-600 text-white shadow-md'
+                                        : 'bg-gray-200 text-gray-700 active:bg-gray-300'
+                                        }`}
+                                >
+                                    <CategoryIcon className={`w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0 ${isActive ? 'text-white' : 'text-emerald-600'}`} />
+                                    <span>{category.name}</span>
+                                </button>
+                            );
+                        })}
+                    </div>
+                </div>,
+                document.getElementById('header-extension')
+            )}
 
             {/* Brand Horizontal Scroll */}
             {!selectedSubcategory && visibleBrands.length > 0 && (
