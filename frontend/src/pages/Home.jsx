@@ -237,9 +237,9 @@ export default function Home() {
 
     return (
         <>
-            {/* Search Bar */}
-            <div className="mb-3">
-                <div className="flex items-center bg-gray-100 rounded-lg px-3 py-2.5">
+            {/* Search Bar - sticky on mobile */}
+            <div className="sticky top-[52px] z-30 bg-gray-50 pb-2 pt-1 -mx-3 px-3 sm:-mx-4 sm:px-4">
+                <div className="flex items-center bg-white rounded-lg px-3 py-2.5 shadow-sm border border-gray-200">
                     <Search className="w-5 h-5 text-gray-400 flex-shrink-0" />
                     <input
                         type="text"
