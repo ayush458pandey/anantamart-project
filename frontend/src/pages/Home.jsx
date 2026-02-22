@@ -237,9 +237,10 @@ export default function Home() {
 
     return (
         <>
-            {/* Search Bar - sticky on mobile */}
-            <div className="sticky top-[52px] z-30 bg-gray-50 pb-2 pt-1 -mx-3 px-3 sm:-mx-4 sm:px-4">
-                <div className="flex items-center bg-white rounded-lg px-3 py-2.5 shadow-sm border border-gray-200">
+            {/* Search + Category Tabs - sticky on mobile */}
+            <div className="sticky top-[52px] z-30 bg-gray-50 -mx-3 px-3 sm:-mx-4 sm:px-4 pt-1 pb-2">
+                {/* Search Bar */}
+                <div className="flex items-center bg-white rounded-lg px-3 py-2.5 shadow-sm border border-gray-200 mb-2">
                     <Search className="w-5 h-5 text-gray-400 flex-shrink-0" />
                     <input
                         type="text"
@@ -249,48 +250,48 @@ export default function Home() {
                         className="flex-1 ml-2 bg-transparent outline-none text-base min-w-0"
                     />
                 </div>
-            </div>
 
-            {/* Category Tabs */}
-            <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide -mx-3 sm:mx-0 px-3 sm:px-0 mb-4">
-                <button
-                    onClick={() => {
-                        setSelectedCategory('all');
-                        setSelectedBrand(null);
-                        setSelectedSubcategory(null);
-                        setShowSubcategoryView(true);
-                    }}
-                    className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 rounded-lg font-medium text-xs sm:text-sm whitespace-nowrap transition-all touch-manipulation ${selectedCategory === 'all'
-                        ? 'bg-emerald-600 text-white shadow-md'
-                        : 'bg-gray-200 text-gray-700 active:bg-gray-300'
-                        }`}
-                >
-                    <Package className={`w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0 ${selectedCategory === 'all' ? 'text-white' : 'text-emerald-600'}`} />
-                    <span>All Products</span>
-                </button>
+                {/* Category Tabs */}
+                <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+                    <button
+                        onClick={() => {
+                            setSelectedCategory('all');
+                            setSelectedBrand(null);
+                            setSelectedSubcategory(null);
+                            setShowSubcategoryView(true);
+                        }}
+                        className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 rounded-lg font-medium text-xs sm:text-sm whitespace-nowrap transition-all touch-manipulation ${selectedCategory === 'all'
+                            ? 'bg-emerald-600 text-white shadow-md'
+                            : 'bg-gray-200 text-gray-700 active:bg-gray-300'
+                            }`}
+                    >
+                        <Package className={`w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0 ${selectedCategory === 'all' ? 'text-white' : 'text-emerald-600'}`} />
+                        <span>All Products</span>
+                    </button>
 
-                {categories && categories.map((category) => {
-                    const CategoryIcon = getCategoryIcon(category);
-                    const isActive = selectedCategory === category.id;
-                    return (
-                        <button
-                            key={category.id}
-                            onClick={() => {
-                                setSelectedCategory(category.id);
-                                setSelectedBrand(null);
-                                setSelectedSubcategory(null);
-                                setShowSubcategoryView(true);
-                            }}
-                            className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 rounded-lg font-medium text-xs sm:text-sm whitespace-nowrap transition-all touch-manipulation ${isActive
-                                ? 'bg-emerald-600 text-white shadow-md'
-                                : 'bg-gray-200 text-gray-700 active:bg-gray-300'
-                                }`}
-                        >
-                            <CategoryIcon className={`w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0 ${isActive ? 'text-white' : 'text-emerald-600'}`} />
-                            <span>{category.name}</span>
-                        </button>
-                    );
-                })}
+                    {categories && categories.map((category) => {
+                        const CategoryIcon = getCategoryIcon(category);
+                        const isActive = selectedCategory === category.id;
+                        return (
+                            <button
+                                key={category.id}
+                                onClick={() => {
+                                    setSelectedCategory(category.id);
+                                    setSelectedBrand(null);
+                                    setSelectedSubcategory(null);
+                                    setShowSubcategoryView(true);
+                                }}
+                                className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 rounded-lg font-medium text-xs sm:text-sm whitespace-nowrap transition-all touch-manipulation ${isActive
+                                    ? 'bg-emerald-600 text-white shadow-md'
+                                    : 'bg-gray-200 text-gray-700 active:bg-gray-300'
+                                    }`}
+                            >
+                                <CategoryIcon className={`w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0 ${isActive ? 'text-white' : 'text-emerald-600'}`} />
+                                <span>{category.name}</span>
+                            </button>
+                        );
+                    })}
+                </div>
             </div>
 
             {/* Brand Horizontal Scroll */}
