@@ -8,7 +8,7 @@ import AddressForm from './AddressForm';
 import { orderService } from '../api/services/orderService';
 import { addressService } from '../api/services/addressService';
 import { cartService } from '../api/services/cartService';
-import { getInclusivePriceExact, getTaxFromInclusive } from '../utils/priceUtils';
+import { getTaxFromInclusive } from '../utils/priceUtils';
 
 const paymentMethods = [
   {
@@ -139,12 +139,10 @@ export default function AdvancedCheckout({ cart, onClose, onPlaceOrder }) {
     }
   };
 
-  // Calculate pricing (all prices are now INCLUSIVE of GST)
-  // 1. Subtotal = sum of inclusive prices
-  const subtotal = cart?.items?.reduce((sum, item) => {
-    const inclusiveUnit = getInclusivePriceExact(item.product.base_price, item.product.gst_rate);
-    return sum + (inclusiveUnit * item.quantity);
-  }, 0) || 0;
+  // Calculate pricing (base_price is already INCLUSIVE of GST)
+  // 1. Subtotal = sum of base_price * qty (already inclusive)
+  const subtotal = cart?.items?.reduce((sum, item) =>
+    sum + (parseFloat(item.product.base_price) * item.quantity), 0) || 0;
 
   // 2. Discount logic (applied on inclusive subtotal)
   const isDiscountApplicable = subtotal > 10000;
@@ -157,8 +155,7 @@ export default function AdvancedCheckout({ cart, onClose, onPlaceOrder }) {
 
   // 4. Back-calculate tax from inclusive prices (for display breakdown only)
   const totalTaxAmount = cart?.items?.reduce((acc, item) => {
-    const inclusiveUnit = getInclusivePriceExact(item.product.base_price, item.product.gst_rate);
-    const itemTotal = inclusiveUnit * item.quantity;
+    const itemTotal = parseFloat(item.product.base_price) * item.quantity;
     const taxableTotal = isDiscountApplicable ? itemTotal * 0.9 : itemTotal;
     return acc + getTaxFromInclusive(taxableTotal, item.product.gst_rate);
   }, 0) || 0;

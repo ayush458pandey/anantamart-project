@@ -25,10 +25,7 @@ class CartItem(models.Model):
     
     @property
     def total_price(self):
-        from decimal import Decimal
-        tax_rate = self.product.tax_rate or Decimal('18')
-        inclusive_unit = self.product.base_price * (1 + tax_rate / 100)
-        return round(inclusive_unit * self.quantity, 2)
+        return self.product.base_price * self.quantity
     
     def __str__(self):
         if self.variant:

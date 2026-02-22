@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
 import { Search, X, Package, TrendingUp } from 'lucide-react';
-import { getInclusivePrice } from '../utils/priceUtils';
 
 export default function SearchWithSuggestions({
     products,
@@ -209,7 +208,7 @@ export default function SearchWithSuggestions({
 
                                         {/* Price */}
                                         <p className="text-sm font-bold text-emerald-600 flex-shrink-0">
-                                            ₹{getInclusivePrice(product.base_price, product.gst_rate)}
+                                            ₹{parseFloat(product.base_price).toFixed(0)}
                                         </p>
                                     </button>
                                 ))}

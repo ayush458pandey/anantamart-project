@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { ArrowLeft, Package } from 'lucide-react';
 import { productService } from '../api/services/productService';
-import { getInclusivePrice } from '../utils/priceUtils';
 
 /**
  * BrandPage Component
@@ -164,7 +163,7 @@ function ProductCard({ product, onViewDetails, onAddToCart }) {
             <div className="p-2 sm:p-3">
                 <div className="flex items-center gap-2 mb-1">
                     <div className="bg-emerald-600 text-white px-2 py-0.5 rounded">
-                        <span className="text-xs sm:text-sm font-bold">₹{getInclusivePrice(product.base_price, product.gst_rate)}</span>
+                        <span className="text-xs sm:text-sm font-bold">₹{Math.round(product.base_price)}</span>
                     </div>
                     <span className="text-gray-400 line-through text-[10px] sm:text-xs">
                         ₹{Math.round(product.mrp)}

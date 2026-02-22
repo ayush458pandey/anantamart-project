@@ -4,23 +4,20 @@ import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import EstimateView from '../components/EstimateView';
 import AdvancedCheckout from '../components/AdvancedCheckout';
-import { getInclusivePriceExact, getTaxFromInclusive } from '../utils/priceUtils';
+import { getTaxFromInclusive } from '../utils/priceUtils';
 
 export default function CartPage() {
     const { user } = useAuth();
     const { cart, removeFromCart, updateQuantity } = useCart();
     const [showCheckout, setShowCheckout] = React.useState(false);
 
-    // Subtotal is now INCLUSIVE of GST
-    const estimateSubtotal = cart?.items?.reduce((sum, item) => {
-        const inclusiveUnitPrice = getInclusivePriceExact(item.product.base_price, item.product.gst_rate);
-        return sum + (inclusiveUnitPrice * item.quantity);
-    }, 0) || 0;
+    // base_price is already tax-inclusive, so subtotal = sum of base_price * qty
+    const estimateSubtotal = cart?.items?.reduce((sum, item) =>
+        sum + (parseFloat(item.product.base_price) * item.quantity), 0) || 0;
 
-    // Tax is back-calculated from inclusive prices (for display only)
+    // Back-calculate tax from inclusive prices (for display breakdown only)
     const totalTaxAmount = cart?.items?.reduce((total, item) => {
-        const inclusiveUnitPrice = getInclusivePriceExact(item.product.base_price, item.product.gst_rate);
-        const itemTotal = inclusiveUnitPrice * item.quantity;
+        const itemTotal = parseFloat(item.product.base_price) * item.quantity;
         return total + getTaxFromInclusive(itemTotal, item.product.gst_rate);
     }, 0) || 0;
 

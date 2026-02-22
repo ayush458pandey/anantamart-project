@@ -2,7 +2,6 @@ import React from 'react'; // Added React import just in case
 import { X, Plus, ShoppingCart, Star, Package } from 'lucide-react';
 import { useComparison } from '../context/ComparisonContext';
 import { useCart } from '../context/CartContext';
-import { getInclusivePrice } from '../utils/priceUtils';
 
 export default function ProductComparison({ onClose }) {
   const { compareList, removeFromCompare, clearCompare } = useComparison();
@@ -113,7 +112,7 @@ export default function ProductComparison({ onClose }) {
                     values={compareList.map((p) => (
                       <div key={p.id} className="text-center w-full">
                         <span className="text-lg font-bold text-emerald-600 block mb-0.5">
-                          ₹{getInclusivePrice(p.base_price, p.gst_rate)}
+                          ₹{parseFloat(p.base_price).toFixed(2)}
                         </span>
                         <div className="text-[10px] text-gray-400 line-through">
                           ₹{parseFloat(p.mrp).toFixed(2)}
@@ -300,7 +299,7 @@ export default function ProductComparison({ onClose }) {
                   values={compareList.map((p) => (
                     <div key={p.id} className="text-center w-full">
                       <span className="text-2xl font-bold text-emerald-600 block mb-1">
-                        ₹{getInclusivePrice(p.base_price, p.gst_rate)}
+                        ₹{parseFloat(p.base_price).toFixed(2)}
                       </span>
                       <div className="text-sm text-gray-400 line-through">
                         ₹{parseFloat(p.mrp).toFixed(2)}
