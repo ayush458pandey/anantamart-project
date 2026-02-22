@@ -8,6 +8,7 @@ import AddressForm from './AddressForm';
 import { orderService } from '../api/services/orderService';
 import { addressService } from '../api/services/addressService';
 import { cartService } from '../api/services/cartService';
+import { getInclusivePriceExact, getTaxFromInclusive } from '../utils/priceUtils';
 
 const paymentMethods = [
   {
@@ -138,42 +139,35 @@ export default function AdvancedCheckout({ cart, onClose, onPlaceOrder }) {
     }
   };
 
-  // Calculate pricing
-  // 1. Calculate Subtotal
-  const subtotal = cart?.items?.reduce((sum, item) => sum + parseFloat(item.total_price), 0) || 0;
+  // Calculate pricing (all prices are now INCLUSIVE of GST)
+  // 1. Subtotal = sum of inclusive prices
+  const subtotal = cart?.items?.reduce((sum, item) => {
+    const inclusiveUnit = getInclusivePriceExact(item.product.base_price, item.product.gst_rate);
+    return sum + (inclusiveUnit * item.quantity);
+  }, 0) || 0;
 
-  // 2. Calculate Discount logic
+  // 2. Discount logic (applied on inclusive subtotal)
   const isDiscountApplicable = subtotal > 10000;
   const discount = isDiscountApplicable ? subtotal * 0.1 : 0;
   const subtotalAfterDiscount = subtotal - discount;
 
-  // 3. Calculate Delivery
+  // 3. Delivery
   const deliveryCost = deliveryOptions.find(d => d.id === selectedDelivery)?.cost || 0;
   const deliveryCharges = subtotal > 5000 ? 0 : deliveryCost;
 
-  // 🟢 4. Calculate Dynamic Tax
-  // We determine the tax multiplier based on whether a discount was applied.
-  // If 10% discount is active, we only tax 90% of the item's value (priceMultiplier = 0.9).
-  const priceMultiplier = isDiscountApplicable ? 0.9 : 1.0;
-
+  // 4. Back-calculate tax from inclusive prices (for display breakdown only)
   const totalTaxAmount = cart?.items?.reduce((acc, item) => {
-    const itemTotal = parseFloat(item.total_price);
-    // Calculate the taxable value for this specific item
-    const taxableValue = itemTotal * priceMultiplier;
-
-    // Use the product's specific GST rate (default to 18 if missing)
-    const itemRate = parseFloat(item.product.gst_rate || 18);
-
-    // Add this item's tax to the accumulator
-    return acc + (taxableValue * (itemRate / 100));
+    const inclusiveUnit = getInclusivePriceExact(item.product.base_price, item.product.gst_rate);
+    const itemTotal = inclusiveUnit * item.quantity;
+    const taxableTotal = isDiscountApplicable ? itemTotal * 0.9 : itemTotal;
+    return acc + getTaxFromInclusive(taxableTotal, item.product.gst_rate);
   }, 0) || 0;
 
-  // Split the calculated total into CGST and SGST
   const cgst = totalTaxAmount / 2;
   const sgst = totalTaxAmount / 2;
 
-  // 5. Final Total
-  const total = subtotalAfterDiscount + totalTaxAmount + deliveryCharges;
+  // 5. Final Total = inclusive subtotal after discount + delivery (tax already in subtotal)
+  const total = subtotalAfterDiscount + deliveryCharges;
 
   // Place Final Order Function
   const placeFinalOrder = async (addressObj, paymentStatus, paymentDetails = {}, allowBackorder = false) => {

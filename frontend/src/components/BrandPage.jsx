@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { ArrowLeft, Package } from 'lucide-react';
 import { productService } from '../api/services/productService';
+import { getInclusivePrice } from '../utils/priceUtils';
 
 /**
  * BrandPage Component
@@ -151,8 +152,8 @@ function ProductCard({ product, onViewDetails, onAddToCart }) {
                 {/* Stock Badge */}
                 <div className="absolute top-2 left-2">
                     <span className={`text-[10px] font-bold px-2 py-1 rounded-full ${product.stock_status === 'in-stock'
-                            ? 'bg-green-600 text-white'
-                            : 'bg-orange-500 text-white'
+                        ? 'bg-green-600 text-white'
+                        : 'bg-orange-500 text-white'
                         }`}>
                         {product.stock_status === 'in-stock' ? 'In Stock' : 'Out of Stock'}
                     </span>
@@ -163,7 +164,7 @@ function ProductCard({ product, onViewDetails, onAddToCart }) {
             <div className="p-2 sm:p-3">
                 <div className="flex items-center gap-2 mb-1">
                     <div className="bg-emerald-600 text-white px-2 py-0.5 rounded">
-                        <span className="text-xs sm:text-sm font-bold">₹{Math.round(product.base_price)}</span>
+                        <span className="text-xs sm:text-sm font-bold">₹{getInclusivePrice(product.base_price, product.gst_rate)}</span>
                     </div>
                     <span className="text-gray-400 line-through text-[10px] sm:text-xs">
                         ₹{Math.round(product.mrp)}

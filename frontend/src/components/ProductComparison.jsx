@@ -2,6 +2,7 @@ import React from 'react'; // Added React import just in case
 import { X, Plus, ShoppingCart, Star, Package } from 'lucide-react';
 import { useComparison } from '../context/ComparisonContext';
 import { useCart } from '../context/CartContext';
+import { getInclusivePrice } from '../utils/priceUtils';
 
 export default function ProductComparison({ onClose }) {
   const { compareList, removeFromCompare, clearCompare } = useComparison();
@@ -112,7 +113,7 @@ export default function ProductComparison({ onClose }) {
                     values={compareList.map((p) => (
                       <div key={p.id} className="text-center w-full">
                         <span className="text-lg font-bold text-emerald-600 block mb-0.5">
-                          ₹{parseFloat(p.base_price).toFixed(2)}
+                          ₹{getInclusivePrice(p.base_price, p.gst_rate)}
                         </span>
                         <div className="text-[10px] text-gray-400 line-through">
                           ₹{parseFloat(p.mrp).toFixed(2)}
@@ -188,10 +189,10 @@ export default function ProductComparison({ onClose }) {
                       <div key={p.id} className="text-center">
                         <span
                           className={`px-2 py-1 rounded-full text-[10px] font-bold inline-block ${p.stock_status === 'in-stock'
-                              ? 'bg-green-100 text-green-700'
-                              : p.stock_status === 'out-of-stock'
-                                ? 'bg-red-100 text-red-700'
-                                : 'bg-orange-100 text-orange-700'
+                            ? 'bg-green-100 text-green-700'
+                            : p.stock_status === 'out-of-stock'
+                              ? 'bg-red-100 text-red-700'
+                              : 'bg-orange-100 text-orange-700'
                             }`}
                         >
                           {p.stock_status === 'in-stock' ? 'In Stock' : p.stock_status === 'out-of-stock' ? 'Out' : 'Low'}
@@ -299,7 +300,7 @@ export default function ProductComparison({ onClose }) {
                   values={compareList.map((p) => (
                     <div key={p.id} className="text-center w-full">
                       <span className="text-2xl font-bold text-emerald-600 block mb-1">
-                        ₹{parseFloat(p.base_price).toFixed(2)}
+                        ₹{getInclusivePrice(p.base_price, p.gst_rate)}
                       </span>
                       <div className="text-sm text-gray-400 line-through">
                         ₹{parseFloat(p.mrp).toFixed(2)}
@@ -432,10 +433,10 @@ export default function ProductComparison({ onClose }) {
                   values={compareList.map((p) => (
                     <div key={p.id} className="text-center">
                       <span className={`text-xs px-3 py-1.5 rounded-full font-medium inline-block ${p.dietary_preference
-                          ? p.dietary_preference.toLowerCase().includes('veg')
-                            ? 'bg-green-100 text-green-700'
-                            : 'bg-orange-100 text-orange-700'
-                          : 'bg-gray-100 text-gray-500'
+                        ? p.dietary_preference.toLowerCase().includes('veg')
+                          ? 'bg-green-100 text-green-700'
+                          : 'bg-orange-100 text-orange-700'
+                        : 'bg-gray-100 text-gray-500'
                         }`}>
                         {p.dietary_preference || 'N/A'}
                       </span>
@@ -493,10 +494,10 @@ export default function ProductComparison({ onClose }) {
                     <div key={p.id} className="text-center">
                       <span
                         className={`px-3 py-1.5 rounded-full text-sm font-bold inline-block ${p.stock_status === 'in-stock'
-                            ? 'bg-green-100 text-green-700'
-                            : p.stock_status === 'out-of-stock'
-                              ? 'bg-red-100 text-red-700'
-                              : 'bg-orange-100 text-orange-700'
+                          ? 'bg-green-100 text-green-700'
+                          : p.stock_status === 'out-of-stock'
+                            ? 'bg-red-100 text-red-700'
+                            : 'bg-orange-100 text-orange-700'
                           }`}
                       >
                         {p.stock_status === 'in-stock' ? 'In Stock' : p.stock_status === 'out-of-stock' ? 'Out of Stock' : 'Low Stock'}

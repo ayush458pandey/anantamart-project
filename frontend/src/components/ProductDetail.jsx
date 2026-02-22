@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { X, Plus, Minus, ShoppingCart, Package, Truck, Shield } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useToast } from '../context/ToastContext';
+import { getInclusivePriceExact } from '../utils/priceUtils';
 
 export default function ProductDetail({ product, onClose, onAddToCart }) {
   const { fetchCart } = useCart();
@@ -28,7 +29,7 @@ export default function ProductDetail({ product, onClose, onAddToCart }) {
     ? Object.values(colorQuantities).reduce((sum, q) => sum + q, 0)
     : quantity;
 
-  const currentTotalPrice = parseFloat(product.base_price) * (totalQuantity || 0); // Handle 0 case
+  const currentTotalPrice = getInclusivePriceExact(product.base_price, product.gst_rate) * (totalQuantity || 0);
 
   // Helper to update color quantity
   const updateColorQty = (color, delta) => {

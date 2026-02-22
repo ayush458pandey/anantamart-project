@@ -1,6 +1,7 @@
 import React from 'react';
 import { Package, Plus, Minus, GitCompare } from 'lucide-react';
 import { useComparison } from '../context/ComparisonContext';
+import { getInclusivePrice } from '../utils/priceUtils';
 
 export default function ProductCard({ product, cart, onAddToCart, removeFromCart, onViewDetails, onNavigateToCategory }) {
     // 1. Check if this specific product is already in the global cart
@@ -135,7 +136,7 @@ export default function ProductCard({ product, cart, onAddToCart, removeFromCart
             <div className="p-2 sm:p-3">
                 <div className="flex items-center gap-1.5 sm:gap-2 mb-1">
                     <div className="bg-emerald-600 text-white px-2 sm:px-2.5 py-0.5 sm:py-1 rounded">
-                        <span className="text-xs sm:text-sm font-bold">₹{Math.round(product.base_price)}</span>
+                        <span className="text-xs sm:text-sm font-bold">₹{getInclusivePrice(product.base_price, product.gst_rate)}</span>
                     </div>
                     {product.mrp && (
                         <span className="text-gray-400 line-through text-[10px] sm:text-xs">

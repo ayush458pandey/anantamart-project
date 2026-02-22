@@ -1,5 +1,6 @@
 import React from 'react';
 import { FileText, Package, Plus, Minus, ShoppingCart } from 'lucide-react';
+import { getInclusivePriceExact } from '../utils/priceUtils';
 
 export default function EstimateView({ cart, removeFromCart, updateQuantity, subtotal, cgst, sgst, total, onCheckout }) {
     if (!cart || cart.items.length === 0) {
@@ -60,7 +61,8 @@ export default function EstimateView({ cart, removeFromCart, updateQuantity, sub
                                     <p className="text-xs sm:text-sm text-gray-500">SKU: {item.product.sku}</p>
                                     <p className="text-xs sm:text-sm text-gray-600 mt-0.5 sm:mt-1">MOQ: {item.product.moq} units</p>
                                     <p className="font-bold text-emerald-600 mt-1 text-sm sm:text-base">
-                                        ₹{parseFloat(item.product.base_price).toFixed(2)}
+                                        ₹{getInclusivePriceExact(item.product.base_price, item.product.gst_rate).toFixed(2)}
+                                        <span className="text-[9px] text-gray-400 font-normal ml-1">(incl. GST)</span>
                                     </p>
                                 </div>
                             </div>
@@ -86,7 +88,7 @@ export default function EstimateView({ cart, removeFromCart, updateQuantity, sub
                                 </div>
 
                                 <div className="text-right sm:text-left">
-                                    <p className="font-bold text-base sm:text-lg">₹{parseFloat(item.total_price).toFixed(2)}</p>
+                                    <p className="font-bold text-base sm:text-lg">₹{(getInclusivePriceExact(item.product.base_price, item.product.gst_rate) * item.quantity).toFixed(2)}</p>
                                     <button
                                         onClick={() => removeFromCart(item.id)}
                                         className="text-red-600 text-xs sm:text-sm hover:underline active:text-red-700 mt-1 font-medium touch-manipulation"
@@ -116,7 +118,7 @@ export default function EstimateView({ cart, removeFromCart, updateQuantity, sub
                         <span className="font-bold">₹{sgst.toFixed(2)}</span>
                     </div>
                     <div className="flex justify-between text-base sm:text-lg font-bold text-emerald-600 border-t border-gray-200 pt-2 sm:pt-3 mt-2 sm:mt-3">
-                        <span>Total Amount:</span>
+                        <span>Total Amount <span className="text-xs font-normal text-gray-500">(incl. GST)</span></span>
                         <span>₹{total.toFixed(2)}</span>
                     </div>
                 </div>
