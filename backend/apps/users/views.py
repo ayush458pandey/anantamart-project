@@ -4,6 +4,11 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.decorators import api_view, permission_classes
 from django.contrib.auth.models import User
+from django.contrib.auth.tokens import default_token_generator
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.utils.encoding import force_bytes, force_str
+from django.core.mail import send_mail
+from django.conf import settings
 from .models import Address, UserProfile
 from .serializers import AddressSerializer, UserSerializer, RegisterSerializer
 
@@ -81,3 +86,66 @@ class ProfileView(APIView):
         
         serializer = UserSerializer(user)
         return Response(serializer.data)
+
+
+# Password Reset - Request
+class PasswordResetRequestView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        email = request.data.get('email', '').strip()
+        if not email:
+            return Response({'error': 'Email is required'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            user = User.objects.get(email=email)
+        except User.DoesNotExist:
+            # Don't reveal whether email exists
+            return Response({'message': 'If this email exists, a reset link has been sent.'})
+
+        token = default_token_generator.make_token(user)
+        uid = urlsafe_base64_encode(force_bytes(user.pk))
+
+        reset_url = f"https://ananta-mart.in/reset-password?uid={uid}&token={token}"
+
+        try:
+            send_mail(
+                subject='Anantamart - Password Reset',
+                message=f'Click the link to reset your password: {reset_url}',
+                from_email=settings.DEFAULT_FROM_EMAIL if hasattr(settings, 'DEFAULT_FROM_EMAIL') else 'noreply@ananta-mart.in',
+                recipient_list=[email],
+                fail_silently=False,
+            )
+        except Exception as e:
+            return Response({'error': 'Failed to send email. Please try again later.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        return Response({'message': 'If this email exists, a reset link has been sent.'})
+
+
+# Password Reset - Confirm
+class PasswordResetConfirmView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        uid = request.data.get('uid', '')
+        token = request.data.get('token', '')
+        new_password = request.data.get('new_password', '')
+
+        if not uid or not token or not new_password:
+            return Response({'error': 'uid, token, and new_password are required'}, status=status.HTTP_400_BAD_REQUEST)
+
+        if len(new_password) < 8:
+            return Response({'error': 'Password must be at least 8 characters'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            user_id = force_str(urlsafe_base64_decode(uid))
+            user = User.objects.get(pk=user_id)
+        except (TypeError, ValueError, User.DoesNotExist):
+            return Response({'error': 'Invalid reset link'}, status=status.HTTP_400_BAD_REQUEST)
+
+        if not default_token_generator.check_token(user, token):
+            return Response({'error': 'Reset link has expired'}, status=status.HTTP_400_BAD_REQUEST)
+
+        user.set_password(new_password)
+        user.save()
+        return Response({'message': 'Password has been reset successfully'})
