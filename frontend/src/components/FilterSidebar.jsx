@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { X, Filter, ChevronDown, ChevronUp } from 'lucide-react';
 
 /**
@@ -60,11 +60,11 @@ export default function FilterSidebar({
             return (
                 <button
                     onClick={onToggle}
-                    className="fixed bottom-20 right-4 bg-emerald-600 text-white p-3 rounded-full shadow-lg z-40 flex items-center gap-2"
+                    className="fixed bottom-20 right-4 bg-amber-500 text-white p-3 rounded-full shadow-lg z-40 flex items-center gap-2"
                 >
                     <Filter className="w-5 h-5" />
                     {hasActiveFilters && (
-                        <span className="bg-white text-emerald-600 text-xs font-bold px-2 py-0.5 rounded-full">
+                        <span className="bg-white text-amber-500 text-xs font-bold px-2 py-0.5 rounded-full">
                             {selectedBrands.length + selectedSubcategories.length}
                         </span>
                     )}
@@ -137,13 +137,13 @@ function FilterContent({
     return (
         <>
             {/* Header */}
-            <div className="bg-emerald-600 text-white p-4 flex items-center justify-between">
+            <div className="bg-amber-500 text-white p-4 flex items-center justify-between">
                 <div className="flex items-center gap-2">
                     <Filter className="w-5 h-5" />
                     <h3 className="font-bold text-lg">Filters</h3>
                 </div>
                 {isMobile && (
-                    <button onClick={onClose} className="p-1 hover:bg-emerald-700 rounded">
+                    <button onClick={onClose} className="p-1 hover:bg-amber-600 rounded">
                         <X className="w-5 h-5" />
                     </button>
                 )}
@@ -151,9 +151,9 @@ function FilterContent({
 
             {/* Active Filters & Clear All */}
             {hasActiveFilters && (
-                <div className="p-4 bg-emerald-50 border-b border-emerald-100">
+                <div className="p-4 bg-amber-50 border-b border-amber-100">
                     <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm font-semibold text-emerald-800">
+                        <span className="text-sm font-semibold text-amber-700">
                             Active Filters ({selectedBrands.length + selectedSubcategories.length})
                         </span>
                         <button
@@ -168,7 +168,7 @@ function FilterContent({
                     {selectedBrands.map(brand => (
                         <div
                             key={brand}
-                            className="inline-flex items-center gap-1 bg-white border border-emerald-200 rounded-full px-2 py-1 mr-2 mb-2 text-xs"
+                            className="inline-flex items-center gap-1 bg-white border border-amber-200 rounded-full px-2 py-1 mr-2 mb-2 text-xs"
                         >
                             <span className="text-gray-700">{brand}</span>
                             <button
@@ -186,7 +186,7 @@ function FilterContent({
                         return sub ? (
                             <div
                                 key={subId}
-                                className="inline-flex items-center gap-1 bg-white border border-emerald-200 rounded-full px-2 py-1 mr-2 mb-2 text-xs"
+                                className="inline-flex items-center gap-1 bg-white border border-amber-200 rounded-full px-2 py-1 mr-2 mb-2 text-xs"
                             >
                                 <span className="text-gray-700">{sub.name}</span>
                                 <button
@@ -236,7 +236,7 @@ function FilterContent({
                                                     type="checkbox"
                                                     checked={selectedSubcategories.includes(subcategory.id)}
                                                     onChange={() => handleSubcategoryToggle(subcategory.id)}
-                                                    className="w-4 h-4 text-emerald-600 border-gray-300 rounded focus:ring-emerald-500"
+                                                    className="w-4 h-4 text-amber-500 border-gray-300 rounded focus:ring-amber-500"
                                                 />
                                                 <span className="flex-1 text-sm text-gray-700">
                                                     {subcategory.name}
@@ -277,7 +277,7 @@ function FilterContent({
                                                     type="checkbox"
                                                     checked={selectedBrands.includes(brand.name)}
                                                     onChange={() => handleBrandToggle(brand.name)}
-                                                    className="w-4 h-4 text-emerald-600 border-gray-300 rounded focus:ring-emerald-500"
+                                                    className="w-4 h-4 text-amber-500 border-gray-300 rounded focus:ring-amber-500"
                                                 />
                                                 <span className="flex-1 text-sm text-gray-700">
                                                     {brand.name}

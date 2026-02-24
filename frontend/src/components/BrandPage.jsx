@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { ArrowLeft, Package } from 'lucide-react';
 import { productService } from '../api/services/productService';
 
@@ -43,7 +43,7 @@ export default function BrandPage({ brand, onBack, onProductClick, onAddToCart }
                 <div className="max-w-7xl mx-auto px-3 sm:px-4 py-4">
                     <button
                         onClick={onBack}
-                        className="flex items-center gap-2 text-emerald-600 hover:text-emerald-700 mb-3 touch-manipulation"
+                        className="flex items-center gap-2 text-amber-500 hover:text-amber-600 mb-3 touch-manipulation"
                     >
                         <ArrowLeft className="w-5 h-5" />
                         <span className="text-sm font-medium">Back</span>
@@ -71,7 +71,7 @@ export default function BrandPage({ brand, onBack, onProductClick, onAddToCart }
                             {brand.description && (
                                 <p className="text-sm text-gray-600 mt-1 line-clamp-2">{brand.description}</p>
                             )}
-                            <p className="text-sm text-emerald-600 font-medium mt-1">
+                            <p className="text-sm text-amber-500 font-medium mt-1">
                                 {brand.product_count || products.length} {(brand.product_count || products.length) === 1 ? 'Product' : 'Products'}
                             </p>
                         </div>
@@ -83,7 +83,7 @@ export default function BrandPage({ brand, onBack, onProductClick, onAddToCart }
             <div className="max-w-7xl mx-auto px-3 sm:px-4 py-4">
                 {loading && (
                     <div className="flex items-center justify-center py-12">
-                        <div className="animate-spin rounded-full h-12 w-12 border-b-4 border-emerald-600"></div>
+                        <div className="animate-spin rounded-full h-12 w-12 border-b-4 border-amber-500"></div>
                     </div>
                 )}
 
@@ -162,7 +162,7 @@ function ProductCard({ product, onViewDetails, onAddToCart }) {
             {/* Details */}
             <div className="p-2 sm:p-3">
                 <div className="flex items-center gap-2 mb-1">
-                    <div className="bg-emerald-600 text-white px-2 py-0.5 rounded">
+                    <div className="bg-amber-500 text-white px-2 py-0.5 rounded">
                         <span className="text-xs sm:text-sm font-bold">₹{Math.round(product.base_price)}</span>
                     </div>
                     <span className="text-gray-400 line-through text-[10px] sm:text-xs">
@@ -178,7 +178,7 @@ function ProductCard({ product, onViewDetails, onAddToCart }) {
 
                 <h3
                     onClick={onViewDetails}
-                    className="text-xs sm:text-sm font-semibold text-gray-900 line-clamp-2 min-h-[32px] mb-1 cursor-pointer hover:text-emerald-600"
+                    className="text-xs sm:text-sm font-semibold text-gray-900 line-clamp-2 min-h-[32px] mb-1 cursor-pointer hover:text-amber-500"
                 >
                     {product.name}
                 </h3>
@@ -189,7 +189,7 @@ function ProductCard({ product, onViewDetails, onAddToCart }) {
 
                 <button
                     onClick={handleAdd}
-                    className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 rounded-lg text-xs sm:text-sm mt-2"
+                    className="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold py-2 rounded-lg text-xs sm:text-sm mt-2"
                 >
                     + ADD
                 </button>

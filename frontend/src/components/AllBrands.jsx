@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { Search, ChevronLeft, Info } from 'lucide-react';
 
 const AllBrands = ({ brands, onBrandClick, onBack }) => {
@@ -37,7 +37,7 @@ const AllBrands = ({ brands, onBrandClick, onBack }) => {
                         placeholder="Find a brand..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none transition-all"
+                        className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-500 outline-none transition-all"
                     />
                 </div>
 
@@ -48,7 +48,7 @@ const AllBrands = ({ brands, onBrandClick, onBack }) => {
                             key={letter}
                             onClick={() => setSelectedLetter(letter)}
                             className={`px-3 py-1.5 rounded-lg text-sm font-bold flex-shrink-0 transition-colors ${selectedLetter === letter
-                                    ? 'bg-emerald-600 text-white shadow-md'
+                                    ? 'bg-amber-500 text-white shadow-md'
                                     : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                                 }`}
                         >
@@ -66,14 +66,14 @@ const AllBrands = ({ brands, onBrandClick, onBack }) => {
                                 onClick={() => onBrandClick(brand)}
                                 className="group flex flex-col items-center cursor-pointer"
                             >
-                                <div className="w-20 h-20 sm:w-24 sm:h-24 bg-white border border-gray-200 rounded-xl flex items-center justify-center p-3 shadow-sm group-hover:shadow-md group-hover:border-emerald-500 transition-all">
+                                <div className="w-20 h-20 sm:w-24 sm:h-24 bg-white border border-gray-200 rounded-xl flex items-center justify-center p-3 shadow-sm group-hover:shadow-md group-hover:border-amber-500 transition-all">
                                     <img
                                         src={brand.logo || "/api/placeholder/100/100"}
                                         alt={brand.name}
                                         className="w-full h-full object-contain filter group-hover:brightness-105"
                                     />
                                 </div>
-                                <span className="mt-2 text-xs font-medium text-gray-700 text-center line-clamp-1 group-hover:text-emerald-700">
+                                <span className="mt-2 text-xs font-medium text-gray-700 text-center line-clamp-1 group-hover:text-amber-600">
                                     {brand.name}
                                 </span>
                             </div>

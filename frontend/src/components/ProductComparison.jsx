@@ -1,4 +1,4 @@
-import React from 'react'; // Added React import just in case
+﻿import React from 'react'; // Added React import just in case
 import { X, Plus, ShoppingCart, Star, Package } from 'lucide-react';
 import { useComparison } from '../context/ComparisonContext';
 import { useCart } from '../context/CartContext';
@@ -23,7 +23,7 @@ export default function ProductComparison({ onClose }) {
             <p className="text-gray-500 mb-6">Add products to comparison list to see side-by-side details</p>
             <button
               onClick={onClose}
-              className="bg-emerald-600 text-white px-6 py-3 rounded-lg font-bold hover:bg-emerald-700"
+              className="bg-amber-500 text-white px-6 py-3 rounded-lg font-bold hover:bg-amber-600"
             >
               Browse Products
             </button>
@@ -79,7 +79,7 @@ export default function ProductComparison({ onClose }) {
                           >
                             <X className="w-3 h-3" />
                           </button>
-                          <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-lg p-2 mb-2 border border-emerald-200">
+                          <div className="bg-gradient-to-br from-amber-50 to-amber-100 rounded-lg p-2 mb-2 border border-amber-200">
                             {product.image ? (
                               <img
                                 src={product.image}
@@ -89,7 +89,7 @@ export default function ProductComparison({ onClose }) {
                               />
                             ) : (
                               <div className="flex items-center justify-center h-20">
-                                <Package className="w-10 h-10 text-emerald-300" />
+                                <Package className="w-10 h-10 text-amber-300" />
                               </div>
                             )}
                           </div>
@@ -111,7 +111,7 @@ export default function ProductComparison({ onClose }) {
                     compareList={compareList}
                     values={compareList.map((p) => (
                       <div key={p.id} className="text-center w-full">
-                        <span className="text-lg font-bold text-emerald-600 block mb-0.5">
+                        <span className="text-lg font-bold text-amber-500 block mb-0.5">
                           ₹{parseFloat(p.base_price).toFixed(2)}
                         </span>
                         <div className="text-[10px] text-gray-400 line-through">
@@ -158,7 +158,7 @@ export default function ProductComparison({ onClose }) {
                     compareList={compareList}
                     values={compareList.map((p) => (
                       <div key={p.id} className="text-center">
-                        <span className="font-bold text-base text-emerald-600">
+                        <span className="font-bold text-base text-amber-500">
                           {p.moq}
                         </span>
                         <span className="text-[10px] text-gray-600 ml-0.5">units</span>
@@ -235,7 +235,7 @@ export default function ProductComparison({ onClose }) {
                       <div key={p.id} className="w-full flex justify-center">
                         <button
                           onClick={() => addToCart(p.id, p.moq)}
-                          className="w-full max-w-[180px] bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-bold py-2 rounded-lg transition-colors flex items-center justify-center gap-1.5 text-[11px] shadow-md"
+                          className="w-full max-w-[180px] bg-amber-500 hover:bg-amber-600 active:bg-amber-700 text-white font-bold py-2 rounded-lg transition-colors flex items-center justify-center gap-1.5 text-[11px] shadow-md"
                         >
                           <Plus className="w-3 h-3" />
                           Add to Cart
@@ -266,7 +266,7 @@ export default function ProductComparison({ onClose }) {
                         >
                           <X className="w-3.5 h-3.5" />
                         </button>
-                        <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-lg p-4 mb-3 border border-emerald-200">
+                        <div className="bg-gradient-to-br from-amber-50 to-amber-100 rounded-lg p-4 mb-3 border border-amber-200">
                           {product.image ? (
                             <img
                               src={product.image}
@@ -276,7 +276,7 @@ export default function ProductComparison({ onClose }) {
                             />
                           ) : (
                             <div className="flex items-center justify-center h-40">
-                              <Package className="w-16 h-16 text-emerald-300" />
+                              <Package className="w-16 h-16 text-amber-300" />
                             </div>
                           )}
                         </div>
@@ -298,7 +298,7 @@ export default function ProductComparison({ onClose }) {
                   compareList={compareList}
                   values={compareList.map((p) => (
                     <div key={p.id} className="text-center w-full">
-                      <span className="text-2xl font-bold text-emerald-600 block mb-1">
+                      <span className="text-2xl font-bold text-amber-500 block mb-1">
                         ₹{parseFloat(p.base_price).toFixed(2)}
                       </span>
                       <div className="text-sm text-gray-400 line-through">
@@ -449,7 +449,7 @@ export default function ProductComparison({ onClose }) {
                   compareList={compareList}
                   values={compareList.map((p) => (
                     <div key={p.id} className="text-center">
-                      <span className="font-bold text-lg text-emerald-600">
+                      <span className="font-bold text-lg text-amber-500">
                         {p.moq}
                       </span>
                       <span className="text-sm text-gray-600 ml-1">units</span>
@@ -546,7 +546,7 @@ export default function ProductComparison({ onClose }) {
                     <div key={p.id} className="w-full flex justify-center">
                       <button
                         onClick={() => addToCart(p.id, p.moq)}
-                        className="w-full max-w-[220px] bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-bold py-3 rounded-lg transition-colors flex items-center justify-center gap-2 text-sm shadow-md hover:shadow-lg"
+                        className="w-full max-w-[220px] bg-amber-500 hover:bg-amber-600 active:bg-amber-700 text-white font-bold py-3 rounded-lg transition-colors flex items-center justify-center gap-2 text-sm shadow-md hover:shadow-lg"
                       >
                         <Plus className="w-4 h-4" />
                         Add to Cart

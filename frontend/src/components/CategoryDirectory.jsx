@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import {
     Scissors, Armchair, Sparkles, Coffee,
     Utensils, Droplet, Briefcase, Shirt,
@@ -39,7 +39,7 @@ const CategoryDirectory = ({ categories, onSelectCategory }) => {
                             className="group flex flex-col items-center cursor-pointer"
                         >
                             {/* SQUARE CONTAINER */}
-                            <div className={`w-20 h-20 sm:w-24 sm:h-24 bg-white border border-gray-200 rounded-xl flex items-center justify-center shadow-sm transition-all duration-200 group-hover:shadow-md group-hover:border-emerald-500 group-hover:-translate-y-1 overflow-hidden ${category.image ? '' : 'p-3'}`}>
+                            <div className={`w-20 h-20 sm:w-24 sm:h-24 bg-white border border-gray-200 rounded-xl flex items-center justify-center shadow-sm transition-all duration-200 group-hover:shadow-md group-hover:border-amber-500 group-hover:-translate-y-1 overflow-hidden ${category.image ? '' : 'p-3'}`}>
                                 {category.image ? (
                                     <img
                                         src={category.image}
@@ -47,11 +47,11 @@ const CategoryDirectory = ({ categories, onSelectCategory }) => {
                                         className="w-full h-full object-cover"
                                     />
                                 ) : (
-                                    <Icon className="w-8 h-8 sm:w-10 sm:h-10 text-emerald-600 group-hover:scale-110 transition-transform" />
+                                    <Icon className="w-8 h-8 sm:w-10 sm:h-10 text-amber-500 group-hover:scale-110 transition-transform" />
                                 )}
                             </div>
 
-                            <span className="mt-2 text-[10px] sm:text-xs font-medium text-gray-600 text-center truncate w-full px-1 group-hover:text-emerald-700">
+                            <span className="mt-2 text-[10px] sm:text-xs font-medium text-gray-600 text-center truncate w-full px-1 group-hover:text-amber-600">
                                 {category.name}
                             </span>
                         </div>

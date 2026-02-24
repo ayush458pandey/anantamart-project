@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import {
   X, CreditCard, Smartphone, Building2, Wallet,
   CheckCircle, MapPin, Truck, Package, AlertCircle, Plus, Loader, FileText
@@ -348,7 +348,7 @@ export default function AdvancedCheckout({ cart, onClose, onPlaceOrder }) {
               Order ID: <span className="font-bold">{completedOrder?.order_number || '#ORD' + Date.now().toString().slice(-8)}</span>
             </p>
             <p className="text-sm text-gray-500 mb-6">
-              Total Amount: <span className="font-bold text-emerald-600">₹{total.toFixed(2)}</span>
+              Total Amount: <span className="font-bold text-amber-500">₹{total.toFixed(2)}</span>
             </p>
             <p className="text-sm text-gray-600 mb-6">
               You will receive order confirmation via email and SMS shortly.
@@ -367,7 +367,7 @@ export default function AdvancedCheckout({ cart, onClose, onPlaceOrder }) {
                   // 🟢 Force a redirect to Home, which reloads the cart data
                   window.location.href = '/';
                 }}
-                className="flex-1 bg-emerald-600 text-white font-bold py-3 rounded-lg hover:bg-emerald-700"
+                className="flex-1 bg-amber-500 text-white font-bold py-3 rounded-lg hover:bg-amber-600"
               >
                 Continue Shopping
               </button>
@@ -420,12 +420,12 @@ export default function AdvancedCheckout({ cart, onClose, onPlaceOrder }) {
                 <div>
                   <div className="flex justify-between items-center mb-3">
                     <h3 className="text-lg font-bold flex items-center gap-2">
-                      <MapPin className="w-5 h-5 text-emerald-600" />
+                      <MapPin className="w-5 h-5 text-amber-500" />
                       Delivery Address
                     </h3>
                     <button
                       onClick={() => setShowAddressForm(true)}
-                      className="text-sm text-emerald-600 font-bold flex items-center gap-1 hover:bg-emerald-50 px-3 py-1.5 rounded-lg transition-colors"
+                      className="text-sm text-amber-500 font-bold flex items-center gap-1 hover:bg-amber-50 px-3 py-1.5 rounded-lg transition-colors"
                     >
                       <Plus className="w-4 h-4" /> Add New
                     </button>
@@ -438,7 +438,7 @@ export default function AdvancedCheckout({ cart, onClose, onPlaceOrder }) {
                   ) : addresses.length === 0 ? (
                     <div className="text-center py-8 bg-gray-50 rounded-xl border border-dashed border-gray-300">
                       <p className="text-gray-500 mb-2">No addresses found.</p>
-                      <button onClick={() => setShowAddressForm(true)} className="text-emerald-600 font-bold hover:underline">
+                      <button onClick={() => setShowAddressForm(true)} className="text-amber-500 font-bold hover:underline">
                         Add your first address
                       </button>
                     </div>
@@ -448,8 +448,8 @@ export default function AdvancedCheckout({ cart, onClose, onPlaceOrder }) {
                         <label
                           key={address.id}
                           className={`block p-4 border-2 rounded-lg cursor-pointer transition-all ${selectedAddress === address.id
-                            ? 'border-emerald-600 bg-emerald-50'
-                            : 'border-gray-200 hover:border-emerald-300'
+                            ? 'border-amber-500 bg-amber-50'
+                            : 'border-gray-200 hover:border-amber-300'
                             }`}
                         >
                           <input
@@ -461,7 +461,7 @@ export default function AdvancedCheckout({ cart, onClose, onPlaceOrder }) {
                           />
                           <div className="flex items-start gap-3">
                             <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 mt-0.5 ${selectedAddress === address.id
-                              ? 'border-emerald-600 bg-emerald-600'
+                              ? 'border-amber-500 bg-amber-500'
                               : 'border-gray-300'
                               }`}>
                               {selectedAddress === address.id && (
@@ -490,7 +490,7 @@ export default function AdvancedCheckout({ cart, onClose, onPlaceOrder }) {
                 {/* Delivery Options */}
                 <div>
                   <h3 className="text-lg font-bold mb-3 flex items-center gap-2">
-                    <Truck className="w-5 h-5 text-emerald-600" />
+                    <Truck className="w-5 h-5 text-amber-500" />
                     Delivery Options
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
@@ -498,8 +498,8 @@ export default function AdvancedCheckout({ cart, onClose, onPlaceOrder }) {
                       <label
                         key={option.id}
                         className={`block p-4 border-2 rounded-lg cursor-pointer transition-all ${selectedDelivery === option.id
-                          ? 'border-emerald-600 bg-emerald-50'
-                          : 'border-gray-200 hover:border-emerald-300'
+                          ? 'border-amber-500 bg-amber-50'
+                          : 'border-gray-200 hover:border-amber-300'
                           }`}
                       >
                         <input
@@ -513,7 +513,7 @@ export default function AdvancedCheckout({ cart, onClose, onPlaceOrder }) {
                           <div className="text-3xl mb-2">{option.icon}</div>
                           <div className="font-bold text-gray-800 mb-1">{option.name}</div>
                           <div className="text-sm text-gray-600 mb-2">{option.duration}</div>
-                          <div className="font-bold text-emerald-600">
+                          <div className="font-bold text-amber-500">
                             {option.cost === 0 ? 'FREE' : `₹${option.cost}`}
                           </div>
                         </div>
@@ -531,7 +531,7 @@ export default function AdvancedCheckout({ cart, onClose, onPlaceOrder }) {
                         value={scheduledDate}
                         onChange={(e) => setScheduledDate(e.target.value)}
                         min={new Date().toISOString().split('T')[0]}
-                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-emerald-600 focus:outline-none"
+                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-amber-500 focus:outline-none"
                       />
                     </div>
                   )}
@@ -539,7 +539,7 @@ export default function AdvancedCheckout({ cart, onClose, onPlaceOrder }) {
 
                 <button
                   onClick={() => setStep(2)}
-                  className="w-full bg-emerald-600 text-white font-bold py-3 rounded-lg hover:bg-emerald-700"
+                  className="w-full bg-amber-500 text-white font-bold py-3 rounded-lg hover:bg-amber-600"
                 >
                   Continue to Payment
                 </button>
@@ -550,7 +550,7 @@ export default function AdvancedCheckout({ cart, onClose, onPlaceOrder }) {
             {step === 2 && (
               <div className="space-y-6">
                 <h3 className="text-lg font-bold mb-3 flex items-center gap-2">
-                  <CreditCard className="w-5 h-5 text-emerald-600" />
+                  <CreditCard className="w-5 h-5 text-amber-500" />
                   Select Payment Method
                 </h3>
 
@@ -561,8 +561,8 @@ export default function AdvancedCheckout({ cart, onClose, onPlaceOrder }) {
                       <label
                         key={method.id}
                         className={`block p-4 border-2 rounded-lg cursor-pointer transition-all ${selectedPayment === method.id
-                          ? 'border-emerald-600 bg-emerald-50'
-                          : 'border-gray-200 hover:border-emerald-300'
+                          ? 'border-amber-500 bg-amber-50'
+                          : 'border-gray-200 hover:border-amber-300'
                           }`}
                       >
                         <input
@@ -574,7 +574,7 @@ export default function AdvancedCheckout({ cart, onClose, onPlaceOrder }) {
                         />
                         <div className="flex items-start gap-3">
                           <div className={`p-3 rounded-lg ${selectedPayment === method.id
-                            ? 'bg-emerald-600 text-white'
+                            ? 'bg-amber-500 text-white'
                             : 'bg-gray-100 text-gray-600'
                             }`}>
                             <Icon className="w-6 h-6" />
@@ -584,7 +584,7 @@ export default function AdvancedCheckout({ cart, onClose, onPlaceOrder }) {
                             <div className="text-sm text-gray-600">{method.description}</div>
                           </div>
                           <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${selectedPayment === method.id
-                            ? 'border-emerald-600 bg-emerald-600'
+                            ? 'border-amber-500 bg-amber-500'
                             : 'border-gray-300'
                             }`}>
                             {selectedPayment === method.id && (
@@ -607,7 +607,7 @@ export default function AdvancedCheckout({ cart, onClose, onPlaceOrder }) {
                   <button
                     onClick={() => setStep(3)}
                     disabled={!selectedPayment}
-                    className="flex-1 bg-emerald-600 text-white font-bold py-3 rounded-lg hover:bg-emerald-700 disabled:bg-gray-300 disabled:cursor-not-allowed"
+                    className="flex-1 bg-amber-500 text-white font-bold py-3 rounded-lg hover:bg-amber-600 disabled:bg-gray-300 disabled:cursor-not-allowed"
                   >
                     Review Order
                   </button>
@@ -631,7 +631,7 @@ export default function AdvancedCheckout({ cart, onClose, onPlaceOrder }) {
                           <div className="font-bold text-sm">
                             {item.product.name}
                             {item.variant && (
-                              <span className="ml-1 text-emerald-600 text-xs font-normal">
+                              <span className="ml-1 text-amber-500 text-xs font-normal">
                                 ({item.variant})
                               </span>
                             )}
@@ -645,7 +645,7 @@ export default function AdvancedCheckout({ cart, onClose, onPlaceOrder }) {
                 </div>
 
                 {/* Price Breakdown */}
-                <div className="bg-emerald-50 rounded-lg p-6">
+                <div className="bg-amber-50 rounded-lg p-6">
                   <h3 className="font-bold text-lg mb-4">Price Details</h3>
                   <div className="space-y-2 text-sm">
                     <div className="flex justify-between">
@@ -684,7 +684,7 @@ export default function AdvancedCheckout({ cart, onClose, onPlaceOrder }) {
                       </div>
                     )}
 
-                    <div className="flex justify-between text-xl font-bold text-emerald-600 border-t-2 border-emerald-600 pt-3 mt-3">
+                    <div className="flex justify-between text-xl font-bold text-amber-500 border-t-2 border-amber-500 pt-3 mt-3">
                       <span>Total Amount:</span>
                       <span>₹{total.toFixed(2)}</span>
                     </div>
@@ -728,7 +728,7 @@ export default function AdvancedCheckout({ cart, onClose, onPlaceOrder }) {
                   <button
                     onClick={handlePlaceOrder}
                     disabled={isProcessing}
-                    className="flex-1 bg-emerald-600 text-white font-bold py-3 rounded-lg hover:bg-emerald-700 flex items-center justify-center gap-2 disabled:bg-gray-300 disabled:cursor-not-allowed"
+                    className="flex-1 bg-amber-500 text-white font-bold py-3 rounded-lg hover:bg-amber-600 flex items-center justify-center gap-2 disabled:bg-gray-300 disabled:cursor-not-allowed"
                   >
                     {isProcessing ? (
                       <>
@@ -851,7 +851,7 @@ export default function AdvancedCheckout({ cart, onClose, onPlaceOrder }) {
                   }
                 }}
                 disabled={isProcessing}
-                className="flex-1 bg-emerald-600 text-white font-bold py-3 rounded-lg hover:bg-emerald-700 flex items-center justify-center gap-2"
+                className="flex-1 bg-amber-500 text-white font-bold py-3 rounded-lg hover:bg-amber-600 flex items-center justify-center gap-2"
               >
                 <Wallet className="w-5 h-5" />
                 Advance Payment
@@ -872,9 +872,9 @@ function StepIndicator({ step, current, label }) {
   return (
     <div className="flex flex-col items-center">
       <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold transition-all ${isActive
-        ? 'bg-emerald-600 text-white'
+        ? 'bg-amber-500 text-white'
         : isCompleted
-          ? 'bg-emerald-100 text-emerald-600'
+          ? 'bg-amber-100 text-amber-500'
           : 'bg-gray-200 text-gray-500'
         }`}>
         {isCompleted ? <CheckCircle className="w-6 h-6" /> : step}

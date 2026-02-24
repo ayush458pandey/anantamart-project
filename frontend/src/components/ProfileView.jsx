@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { User, Mail, Building, LogOut, X } from 'lucide-react';
 
 export default function ProfileView({ user, onLogout }) {
@@ -9,17 +9,17 @@ export default function ProfileView({ user, onLogout }) {
             <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-4 sm:mb-6">My Profile</h2>
 
             <div className="bg-white rounded-lg sm:rounded-xl shadow-md overflow-hidden">
-                <div className="bg-gradient-to-r from-emerald-500 to-emerald-600 p-6 sm:p-8">
+                <div className="bg-gradient-to-r from-amber-500 to-amber-500 p-6 sm:p-8">
                     <div className="flex items-center gap-4 sm:gap-6">
-                        <div className="w-16 h-16 sm:w-20 sm:h-20 bg-white rounded-full flex items-center justify-center shadow-lg text-emerald-600 font-bold text-2xl">
+                        <div className="w-16 h-16 sm:w-20 sm:h-20 bg-white rounded-full flex items-center justify-center shadow-lg text-amber-500 font-bold text-2xl">
                             {user.first_name ? user.first_name[0] : 'U'}
                         </div>
                         <div className="flex-1 text-white">
                             <h3 className="text-xl sm:text-2xl font-bold mb-1">
                                 {user.business_name || `${user.first_name} ${user.last_name}`}
                             </h3>
-                            <p className="text-emerald-100 text-sm sm:text-base">{user.email}</p>
-                            <span className="inline-block mt-2 bg-emerald-700 bg-opacity-50 px-3 py-1 rounded-full text-xs font-medium">
+                            <p className="text-amber-100 text-sm sm:text-base">{user.email}</p>
+                            <span className="inline-block mt-2 bg-amber-600 bg-opacity-50 px-3 py-1 rounded-full text-xs font-medium">
                                 {user.is_superuser ? 'Super Admin' : 'Business Account'}
                             </span>
                         </div>
@@ -29,7 +29,7 @@ export default function ProfileView({ user, onLogout }) {
                 <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
                     <div>
                         <h4 className="text-base sm:text-lg font-bold text-gray-800 mb-3 sm:mb-4 flex items-center gap-2">
-                            <Building className="w-5 h-5 text-emerald-600" />
+                            <Building className="w-5 h-5 text-amber-500" />
                             Account Details
                         </h4>
                         <div className="space-y-3 sm:space-y-4">

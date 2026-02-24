@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Package, Mail, ArrowLeft, CheckCircle } from 'lucide-react';
 import axiosInstance from '../api/axios';
@@ -31,9 +31,9 @@ export default function ForgotPassword() {
 
     if (sent) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-emerald-50 to-emerald-100 flex flex-col items-center justify-center px-4">
+            <div className="min-h-screen bg-gradient-to-br from-amber-50 to-amber-100 flex flex-col items-center justify-center px-4">
                 <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-8 text-center">
-                    <CheckCircle className="w-16 h-16 text-emerald-500 mx-auto mb-4" />
+                    <CheckCircle className="w-16 h-16 text-amber-500 mx-auto mb-4" />
                     <h2 className="text-2xl font-bold text-gray-800 mb-2">Check Your Email</h2>
                     <p className="text-gray-600 mb-6">
                         We've sent a password reset link to <strong>{email}</strong>. Please check your inbox and follow the instructions.
@@ -44,13 +44,13 @@ export default function ForgotPassword() {
                     <div className="space-y-3">
                         <button
                             onClick={() => { setSent(false); setEmail(''); }}
-                            className="w-full bg-emerald-600 text-white font-semibold py-2.5 rounded-lg hover:bg-emerald-700 transition-colors"
+                            className="w-full bg-amber-500 text-white font-semibold py-2.5 rounded-lg hover:bg-amber-600 transition-colors"
                         >
                             Try Another Email
                         </button>
                         <Link
                             to="/login"
-                            className="block w-full text-center text-emerald-600 font-medium hover:text-emerald-700"
+                            className="block w-full text-center text-amber-500 font-medium hover:text-amber-600"
                         >
                             Back to Login
                         </Link>
@@ -61,10 +61,10 @@ export default function ForgotPassword() {
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-emerald-50 to-emerald-100 flex flex-col items-center justify-center px-4">
+        <div className="min-h-screen bg-gradient-to-br from-amber-50 to-amber-100 flex flex-col items-center justify-center px-4">
             <div className="flex items-center gap-2 mb-6 cursor-pointer" onClick={() => navigate('/')}>
-                <Package className="w-8 h-8 text-emerald-600" />
-                <h1 className="text-2xl font-bold text-emerald-600">Anantamart</h1>
+                <Package className="w-8 h-8 text-amber-500" />
+                <h1 className="text-2xl font-bold text-amber-500">Anantamart</h1>
             </div>
 
             <div className="w-full max-w-md bg-white rounded-2xl shadow-xl overflow-hidden">
@@ -91,7 +91,7 @@ export default function ForgotPassword() {
                                     onChange={(e) => setEmail(e.target.value)}
                                     placeholder="your@email.com"
                                     required
-                                    className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all"
+                                    className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition-all"
                                 />
                             </div>
                         </div>
@@ -99,7 +99,7 @@ export default function ForgotPassword() {
                         <button
                             type="submit"
                             disabled={loading}
-                            className="w-full bg-emerald-600 text-white font-semibold py-2.5 rounded-lg hover:bg-emerald-700 active:bg-emerald-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                            className="w-full bg-amber-500 text-white font-semibold py-2.5 rounded-lg hover:bg-amber-600 active:bg-amber-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                         >
                             {loading ? 'Sending...' : 'Send Reset Link'}
                         </button>
@@ -108,7 +108,7 @@ export default function ForgotPassword() {
                     <div className="mt-4 text-center">
                         <Link
                             to="/login"
-                            className="inline-flex items-center gap-1 text-sm text-emerald-600 hover:text-emerald-700 font-medium"
+                            className="inline-flex items-center gap-1 text-sm text-amber-500 hover:text-amber-600 font-medium"
                         >
                             <ArrowLeft className="w-4 h-4" />
                             Back to Login

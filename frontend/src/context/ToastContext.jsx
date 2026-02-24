@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useCallback } from 'react';
+﻿import { createContext, useContext, useState, useCallback } from 'react';
 import { CheckCircle, X, AlertCircle, Info, ShoppingCart } from 'lucide-react';
 
 const ToastContext = createContext();
@@ -58,14 +58,14 @@ function Toast({ toast, onClose }) {
         success: <CheckCircle className="w-5 h-5 text-green-500" />,
         error: <AlertCircle className="w-5 h-5 text-red-500" />,
         info: <Info className="w-5 h-5 text-blue-500" />,
-        cart: <ShoppingCart className="w-5 h-5 text-emerald-500" />
+        cart: <ShoppingCart className="w-5 h-5 text-amber-500" />
     };
 
     const bgColors = {
         success: 'bg-green-50 border-green-200',
         error: 'bg-red-50 border-red-200',
         info: 'bg-blue-50 border-blue-200',
-        cart: 'bg-emerald-50 border-emerald-200'
+        cart: 'bg-amber-50 border-amber-200'
     };
 
     return (

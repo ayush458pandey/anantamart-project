@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+﻿import { useState, useEffect, useRef } from 'react';
 import { Search, X, Package, TrendingUp } from 'lucide-react';
 
 export default function SearchWithSuggestions({
@@ -118,7 +118,7 @@ export default function SearchWithSuggestions({
                         }
                     }}
                     placeholder="Search products..."
-                    className="w-full pl-11 pr-12 py-2.5 bg-gray-100 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
+                    className="w-full pl-11 pr-12 py-2.5 bg-gray-100 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all"
                 />
                 {searchQuery && (
                     <button
@@ -165,7 +165,7 @@ export default function SearchWithSuggestions({
                                         <button
                                             key={idx}
                                             onClick={() => handleRecentClick(term)}
-                                            className="px-2.5 py-1.5 bg-gray-100 active:bg-emerald-100 rounded-full text-xs font-medium transition-colors touch-manipulation"
+                                            className="px-2.5 py-1.5 bg-gray-100 active:bg-amber-100 rounded-full text-xs font-medium transition-colors touch-manipulation"
                                         >
                                             {term}
                                         </button>
@@ -207,7 +207,7 @@ export default function SearchWithSuggestions({
                                         </div>
 
                                         {/* Price */}
-                                        <p className="text-sm font-bold text-emerald-600 flex-shrink-0">
+                                        <p className="text-sm font-bold text-amber-500 flex-shrink-0">
                                             ₹{parseFloat(product.base_price).toFixed(0)}
                                         </p>
                                     </button>
