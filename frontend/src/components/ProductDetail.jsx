@@ -3,7 +3,7 @@ import { X, Plus, Minus, ShoppingCart, Package, Truck, Shield } from 'lucide-rea
 import { useCart } from '../context/CartContext';
 import { useToast } from '../context/ToastContext';
 
-export default function ProductDetail({ product, onClose, onAddToCart }) {
+export default function ProductDetail({ product, onClose, onAddToCart, onBrandClick }) {
   const { fetchCart } = useCart();
   const toast = useToast();
   const [quantity, setQuantity] = useState(product.moq || 1);
@@ -304,7 +304,17 @@ export default function ProductDetail({ product, onClose, onAddToCart }) {
               <h3 className="text-xl font-bold text-gray-900 mb-6">Product Information</h3>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
-                {product.brand_name && <DetailRow label="Brand" value={product.brand_name} />}
+                {product.brand_name && (
+                  <div className="flex items-start py-3 border-b border-gray-100">
+                    <span className="text-sm text-gray-600 w-1/2">Brand</span>
+                    <span
+                      className="text-sm font-semibold text-emerald-600 w-1/2 cursor-pointer hover:underline"
+                      onClick={() => onBrandClick && onBrandClick(product.brand_name, product.brand_ref || product.brand)}
+                    >
+                      {product.brand_name}
+                    </span>
+                  </div>
+                )}
                 {product.product_type && <DetailRow label="Product Type" value={product.product_type} />}
                 {product.unit && <DetailRow label="Unit" value={product.unit} />}
                 {product.weight && <DetailRow label="Weight/Volume" value={product.weight} />}

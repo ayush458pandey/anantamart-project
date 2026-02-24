@@ -507,6 +507,15 @@ export default function Home() {
                     product={selectedProduct}
                     onClose={() => setSelectedProduct(null)}
                     onAddToCart={addToCart}
+                    onBrandClick={(brandName, brandId) => {
+                        setSelectedProduct(null);
+                        const brand = brands.find(b => String(b.id) === String(brandId) || b.name === brandName);
+                        if (brand) {
+                            setSelectedBrand(brand);
+                            setShowSubcategoryView(false);
+                            window.scrollTo({ top: 0, behavior: 'smooth' });
+                        }
+                    }}
                 />
             )}
         </>
