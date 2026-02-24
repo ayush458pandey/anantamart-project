@@ -151,8 +151,8 @@ function ProductCard({ product, onViewDetails, onAddToCart }) {
                 {/* Stock Badge */}
                 <div className="absolute top-2 left-2">
                     <span className={`text-[10px] font-bold px-2 py-1 rounded-full ${product.stock_status === 'in-stock'
-                            ? 'bg-green-600 text-white'
-                            : 'bg-orange-500 text-white'
+                        ? 'bg-green-600 text-white'
+                        : 'bg-orange-500 text-white'
                         }`}>
                         {product.stock_status === 'in-stock' ? 'In Stock' : 'Out of Stock'}
                     </span>

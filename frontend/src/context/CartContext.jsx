@@ -1,4 +1,5 @@
-import { createContext, useState, useContext, useEffect } from 'react';
+import { createContext, useState, useContext, useEffect, useCallback } from 'react';
+import { useLocation } from 'react-router-dom';
 import { cartService } from '../api/services/cartService';
 
 // Create the Context
@@ -9,29 +10,28 @@ export const CartProvider = ({ children }) => {
   const [cart, setCart] = useState({ items: [], total_items: 0, total_price: 0 });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const location = useLocation();
 
-  // Fetch cart on mount (initial load)
+  // Refetch cart when navigating between pages
   useEffect(() => {
     fetchCart();
-  }, []);
+  }, [location.pathname]);
 
   // --- Actions ---
 
-  const fetchCart = async () => {
+  const fetchCart = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
       const data = await cartService.getCart();
-      // Ensure we always set a valid object, even if API returns null/undefined
       setCart(data || { items: [], total_items: 0, total_price: 0 });
     } catch (err) {
-      console.error('Error fetching cart:', err);
       // Don't set global error for 404s (empty cart), just reset state
       setCart({ items: [], total_items: 0, total_price: 0 });
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   const addToCart = async (productId, quantity = 1, variant = null) => {
     try {
@@ -40,7 +40,6 @@ export const CartProvider = ({ children }) => {
       setCart(data);
       return { success: true, data };
     } catch (err) {
-      console.error('Error adding to cart:', err);
       setError('Failed to add item to cart');
       return { success: false, error: err.message };
     } finally {
@@ -54,7 +53,6 @@ export const CartProvider = ({ children }) => {
       const data = await cartService.removeFromCart(productId);
       setCart(data);
     } catch (err) {
-      console.error('Error removing from cart:', err);
       setError('Failed to remove item');
     } finally {
       setLoading(false);
@@ -67,7 +65,6 @@ export const CartProvider = ({ children }) => {
       const data = await cartService.updateCartItem(itemId, quantity);
       setCart(data);
     } catch (err) {
-      console.error('Error updating quantity:', err);
       setError('Failed to update quantity');
     } finally {
       setLoading(false);
@@ -80,7 +77,6 @@ export const CartProvider = ({ children }) => {
       const data = await cartService.clearCart();
       setCart(data);
     } catch (err) {
-      console.error('Error clearing cart:', err);
       setError('Failed to clear cart');
     } finally {
       setLoading(false);

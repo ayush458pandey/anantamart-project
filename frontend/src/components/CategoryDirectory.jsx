@@ -38,14 +38,13 @@ const CategoryDirectory = ({ categories, onSelectCategory }) => {
                             onClick={() => onSelectCategory(category.id)}
                             className="group flex flex-col items-center cursor-pointer"
                         >
-                            {/* CIRCLE CONTAINER: Changed rounded-xl to rounded-full */}
-                            <div className="w-20 h-20 sm:w-24 sm:h-24 bg-white border border-gray-200 rounded-full flex items-center justify-center p-3 shadow-sm transition-all duration-200 group-hover:shadow-md group-hover:border-emerald-500 group-hover:-translate-y-1">
+                            {/* SQUARE CONTAINER */}
+                            <div className={`w-20 h-20 sm:w-24 sm:h-24 bg-white border border-gray-200 rounded-xl flex items-center justify-center shadow-sm transition-all duration-200 group-hover:shadow-md group-hover:border-emerald-500 group-hover:-translate-y-1 overflow-hidden ${category.image ? '' : 'p-3'}`}>
                                 {category.image ? (
                                     <img
                                         src={category.image}
                                         alt={category.name}
-                                        // Added rounded-full to image as well
-                                        className="w-full h-full object-contain rounded-full"
+                                        className="w-full h-full object-cover"
                                     />
                                 ) : (
                                     <Icon className="w-8 h-8 sm:w-10 sm:h-10 text-emerald-600 group-hover:scale-110 transition-transform" />

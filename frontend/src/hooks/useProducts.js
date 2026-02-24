@@ -1,68 +1,91 @@
-import { useState, useEffect } from 'react';
-// Import the custom axios instance we configured earlier
-// MAKE SURE THIS PATH MATCHES WHERE YOU SAVED axios.js
+import { useState, useEffect, useCallback, useRef } from 'react';
 import axios from '../api/axios';
 
+// Module-level cache — persists across component remounts and route changes
+let cachedProducts = null;
+let cachedCategories = null;
+let lastFetchTime = 0;
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
 export const useProducts = () => {
-  const [products, setProducts] = useState([]);
-  const [categories, setCategories] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [products, setProducts] = useState(cachedProducts || []);
+  const [categories, setCategories] = useState(cachedCategories || []);
+  const [loading, setLoading] = useState(!cachedProducts);
   const [error, setError] = useState(null);
+  const fetchingRef = useRef(false);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
+  const fetchData = useCallback(async (force = false) => {
+    const now = Date.now();
+    const isCacheValid = cachedProducts && cachedCategories && (now - lastFetchTime < CACHE_TTL);
+
+    // If cache is valid and not forced, skip fetch
+    if (isCacheValid && !force) {
+      setProducts(cachedProducts);
+      setCategories(cachedCategories);
+      setLoading(false);
+      return;
+    }
+
+    // Prevent duplicate concurrent fetches
+    if (fetchingRef.current) return;
+    fetchingRef.current = true;
+
+    try {
+      // Only show loading spinner if we have no cached data at all
+      if (!cachedProducts) {
         setLoading(true);
+      }
 
-        // 1. Fetch Categories
-        // We use simple paths ('/categories/') because the Base URL is in axios.js
-        const categoriesRes = await axios.get('/categories/');
-        console.log('📦 Full Categories Response:', categoriesRes.data);
+      const [categoriesRes, productsRes] = await Promise.all([
+        axios.get('/categories/'),
+        axios.get('/products/'),
+      ]);
 
-        const categoriesData = Array.isArray(categoriesRes.data)
-          ? categoriesRes.data
-          : (categoriesRes.data.results || []);
+      const categoriesData = Array.isArray(categoriesRes.data)
+        ? categoriesRes.data
+        : (categoriesRes.data.results || []);
 
-        setCategories(categoriesData);
+      let productsData = Array.isArray(productsRes.data)
+        ? productsRes.data
+        : (productsRes.data.results || []);
 
-        // 2. Fetch Products
-        const productsRes = await axios.get('/products/');
-        console.log('📦 Full Products Response:', productsRes.data);
+      // Fix Image Logic for Cloudinary
+      productsData = productsData.map(product => {
+        if (product.image_url) {
+          product.image = product.image_url;
+        } else if (product.images && product.images.length > 0) {
+          product.image = product.images[0].image;
+        }
+        return product;
+      });
 
-        let productsData = Array.isArray(productsRes.data)
-          ? productsRes.data
-          : (productsRes.data.results || []);
+      // Update cache
+      cachedProducts = productsData;
+      cachedCategories = categoriesData;
+      lastFetchTime = Date.now();
 
-        // 3. Fix Image Logic for Cloudinary
-        productsData = productsData.map(product => {
-          // Cloudinary gives us full URLs, so we don't need "localhost" anymore.
-          // We prioritize 'image_url' if it exists.
-          if (product.image_url) {
-            product.image = product.image_url;
-          }
-          // If we have gallery images, use the first one as the main image
-          else if (product.images && product.images.length > 0) {
-            product.image = product.images[0].image;
-          }
-          return product;
-        });
-
-        console.log('✅ Products Array:', productsData);
-        setProducts(productsData);
-        setError(null);
-
-      } catch (err) {
-        console.error('❌ Error:', err);
+      setProducts(productsData);
+      setCategories(categoriesData);
+      setError(null);
+    } catch (err) {
+      // If we have cached data, keep showing it despite the error
+      if (cachedProducts) {
+        setProducts(cachedProducts);
+        setCategories(cachedCategories);
+      } else {
         setError(`Failed to fetch data: ${err.message}`);
         setProducts([]);
         setCategories([]);
-      } finally {
-        setLoading(false);
       }
-    };
-
-    fetchData();
+    } finally {
+      setLoading(false);
+      fetchingRef.current = false;
+    }
   }, []);
 
-  return { products, categories, loading, error };
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  return { products, categories, loading, error, refetch: () => fetchData(true) };
 };

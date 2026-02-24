@@ -1,34 +1,48 @@
-import React from 'react';
+import React, { Suspense, lazy } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 
-// 1. Import your 1300-line file (It is in the same folder, so path is ./)
-import Home from './pages/Home';
+import Layout from './components/Layout';
+import './App.css';
 
-// 2. Import the new pages
-import Login from './pages/Login';
-import AdvancedCheckout from './components/AdvancedCheckout';
+// --- LAZY LOAD all pages for code splitting ---
+const Home = lazy(() => import('./pages/Home'));
+const Login = lazy(() => import('./pages/Login'));
+const CartPage = lazy(() => import('./pages/CartPage'));
+const OrdersPage = lazy(() => import('./pages/OrdersPage'));
+const ProfilePage = lazy(() => import('./pages/ProfilePage'));
+const ComparePage = lazy(() => import('./pages/ComparePage'));
+const ForgotPassword = lazy(() => import('./pages/ForgotPassword'));
+const ResetPassword = lazy(() => import('./pages/ResetPassword'));
 
-// 3. Import Layouts (Only if they aren't already inside Home.jsx)
-// Since your Home.jsx is massive, it likely already contains Navbar/Footer.
-// So we don't import them here to avoid double headers.
+// Minimal loading fallback
+const PageLoader = () => (
+  <div className="flex items-center justify-center min-h-screen">
+    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600"></div>
+  </div>
+);
 
 function App() {
   return (
-    <div className="app-container">
+    <Suspense fallback={<PageLoader />}>
       <Routes>
-        {/* The "Home" route now loads your massive file */}
-        <Route path="/" element={<Home />} />
+        {/* Pages with Layout (Navbar + Footer + BottomNav) */}
+        <Route element={<Layout />}>
+          <Route path="/" element={<Home />} />
+          <Route path="/cart" element={<CartPage />} />
+          <Route path="/orders" element={<OrdersPage />} />
+          <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/compare" element={<ComparePage />} />
+        </Route>
 
-        {/* The "Login" route loads the new login page */}
+        {/* Standalone pages (no Layout) */}
         <Route path="/login" element={<Login />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
 
-        {/* The "Checkout" route */}
-        <Route path="/checkout" element={<AdvancedCheckout />} />
-
-        {/* Catch-all: Send unknown links to Home */}
+        {/* Catch-all redirect */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
-    </div>
+    </Suspense>
   );
 }
 

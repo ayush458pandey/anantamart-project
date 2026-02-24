@@ -1,7 +1,11 @@
 import { useState } from 'react';
 import { X, Plus, Minus, ShoppingCart, Package, Truck, Shield } from 'lucide-react';
+import { useCart } from '../context/CartContext';
+import { useToast } from '../context/ToastContext';
 
-export default function ProductDetail({ product, onClose, onAddToCart }) {
+export default function ProductDetail({ product, onClose, onAddToCart, onBrandClick }) {
+  const { fetchCart } = useCart();
+  const toast = useToast();
   const [quantity, setQuantity] = useState(product.moq || 1);
   const [selectedImage, setSelectedImage] = useState(0);
 
@@ -24,7 +28,7 @@ export default function ProductDetail({ product, onClose, onAddToCart }) {
     ? Object.values(colorQuantities).reduce((sum, q) => sum + q, 0)
     : quantity;
 
-  const currentTotalPrice = parseFloat(product.base_price) * (totalQuantity || 0); // Handle 0 case
+  const currentTotalPrice = parseFloat(product.base_price) * (totalQuantity || 0);
 
   // Helper to update color quantity
   const updateColorQty = (color, delta) => {
@@ -39,18 +43,17 @@ export default function ProductDetail({ product, onClose, onAddToCart }) {
     });
   };
 
-  // --- NEW HANDLE ADD TO CART ---
-  // --- NEW HANDLE ADD TO CART ---
+  // --- HANDLE ADD TO CART ---
   const handleAddToCart = async () => {
     // Validation
     if (totalQuantity === 0) {
-      alert("Please select at least 1 item.");
+      toast.error("Please select at least 1 item");
       return;
     }
 
     // Verify MOQ
     if (totalQuantity < product.moq) {
-      alert(`Minimum Order Quantity is ${product.moq}. Please add more items.`);
+      toast.error(`Minimum order quantity is ${product.moq}`);
       return;
     }
 
@@ -79,16 +82,18 @@ export default function ProductDetail({ product, onClose, onAddToCart }) {
 
       await Promise.all(promises);
 
-      // If we reach here, all requests succeeded (cartService checks validation)
-      alert(`✅ Added ${totalQuantity} units to cart!`);
+      // Refresh the global cart state so UI updates
+      await fetchCart();
+
+      // Show toast and close modal
+      toast.cart(`Added ${totalQuantity} item${totalQuantity > 1 ? 's' : ''} to cart`);
       if (onAddToCart) onAddToCart();
       onClose();
 
     } catch (error) {
       console.error("Add to cart error:", error);
-      // cartService logic might throw, showing the error message in alert would be nice
       const msg = error.response?.data?.error || error.message || "Could not add to cart.";
-      alert(`❌ Failed: ${msg}`);
+      toast.error(msg);
     }
   };
 
@@ -299,7 +304,17 @@ export default function ProductDetail({ product, onClose, onAddToCart }) {
               <h3 className="text-xl font-bold text-gray-900 mb-6">Product Information</h3>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
-                {product.brand && <DetailRow label="Brand" value={product.brand} />}
+                {product.brand_name && (
+                  <div className="flex items-start py-3 border-b border-gray-100">
+                    <span className="text-sm text-gray-600 w-1/2">Brand</span>
+                    <span
+                      className="text-sm font-semibold text-emerald-600 w-1/2 cursor-pointer hover:underline"
+                      onClick={() => onBrandClick && onBrandClick(product.brand_name, product.brand_ref || product.brand)}
+                    >
+                      {product.brand_name}
+                    </span>
+                  </div>
+                )}
                 {product.product_type && <DetailRow label="Product Type" value={product.product_type} />}
                 {product.unit && <DetailRow label="Unit" value={product.unit} />}
                 {product.weight && <DetailRow label="Weight/Volume" value={product.weight} />}

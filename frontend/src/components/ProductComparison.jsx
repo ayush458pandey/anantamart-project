@@ -188,10 +188,10 @@ export default function ProductComparison({ onClose }) {
                       <div key={p.id} className="text-center">
                         <span
                           className={`px-2 py-1 rounded-full text-[10px] font-bold inline-block ${p.stock_status === 'in-stock'
-                              ? 'bg-green-100 text-green-700'
-                              : p.stock_status === 'out-of-stock'
-                                ? 'bg-red-100 text-red-700'
-                                : 'bg-orange-100 text-orange-700'
+                            ? 'bg-green-100 text-green-700'
+                            : p.stock_status === 'out-of-stock'
+                              ? 'bg-red-100 text-red-700'
+                              : 'bg-orange-100 text-orange-700'
                             }`}
                         >
                           {p.stock_status === 'in-stock' ? 'In Stock' : p.stock_status === 'out-of-stock' ? 'Out' : 'Low'}
@@ -432,10 +432,10 @@ export default function ProductComparison({ onClose }) {
                   values={compareList.map((p) => (
                     <div key={p.id} className="text-center">
                       <span className={`text-xs px-3 py-1.5 rounded-full font-medium inline-block ${p.dietary_preference
-                          ? p.dietary_preference.toLowerCase().includes('veg')
-                            ? 'bg-green-100 text-green-700'
-                            : 'bg-orange-100 text-orange-700'
-                          : 'bg-gray-100 text-gray-500'
+                        ? p.dietary_preference.toLowerCase().includes('veg')
+                          ? 'bg-green-100 text-green-700'
+                          : 'bg-orange-100 text-orange-700'
+                        : 'bg-gray-100 text-gray-500'
                         }`}>
                         {p.dietary_preference || 'N/A'}
                       </span>
@@ -493,10 +493,10 @@ export default function ProductComparison({ onClose }) {
                     <div key={p.id} className="text-center">
                       <span
                         className={`px-3 py-1.5 rounded-full text-sm font-bold inline-block ${p.stock_status === 'in-stock'
-                            ? 'bg-green-100 text-green-700'
-                            : p.stock_status === 'out-of-stock'
-                              ? 'bg-red-100 text-red-700'
-                              : 'bg-orange-100 text-orange-700'
+                          ? 'bg-green-100 text-green-700'
+                          : p.stock_status === 'out-of-stock'
+                            ? 'bg-red-100 text-red-700'
+                            : 'bg-orange-100 text-orange-700'
                           }`}
                       >
                         {p.stock_status === 'in-stock' ? 'In Stock' : p.stock_status === 'out-of-stock' ? 'Out of Stock' : 'Low Stock'}
