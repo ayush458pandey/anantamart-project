@@ -304,7 +304,7 @@ export default function ProductDetail({ product, onClose, onAddToCart }) {
               <h3 className="text-xl font-bold text-gray-900 mb-6">Product Information</h3>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
-                {product.brand && <DetailRow label="Brand" value={product.brand} />}
+                {product.brand_name && <DetailRow label="Brand" value={product.brand_name} />}
                 {product.product_type && <DetailRow label="Product Type" value={product.product_type} />}
                 {product.unit && <DetailRow label="Unit" value={product.unit} />}
                 {product.weight && <DetailRow label="Weight/Volume" value={product.weight} />}
