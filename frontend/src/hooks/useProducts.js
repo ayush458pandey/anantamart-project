@@ -1,19 +1,41 @@
-import { useState, useEffect, useCallback } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import axios from '../api/axios';
 
+// Module-level cache — persists across component remounts and route changes
+let cachedProducts = null;
+let cachedCategories = null;
+let lastFetchTime = 0;
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
 export const useProducts = () => {
-  const [products, setProducts] = useState([]);
-  const [categories, setCategories] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [products, setProducts] = useState(cachedProducts || []);
+  const [categories, setCategories] = useState(cachedCategories || []);
+  const [loading, setLoading] = useState(!cachedProducts);
   const [error, setError] = useState(null);
-  const location = useLocation();
+  const fetchingRef = useRef(false);
 
-  const fetchData = useCallback(async () => {
+  const fetchData = useCallback(async (force = false) => {
+    const now = Date.now();
+    const isCacheValid = cachedProducts && cachedCategories && (now - lastFetchTime < CACHE_TTL);
+
+    // If cache is valid and not forced, skip fetch
+    if (isCacheValid && !force) {
+      setProducts(cachedProducts);
+      setCategories(cachedCategories);
+      setLoading(false);
+      return;
+    }
+
+    // Prevent duplicate concurrent fetches
+    if (fetchingRef.current) return;
+    fetchingRef.current = true;
+
     try {
-      setLoading(true);
+      // Only show loading spinner if we have no cached data at all
+      if (!cachedProducts) {
+        setLoading(true);
+      }
 
-      // Fetch categories and products IN PARALLEL
       const [categoriesRes, productsRes] = await Promise.all([
         axios.get('/categories/'),
         axios.get('/products/'),
@@ -22,8 +44,6 @@ export const useProducts = () => {
       const categoriesData = Array.isArray(categoriesRes.data)
         ? categoriesRes.data
         : (categoriesRes.data.results || []);
-
-      setCategories(categoriesData);
 
       let productsData = Array.isArray(productsRes.data)
         ? productsRes.data
@@ -39,22 +59,33 @@ export const useProducts = () => {
         return product;
       });
 
-      setProducts(productsData);
-      setError(null);
+      // Update cache
+      cachedProducts = productsData;
+      cachedCategories = categoriesData;
+      lastFetchTime = Date.now();
 
+      setProducts(productsData);
+      setCategories(categoriesData);
+      setError(null);
     } catch (err) {
-      setError(`Failed to fetch data: ${err.message}`);
-      setProducts([]);
-      setCategories([]);
+      // If we have cached data, keep showing it despite the error
+      if (cachedProducts) {
+        setProducts(cachedProducts);
+        setCategories(cachedCategories);
+      } else {
+        setError(`Failed to fetch data: ${err.message}`);
+        setProducts([]);
+        setCategories([]);
+      }
     } finally {
       setLoading(false);
+      fetchingRef.current = false;
     }
   }, []);
 
-  // Refetch when navigating back to a page that uses this hook
   useEffect(() => {
     fetchData();
-  }, [location.pathname, fetchData]);
+  }, [fetchData]);
 
-  return { products, categories, loading, error, refetch: fetchData };
+  return { products, categories, loading, error, refetch: () => fetchData(true) };
 };
