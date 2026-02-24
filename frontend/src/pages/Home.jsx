@@ -61,6 +61,53 @@ export default function Home() {
     const { products, categories, loading, error } = useProducts();
     const { cart, addToCart, removeFromCart } = useCart();
 
+    // --- Browser back button / swipe support ---
+    // Push a history entry when entering a deeper view
+    useEffect(() => {
+        const handlePopState = (e) => {
+            // When back button is pressed, figure out what to close
+            if (selectedProduct) {
+                setSelectedProduct(null);
+            } else if (selectedBrand) {
+                setSelectedBrand(null);
+            } else if (showAllBrands) {
+                setShowAllBrands(false);
+            } else if (selectedSubcategory) {
+                setSelectedSubcategory(null);
+                setShowSubcategoryView(true);
+            } else if (selectedCategory !== 'all') {
+                setSelectedCategory('all');
+            }
+        };
+
+        window.addEventListener('popstate', handlePopState);
+        return () => window.removeEventListener('popstate', handlePopState);
+    }, [selectedProduct, selectedBrand, showAllBrands, selectedSubcategory, selectedCategory]);
+
+    // Push history when navigating deeper
+    const pushHistory = () => {
+        window.history.pushState({ appNav: true }, '');
+    };
+
+    // Wrap state setters that represent "deeper" navigation
+    const selectBrand = (brand) => {
+        pushHistory();
+        setSelectedBrand(brand);
+    };
+    const selectProduct = (product) => {
+        pushHistory();
+        setSelectedProduct(product);
+    };
+    const selectSubcategory = (subcat) => {
+        pushHistory();
+        setSelectedSubcategory(subcat);
+        setShowSubcategoryView(false);
+    };
+    const openAllBrands = () => {
+        pushHistory();
+        setShowAllBrands(true);
+    };
+
     // Fetch subcategories when category changes
     useEffect(() => {
         if (intentionalNavRef.current.navigating) {
@@ -219,7 +266,7 @@ export default function Home() {
             <BrandPage
                 brand={selectedBrand}
                 onBack={() => setSelectedBrand(null)}
-                onProductClick={(product) => setSelectedProduct(product)}
+                onProductClick={(product) => selectProduct(product)}
                 onAddToCart={addToCart}
             />
         );
@@ -230,7 +277,7 @@ export default function Home() {
         return (
             <AllBrands
                 brands={brands}
-                onBrandClick={(brand) => { setSelectedBrand(brand); setShowAllBrands(false); }}
+                onBrandClick={(brand) => { selectBrand(brand); setShowAllBrands(false); }}
                 onBack={() => setShowAllBrands(false)}
             />
         );
@@ -322,7 +369,7 @@ export default function Home() {
                             Browse by Brand
                         </h3>
                         <button
-                            onClick={() => setShowAllBrands(true)}
+                            onClick={() => openAllBrands()}
                             className="text-xs sm:text-sm font-medium text-emerald-600 hover:text-emerald-700 transition-colors flex items-center gap-1"
                         >
                             View All <span className="text-lg">›</span>
@@ -330,7 +377,7 @@ export default function Home() {
                     </div>
                     <BrandGrid
                         brands={visibleBrands}
-                        onBrandClick={(brand) => setSelectedBrand(brand)}
+                        onBrandClick={(brand) => selectBrand(brand)}
                         isLoading={loadingBrands}
                     />
                 </div>
@@ -379,8 +426,7 @@ export default function Home() {
                     <SubcategoryGrid
                         subcategories={subcategories}
                         onSubcategoryClick={(subcat) => {
-                            setSelectedSubcategory(subcat.id);
-                            setShowSubcategoryView(false);
+                            selectSubcategory(subcat.id);
                         }}
                         isLoading={loadingSubcategories}
                     />
@@ -485,7 +531,7 @@ export default function Home() {
                                         cart={cart}
                                         removeFromCart={removeFromCart}
                                         onAddToCart={addToCart}
-                                        onViewDetails={() => setSelectedProduct(product)}
+                                        onViewDetails={() => selectProduct(product)}
                                         onNavigateToCategory={navigateToCategory}
                                     />
                                 ))}
@@ -511,7 +557,7 @@ export default function Home() {
                         setSelectedProduct(null);
                         const brand = brands.find(b => String(b.id) === String(brandId) || b.name === brandName);
                         if (brand) {
-                            setSelectedBrand(brand);
+                            selectBrand(brand);
                             setShowSubcategoryView(false);
                             window.scrollTo({ top: 0, behavior: 'smooth' });
                         }
