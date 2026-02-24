@@ -1,9 +1,7 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
-from .models import Address
+from .models import Address, UserProfile
 
-# Remove this line if it exists:
-# from .serializers import AddressSerializer, UserSerializer, RegisterSerializer
 
 class AddressSerializer(serializers.ModelSerializer):
     class Meta:
@@ -13,10 +11,18 @@ class AddressSerializer(serializers.ModelSerializer):
         read_only_fields = ['id']
 
 
+class UserProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserProfile
+        fields = ['gst_number', 'phone_number', 'business_name']
+
+
 class UserSerializer(serializers.ModelSerializer):
+    profile = UserProfileSerializer(read_only=True)
+
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'first_name', 'last_name']
+        fields = ['id', 'username', 'email', 'first_name', 'last_name', 'profile']
         read_only_fields = ['id']
 
 
