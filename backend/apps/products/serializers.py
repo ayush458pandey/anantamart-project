@@ -23,7 +23,8 @@ class SubcategorySerializer(serializers.ModelSerializer):
         return None
     
     def get_product_count(self, obj):
-        return obj.products.filter(is_active=True).count()
+        # Use pre-annotated count from viewset queryset (avoids N+1)
+        return getattr(obj, '_product_count', obj.products.filter(is_active=True).count())
 
 class BrandSerializer(serializers.ModelSerializer):
     logo_url = serializers.SerializerMethodField()
@@ -41,7 +42,8 @@ class BrandSerializer(serializers.ModelSerializer):
         return None
     
     def get_product_count(self, obj):
-        return obj.products.filter(is_active=True).count()
+        # Use pre-annotated count from viewset queryset (avoids N+1)
+        return getattr(obj, '_product_count', obj.products.filter(is_active=True).count())
 
 class PriceTierSerializer(serializers.ModelSerializer):
     class Meta:

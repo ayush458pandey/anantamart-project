@@ -3,11 +3,16 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
 from django.db.models import Count, Q
+from django.utils.decorators import method_decorator
+from django.views.decorators.cache import cache_page
 from .models import Product, Category, Subcategory, Brand
 from .serializers import ProductSerializer, CategorySerializer, SubcategorySerializer, BrandSerializer
 
+
 class ProductViewSet(viewsets.ModelViewSet):
-    queryset = Product.objects.filter(is_active=True).select_related('category', 'subcategory').prefetch_related('tiers', 'images')
+    queryset = Product.objects.filter(is_active=True).select_related(
+        'category', 'subcategory', 'brand_ref'
+    ).prefetch_related('tiers', 'images')
     serializer_class = ProductSerializer
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     
@@ -46,6 +51,11 @@ class ProductViewSet(viewsets.ModelViewSet):
         context = super().get_serializer_context()
         context['request'] = self.request
         return context
+    
+    # Cache product list for 2 minutes (reduces DB load on repeated requests)
+    @method_decorator(cache_page(120))
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
     
     @action(detail=False, methods=['get'])
     def filter_options(self, request):
@@ -108,11 +118,18 @@ class CategoryViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
     
+    # Cache categories for 5 minutes (rarely change)
+    @method_decorator(cache_page(300))
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
+    
     @action(detail=True, methods=['get'])
     def subcategories(self, request, pk=None):
         """Get all subcategories for a specific category with images"""
         category = self.get_object()
-        subcategories = category.subcategories.filter(is_active=True)
+        subcategories = category.subcategories.filter(is_active=True).annotate(
+            _product_count=Count('products', filter=Q(products__is_active=True))
+        )
         serializer = SubcategorySerializer(subcategories, many=True, context={'request': request})
         return Response(serializer.data)
 
@@ -123,6 +140,11 @@ class SubcategoryViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = SubcategorySerializer
     filter_backends = [DjangoFilterBackend]
     filterset_fields = ['category']
+    
+    def get_queryset(self):
+        return super().get_queryset().annotate(
+            _product_count=Count('products', filter=Q(products__is_active=True))
+        )
     
     def get_serializer_context(self):
         """Add request context to serializer for image URLs"""
@@ -141,6 +163,16 @@ class BrandViewSet(viewsets.ReadOnlyModelViewSet):
     ordering = ['name']
     lookup_field = 'slug'
     
+    def get_queryset(self):
+        return super().get_queryset().annotate(
+            _product_count=Count('products', filter=Q(products__is_active=True))
+        )
+    
+    # Cache brands for 5 minutes
+    @method_decorator(cache_page(300))
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
+    
     def get_serializer_context(self):
         """Add request context to serializer for logo URLs"""
         context = super().get_serializer_context()
@@ -154,7 +186,7 @@ class BrandViewSet(viewsets.ReadOnlyModelViewSet):
         products = Product.objects.filter(
             brand_ref=brand,
             is_active=True
-        ).select_related('category', 'subcategory').prefetch_related('tiers', 'images')
+        ).select_related('category', 'subcategory', 'brand_ref').prefetch_related('tiers', 'images')
         
         # Apply additional filters if provided
         category_id = request.query_params.get('category')
