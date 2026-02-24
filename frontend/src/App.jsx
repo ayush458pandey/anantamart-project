@@ -1,4 +1,4 @@
-﻿import React, { Suspense, lazy } from 'react';
+import React, { Suspense, lazy } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 
 import Layout from './components/Layout';
@@ -17,7 +17,7 @@ const ResetPassword = lazy(() => import('./pages/ResetPassword'));
 // Minimal loading fallback
 const PageLoader = () => (
   <div className="flex items-center justify-center min-h-screen">
-    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-500"></div>
+    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600"></div>
   </div>
 );
 

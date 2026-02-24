@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Package, Clock, CheckCircle, Truck, MapPin, XCircle, Eye, RefreshCw } from 'lucide-react';
 import { orderService } from '../api/services/orderService';
 import OrderTracking from './OrderTracking';
@@ -43,7 +43,7 @@ export default function OrdersList() {
     return (
       <div className="flex items-center justify-center py-20">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-amber-500 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-emerald-600 mx-auto mb-4"></div>
           <p className="text-gray-600">Loading orders...</p>
         </div>
       </div>
@@ -66,7 +66,7 @@ export default function OrdersList() {
         <h2 className="text-2xl font-bold text-gray-800">My Orders</h2>
         <button
           onClick={fetchOrders}
-          className="flex items-center gap-2 px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600"
+          className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700"
         >
           <RefreshCw className="w-4 h-4" />
           Refresh
@@ -127,12 +127,12 @@ function FilterTab({ label, count, active, onClick, color = 'gray' }) {
     <button
       onClick={onClick}
       className={`flex items-center gap-2 px-4 py-2 rounded-lg whitespace-nowrap transition-all font-medium ${active
-          ? 'bg-amber-500 text-white'
+          ? 'bg-emerald-600 text-white'
           : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
         }`}
     >
       <span>{label}</span>
-      <span className={`text-xs px-2 py-0.5 rounded-full ${active ? 'bg-white text-amber-500' : 'bg-gray-200'
+      <span className={`text-xs px-2 py-0.5 rounded-full ${active ? 'bg-white text-emerald-600' : 'bg-gray-200'
         }`}>
         {count}
       </span>
@@ -178,7 +178,7 @@ function OrderCard({ order, onTrack }) {
               <span>•</span>
               <span>{order.items?.length || 0} items</span>
               <span>•</span>
-              <span className="font-semibold text-amber-500">₹{parseFloat(order.total).toFixed(2)}</span>
+              <span className="font-semibold text-emerald-600">₹{parseFloat(order.total).toFixed(2)}</span>
             </div>
           </div>
         </div>
@@ -231,7 +231,7 @@ function OrderCard({ order, onTrack }) {
         <div className="flex gap-3">
           <button
             onClick={onTrack}
-            className="flex-1 bg-amber-500 text-white font-bold py-3 rounded-lg hover:bg-amber-600 transition-colors flex items-center justify-center gap-2"
+            className="flex-1 bg-emerald-600 text-white font-bold py-3 rounded-lg hover:bg-emerald-700 transition-colors flex items-center justify-center gap-2"
           >
             <Eye className="w-5 h-5" />
             Track Order

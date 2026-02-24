@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { X, Package, CheckCircle, Truck, MapPin, Clock, FileText, Download } from 'lucide-react';
 
 const orderStatuses = [
@@ -40,10 +40,10 @@ export default function OrderTracking({ order, onClose }) {
 
           <div className="p-6">
             {/* Current Status Banner */}
-            <div className="bg-amber-50 border-2 border-amber-200 rounded-xl p-6 mb-8">
+            <div className="bg-emerald-50 border-2 border-emerald-200 rounded-xl p-6 mb-8">
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="text-2xl font-bold text-amber-600 mb-2">
+                  <h3 className="text-2xl font-bold text-emerald-700 mb-2">
                     {orderStatuses[currentStatusIndex]?.label}
                   </h3>
                   <p className="text-gray-700">
@@ -54,7 +54,7 @@ export default function OrderTracking({ order, onClose }) {
                       : 'Your order is being processed'}
                   </p>
                 </div>
-                <div className="w-16 h-16 bg-amber-500 rounded-full flex items-center justify-center">
+                <div className="w-16 h-16 bg-emerald-600 rounded-full flex items-center justify-center">
                   <Truck className="w-8 h-8 text-white" />
                 </div>
               </div>
@@ -76,14 +76,14 @@ export default function OrderTracking({ order, onClose }) {
                       <div className="flex flex-col items-center">
                         <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
                           isCompleted 
-                            ? 'bg-amber-500 text-white' 
+                            ? 'bg-emerald-600 text-white' 
                             : 'bg-gray-200 text-gray-400'
                         }`}>
                           <Icon className="w-6 h-6" />
                         </div>
                         {index < orderStatuses.length - 1 && (
                           <div className={`w-1 h-16 ${
-                            isCompleted ? 'bg-amber-500' : 'bg-gray-200'
+                            isCompleted ? 'bg-emerald-600' : 'bg-gray-200'
                           }`}></div>
                         )}
                       </div>
@@ -108,7 +108,7 @@ export default function OrderTracking({ order, onClose }) {
                           )}
                         </div>
                         {isCurrent && (
-                          <p className="text-sm text-amber-500 font-medium">
+                          <p className="text-sm text-emerald-600 font-medium">
                             Current Status
                           </p>
                         )}
@@ -168,7 +168,7 @@ export default function OrderTracking({ order, onClose }) {
             </div>
 
             {/* Price Summary */}
-            <div className="bg-amber-50 rounded-lg p-6 mb-6">
+            <div className="bg-emerald-50 rounded-lg p-6 mb-6">
               <h3 className="font-bold text-lg mb-4">Payment Summary</h3>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
@@ -193,7 +193,7 @@ export default function OrderTracking({ order, onClose }) {
                     {parseFloat(order.delivery_charges) === 0 ? 'FREE' : `₹${parseFloat(order.delivery_charges).toFixed(2)}`}
                   </span>
                 </div>
-                <div className="flex justify-between text-xl font-bold text-amber-500 border-t-2 border-amber-500 pt-3 mt-3">
+                <div className="flex justify-between text-xl font-bold text-emerald-600 border-t-2 border-emerald-600 pt-3 mt-3">
                   <span>Total Paid:</span>
                   <span>₹{parseFloat(order.total).toFixed(2)}</span>
                 </div>

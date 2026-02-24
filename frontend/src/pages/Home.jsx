@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import {
     Search, Package,
@@ -274,7 +274,7 @@ export default function Home() {
                 {/* Loading message */}
                 <div className="text-center mt-6">
                     <div className="inline-flex items-center gap-2 text-gray-500 text-sm">
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-amber-500"></div>
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-emerald-600"></div>
                         Loading Anantamart...
                     </div>
                 </div>
@@ -362,11 +362,11 @@ export default function Home() {
                                 setShowSubcategoryView(true);
                             }}
                             className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 rounded-lg font-medium text-xs sm:text-sm whitespace-nowrap transition-all touch-manipulation ${selectedCategory === 'all'
-                                ? 'bg-amber-500 text-white shadow-md'
+                                ? 'bg-emerald-600 text-white shadow-md'
                                 : 'bg-gray-200 text-gray-700 active:bg-gray-300'
                                 }`}
                         >
-                            <Package className={`w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0 ${selectedCategory === 'all' ? 'text-white' : 'text-amber-500'}`} />
+                            <Package className={`w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0 ${selectedCategory === 'all' ? 'text-white' : 'text-emerald-600'}`} />
                             <span>All Products</span>
                         </button>
 
@@ -383,11 +383,11 @@ export default function Home() {
                                         setShowSubcategoryView(true);
                                     }}
                                     className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 rounded-lg font-medium text-xs sm:text-sm whitespace-nowrap transition-all touch-manipulation ${isActive
-                                        ? 'bg-amber-500 text-white shadow-md'
+                                        ? 'bg-emerald-600 text-white shadow-md'
                                         : 'bg-gray-200 text-gray-700 active:bg-gray-300'
                                         }`}
                                 >
-                                    <CategoryIcon className={`w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0 ${isActive ? 'text-white' : 'text-amber-500'}`} />
+                                    <CategoryIcon className={`w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0 ${isActive ? 'text-white' : 'text-emerald-600'}`} />
                                     <span>{category.name}</span>
                                 </button>
                             );
@@ -406,7 +406,7 @@ export default function Home() {
                         </h3>
                         <button
                             onClick={() => openAllBrands()}
-                            className="text-xs sm:text-sm font-medium text-amber-500 hover:text-amber-600 transition-colors flex items-center gap-1"
+                            className="text-xs sm:text-sm font-medium text-emerald-600 hover:text-emerald-700 transition-colors flex items-center gap-1"
                         >
                             View All <span className="text-lg">›</span>
                         </button>
@@ -433,7 +433,7 @@ export default function Home() {
                         <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">
                             {currentCategoryName}
                         </span>
-                        <h2 className="text-xl sm:text-2xl font-bold text-amber-700 flex items-center gap-2 mt-0.5">
+                        <h2 className="text-xl sm:text-2xl font-bold text-emerald-800 flex items-center gap-2 mt-0.5">
                             {activeSubcategory.name}
                             <span className="text-xs font-normal text-gray-500 bg-gray-100 px-2 py-1 rounded-full border border-gray-200">
                                 {filteredProducts.length} items
@@ -454,7 +454,7 @@ export default function Home() {
                         <h3 className="text-sm sm:text-base font-bold text-gray-700">Browse by Subcategory</h3>
                         <button
                             onClick={() => setShowSubcategoryView(false)}
-                            className="text-xs text-amber-500 hover:text-amber-600 font-medium"
+                            className="text-xs text-emerald-600 hover:text-emerald-700 font-medium"
                         >
                             View All Products
                         </button>
@@ -473,7 +473,7 @@ export default function Home() {
             {selectedSubcategory && (
                 <button
                     onClick={handleBackToSubcategories}
-                    className="flex items-center text-sm font-medium text-amber-500 hover:text-amber-600 mb-3 px-1 transition-colors group"
+                    className="flex items-center text-sm font-medium text-emerald-600 hover:text-emerald-700 mb-3 px-1 transition-colors group"
                 >
                     <ChevronLeft className="w-5 h-5 mr-1 group-hover:-translate-x-1 transition-transform" />
                     Back to {currentCategoryName}
@@ -508,7 +508,7 @@ export default function Home() {
                                         <div key={category.id} className="border-b border-gray-100 pb-6 last:border-0">
                                             <div className="flex items-center justify-between mb-4 px-1">
                                                 <h3 className="text-lg sm:text-xl font-bold text-gray-800 flex items-center gap-2">
-                                                    {CategoryIcon && <CategoryIcon className="w-5 h-5 text-amber-500" />}
+                                                    {CategoryIcon && <CategoryIcon className="w-5 h-5 text-emerald-600" />}
                                                     {category.name}
                                                 </h3>
                                                 <button
@@ -516,7 +516,7 @@ export default function Home() {
                                                         setSelectedCategory(category.id);
                                                         window.scrollTo({ top: 0, behavior: 'smooth' });
                                                     }}
-                                                    className="text-xs sm:text-sm font-medium text-amber-500 hover:text-amber-600 bg-amber-50 px-3 py-1 rounded-full transition-colors"
+                                                    className="text-xs sm:text-sm font-medium text-emerald-600 hover:text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full transition-colors"
                                                 >
                                                     View All
                                                 </button>
@@ -541,7 +541,7 @@ export default function Home() {
                                                                 setSelectedCategory(category.id);
                                                                 window.scrollTo({ top: 0, behavior: 'smooth' });
                                                             }}
-                                                            className="flex flex-col items-center gap-2 text-gray-500 hover:text-amber-500"
+                                                            className="flex flex-col items-center gap-2 text-gray-500 hover:text-emerald-600"
                                                         >
                                                             <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gray-100 flex items-center justify-center">
                                                                 <span className="text-xl font-bold">→</span>

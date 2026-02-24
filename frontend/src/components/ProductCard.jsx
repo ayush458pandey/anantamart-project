@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import { Package, Plus, Minus, GitCompare } from 'lucide-react';
 import { useComparison } from '../context/ComparisonContext';
 
@@ -84,11 +84,11 @@ export default function ProductCard({ product, cart, onAddToCart, removeFromCart
                         handleCompareToggle();
                     }}
                     className={`absolute bottom-1.5 left-1.5 sm:bottom-2 sm:left-2 p-1.5 sm:p-2 rounded-full shadow-md hover:bg-gray-50 active:scale-95 transition-all z-10 touch-manipulation min-w-[36px] min-h-[36px] flex items-center justify-center ${isInCompareList
-                        ? 'bg-amber-100 border-2 border-amber-500'
+                        ? 'bg-emerald-100 border-2 border-emerald-600'
                         : 'bg-white'
                         }`}
                 >
-                    <GitCompare className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${isInCompareList ? 'text-amber-500' : 'text-gray-600'}`} />
+                    <GitCompare className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${isInCompareList ? 'text-emerald-600' : 'text-gray-600'}`} />
                 </button>
 
                 <div className="absolute bottom-1.5 right-1.5 sm:bottom-2 sm:right-2 z-10">
@@ -99,13 +99,13 @@ export default function ProductCard({ product, cart, onAddToCart, removeFromCart
                                 e.stopPropagation();
                                 handleAdd();
                             }}
-                            className="bg-amber-500 hover:bg-amber-600 active:bg-amber-700 text-white font-bold px-3 sm:px-5 py-1.5 sm:py-2 rounded-lg shadow-lg active:scale-95 transition-all text-xs sm:text-sm touch-manipulation"
+                            className="bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-bold px-3 sm:px-5 py-1.5 sm:py-2 rounded-lg shadow-lg active:scale-95 transition-all text-xs sm:text-sm touch-manipulation"
                         >
                             + ADD
                         </button>
                     ) : (
                         /* STATE 2: IN CART - Show Counter */
-                        <div className="flex items-center bg-white rounded-lg shadow-lg border-2 border-amber-500">
+                        <div className="flex items-center bg-white rounded-lg shadow-lg border-2 border-emerald-600">
                             <button
                                 onClick={(e) => {
                                     e.stopPropagation();
@@ -113,9 +113,9 @@ export default function ProductCard({ product, cart, onAddToCart, removeFromCart
                                 }}
                                 className="p-1.5 sm:p-2 hover:bg-gray-50 active:bg-gray-100 transition-colors touch-manipulation min-w-[36px] min-h-[36px] flex items-center justify-center"
                             >
-                                <Minus className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-500" />
+                                <Minus className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-600" />
                             </button>
-                            <span className="px-2 sm:px-3 font-bold text-amber-500 min-w-[32px] sm:min-w-[36px] text-center text-xs sm:text-sm">
+                            <span className="px-2 sm:px-3 font-bold text-emerald-600 min-w-[32px] sm:min-w-[36px] text-center text-xs sm:text-sm">
                                 {quantity}
                             </span>
                             <button
@@ -125,7 +125,7 @@ export default function ProductCard({ product, cart, onAddToCart, removeFromCart
                                 }}
                                 className="p-1.5 sm:p-2 hover:bg-gray-50 active:bg-gray-100 transition-colors touch-manipulation min-w-[36px] min-h-[36px] flex items-center justify-center"
                             >
-                                <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-500" />
+                                <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-600" />
                             </button>
                         </div>
                     )}
@@ -134,7 +134,7 @@ export default function ProductCard({ product, cart, onAddToCart, removeFromCart
 
             <div className="p-2 sm:p-3">
                 <div className="flex items-center gap-1.5 sm:gap-2 mb-1">
-                    <div className="bg-amber-500 text-white px-2 sm:px-2.5 py-0.5 sm:py-1 rounded">
+                    <div className="bg-emerald-600 text-white px-2 sm:px-2.5 py-0.5 sm:py-1 rounded">
                         <span className="text-xs sm:text-sm font-bold">₹{Math.round(product.base_price)}</span>
                     </div>
                     {product.mrp && (
@@ -152,7 +152,7 @@ export default function ProductCard({ product, cart, onAddToCart, removeFromCart
 
                 <h3
                     onClick={onViewDetails}
-                    className="text-xs sm:text-sm font-semibold text-gray-900 line-clamp-2 min-h-[32px] sm:min-h-[36px] mb-1 cursor-pointer hover:text-amber-500 active:text-amber-600 transition-colors"
+                    className="text-xs sm:text-sm font-semibold text-gray-900 line-clamp-2 min-h-[32px] sm:min-h-[36px] mb-1 cursor-pointer hover:text-emerald-600 active:text-emerald-700 transition-colors"
                 >
                     {product.name}
                 </h3>
@@ -202,7 +202,7 @@ export default function ProductCard({ product, cart, onAddToCart, removeFromCart
                                 onNavigateToCategory(product.category, product.subcategory);
                             }
                         }}
-                        className="text-[10px] sm:text-[11px] text-amber-500 mb-0.5 sm:mb-1 truncate cursor-pointer hover:underline hover:text-amber-600"
+                        className="text-[10px] sm:text-[11px] text-emerald-600 mb-0.5 sm:mb-1 truncate cursor-pointer hover:underline hover:text-emerald-700"
                     >
                         📍 {product.category_name}{product.subcategory_name ? ` › ${product.subcategory_name}` : ''}
                     </p>
@@ -213,7 +213,7 @@ export default function ProductCard({ product, cart, onAddToCart, removeFromCart
                 </p>
 
                 <p className="text-[10px] sm:text-[11px] text-gray-600">
-                    <span className="font-semibold text-amber-500">MOQ: {product.moq}</span>
+                    <span className="font-semibold text-emerald-600">MOQ: {product.moq}</span>
                     {' • '}
                     <span>Case: {product.case_size}</span>
                 </p>

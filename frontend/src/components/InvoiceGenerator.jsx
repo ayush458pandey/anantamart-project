@@ -1,4 +1,4 @@
-﻿import { useState } from 'react';
+import { useState } from 'react';
 import { X, Download, Mail, Printer, FileText, Building2 } from 'lucide-react';
 
 export default function InvoiceGenerator({ orderData, onClose }) {
@@ -68,7 +68,7 @@ export default function InvoiceGenerator({ orderData, onClose }) {
             <div className="flex items-start justify-between mb-8 pb-6 border-b-2 border-gray-800">
               <div>
                 <div className="flex items-center gap-3 mb-2">
-                  <div className="w-12 h-12 bg-gradient-to-br from-amber-500 to-amber-600 rounded-lg flex items-center justify-center">
+                  <div className="w-12 h-12 bg-gradient-to-br from-emerald-600 to-emerald-700 rounded-lg flex items-center justify-center">
                     <Building2 className="w-8 h-8 text-white" />
                   </div>
                   <div>
@@ -86,7 +86,7 @@ export default function InvoiceGenerator({ orderData, onClose }) {
               </div>
 
               <div className="text-right">
-                <div className="bg-amber-500 text-white px-4 py-2 rounded-lg mb-4">
+                <div className="bg-emerald-600 text-white px-4 py-2 rounded-lg mb-4">
                   <div className="text-sm font-medium">TAX INVOICE</div>
                   <div className="text-xl font-bold">{invoiceNumber}</div>
                 </div>
@@ -194,7 +194,7 @@ export default function InvoiceGenerator({ orderData, onClose }) {
                     </div>
                   )}
 
-                  <div className="flex justify-between text-lg font-bold text-amber-500 border-t-2 border-gray-300 pt-3 mt-3">
+                  <div className="flex justify-between text-lg font-bold text-emerald-600 border-t-2 border-gray-300 pt-3 mt-3">
                     <span>Total Amount:</span>
                     <span>₹{orderData.pricing.total.toFixed(2)}</span>
                   </div>

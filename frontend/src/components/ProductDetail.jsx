@@ -1,4 +1,4 @@
-﻿import { useState } from 'react';
+import { useState } from 'react';
 import { X, Plus, Minus, ShoppingCart, Package, Truck, Shield } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useToast } from '../context/ToastContext';
@@ -133,7 +133,7 @@ export default function ProductDetail({ product, onClose, onAddToCart, onBrandCl
                       <button
                         key={idx}
                         onClick={() => setSelectedImage(idx)}
-                        className={`flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-all ${selectedImage === idx ? 'border-amber-500' : 'border-gray-200'
+                        className={`flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-all ${selectedImage === idx ? 'border-emerald-600' : 'border-gray-200'
                           }`}
                       >
                         <img src={img} alt="" className="w-full h-full object-cover" />
@@ -170,7 +170,7 @@ export default function ProductDetail({ product, onClose, onAddToCart, onBrandCl
                       <input
                         type="text"
                         placeholder="Search color or code..."
-                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
+                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                       />
@@ -214,7 +214,7 @@ export default function ProductDetail({ product, onClose, onAddToCart, onBrandCl
                                 </span>
                                 <button
                                   onClick={() => updateColorQty(color, 1)}
-                                  className="p-1 hover:bg-gray-100 text-amber-500 w-8 h-8 flex items-center justify-center"
+                                  className="p-1 hover:bg-gray-100 text-emerald-600 w-8 h-8 flex items-center justify-center"
                                 >
                                   <Plus className="w-3 h-3" />
                                 </button>
@@ -263,7 +263,7 @@ export default function ProductDetail({ product, onClose, onAddToCart, onBrandCl
                 {/* Total Price Display */}
                 <div className="mb-6 flex justify-between items-center bg-gray-100 p-4 rounded-lg">
                   <span className="text-gray-600 font-medium">Total Quantity: {totalQuantity} units</span>
-                  <span className="text-xl font-bold text-amber-600">₹{currentTotalPrice.toFixed(2)}</span>
+                  <span className="text-xl font-bold text-emerald-700">₹{currentTotalPrice.toFixed(2)}</span>
                 </div>
 
                 {/* Add to Cart Button */}
@@ -271,7 +271,7 @@ export default function ProductDetail({ product, onClose, onAddToCart, onBrandCl
                 <button
                   onClick={handleAddToCart}
                   className={`w-full font-bold py-4 rounded-lg transition-colors flex items-center justify-center gap-2 mb-6 ${totalQuantity > 0
-                    ? 'bg-amber-500 hover:bg-amber-600 text-white'
+                    ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
                     : 'bg-gray-200 text-gray-500 cursor-not-allowed'}`}
                   disabled={totalQuantity === 0}
                 >
@@ -284,15 +284,15 @@ export default function ProductDetail({ product, onClose, onAddToCart, onBrandCl
                 {/* Benefits */}
                 <div className="grid grid-cols-3 gap-4 mb-6">
                   <div className="flex items-center gap-2">
-                    <Truck className="w-5 h-5 text-amber-500" />
+                    <Truck className="w-5 h-5 text-emerald-600" />
                     <span className="text-xs text-gray-600">Fast Delivery</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Shield className="w-5 h-5 text-amber-500" />
+                    <Shield className="w-5 h-5 text-emerald-600" />
                     <span className="text-xs text-gray-600">Quality Assured</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Package className="w-5 h-5 text-amber-500" />
+                    <Package className="w-5 h-5 text-emerald-600" />
                     <span className="text-xs text-gray-600">Secure Packaging</span>
                   </div>
                 </div>
@@ -308,7 +308,7 @@ export default function ProductDetail({ product, onClose, onAddToCart, onBrandCl
                   <div className="flex items-start py-3 border-b border-gray-100">
                     <span className="text-sm text-gray-600 w-1/2">Brand</span>
                     <span
-                      className="text-sm font-semibold text-amber-500 w-1/2 cursor-pointer hover:underline"
+                      className="text-sm font-semibold text-emerald-600 w-1/2 cursor-pointer hover:underline"
                       onClick={() => onBrandClick && onBrandClick(product.brand_name, product.brand_ref || product.brand)}
                     >
                       {product.brand_name}
@@ -333,7 +333,7 @@ export default function ProductDetail({ product, onClose, onAddToCart, onBrandCl
                   <ul className="space-y-2">
                     {product.key_features_list.map((feature, idx) => (
                       <li key={idx} className="flex items-start gap-2 text-sm text-gray-700">
-                        <span className="text-amber-500 mt-1">✓</span>
+                        <span className="text-emerald-600 mt-1">✓</span>
                         <span>{feature}</span>
                       </li>
                     ))}

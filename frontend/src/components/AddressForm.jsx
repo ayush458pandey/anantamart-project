@@ -1,4 +1,4 @@
-﻿import { useState } from 'react';
+import { useState } from 'react';
 import { X } from 'lucide-react'; // Removed MapPin and Loader
 
 export default function AddressForm({ onSave, onCancel }) {
@@ -40,7 +40,7 @@ export default function AddressForm({ onSave, onCancel }) {
                             <input
                                 required
                                 placeholder="e.g. Main Warehouse"
-                                className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none text-sm"
+                                className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none text-sm"
                                 value={formData.name}
                                 onChange={e => setFormData({ ...formData, name: e.target.value })}
                             />
@@ -50,7 +50,7 @@ export default function AddressForm({ onSave, onCancel }) {
                             <input
                                 required
                                 placeholder="+91..."
-                                className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none text-sm"
+                                className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none text-sm"
                                 value={formData.phone_number}
                                 onChange={e => setFormData({ ...formData, phone_number: e.target.value })}
                             />
@@ -62,7 +62,7 @@ export default function AddressForm({ onSave, onCancel }) {
                         <textarea
                             required
                             rows="2"
-                            className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none text-sm"
+                            className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none text-sm"
                             value={formData.street_address}
                             onChange={e => setFormData({ ...formData, street_address: e.target.value })}
                         />
@@ -73,7 +73,7 @@ export default function AddressForm({ onSave, onCancel }) {
                             <label className="block text-xs font-medium text-gray-500 mb-1">City</label>
                             <input
                                 required
-                                className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none text-sm"
+                                className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none text-sm"
                                 value={formData.city}
                                 onChange={e => setFormData({ ...formData, city: e.target.value })}
                             />
@@ -82,7 +82,7 @@ export default function AddressForm({ onSave, onCancel }) {
                             <label className="block text-xs font-medium text-gray-500 mb-1">Pincode</label>
                             <input
                                 required
-                                className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none text-sm"
+                                className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none text-sm"
                                 value={formData.pincode}
                                 onChange={e => setFormData({ ...formData, pincode: e.target.value })}
                             />
@@ -93,7 +93,7 @@ export default function AddressForm({ onSave, onCancel }) {
                         <label className="block text-xs font-medium text-gray-500 mb-1">State</label>
                         <input
                             required
-                            className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none text-sm"
+                            className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none text-sm"
                             value={formData.state}
                             onChange={e => setFormData({ ...formData, state: e.target.value })}
                         />
@@ -103,7 +103,7 @@ export default function AddressForm({ onSave, onCancel }) {
                         <button
                             type="submit"
                             disabled={loading}
-                            className="w-full bg-amber-500 text-white py-3 rounded-lg font-bold hover:bg-amber-600 transition-colors shadow-md disabled:opacity-50"
+                            className="w-full bg-emerald-600 text-white py-3 rounded-lg font-bold hover:bg-emerald-700 transition-colors shadow-md disabled:opacity-50"
                         >
                             {loading ? 'Saving Address...' : 'Save Address'}
                         </button>

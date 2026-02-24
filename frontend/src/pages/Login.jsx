@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { Package, Eye, EyeOff, Mail, Lock, User, ArrowLeft } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
@@ -114,11 +114,11 @@ export default function Login() {
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-amber-50 to-amber-100 flex flex-col items-center justify-center px-4 py-8">
+        <div className="min-h-screen bg-gradient-to-br from-emerald-50 to-emerald-100 flex flex-col items-center justify-center px-4 py-8">
             {/* Logo */}
             <div className="flex items-center gap-2 mb-6 cursor-pointer" onClick={() => navigate('/')}>
-                <Package className="w-8 h-8 text-amber-500" />
-                <h1 className="text-2xl font-bold text-amber-500">Anantamart</h1>
+                <Package className="w-8 h-8 text-emerald-600" />
+                <h1 className="text-2xl font-bold text-emerald-600">Anantamart</h1>
             </div>
 
             <div className="w-full max-w-md bg-white rounded-2xl shadow-xl overflow-hidden">
@@ -134,7 +134,7 @@ export default function Login() {
                     <button
                         onClick={() => { setActiveTab('signin'); setError(''); setSuccess(''); }}
                         className={`flex-1 py-3.5 text-sm font-semibold transition-colors ${activeTab === 'signin'
-                            ? 'text-amber-500 border-b-2 border-amber-500'
+                            ? 'text-emerald-600 border-b-2 border-emerald-600'
                             : 'text-gray-500 hover:text-gray-700'
                             }`}
                     >
@@ -143,7 +143,7 @@ export default function Login() {
                     <button
                         onClick={() => { setActiveTab('signup'); setError(''); setSuccess(''); }}
                         className={`flex-1 py-3.5 text-sm font-semibold transition-colors ${activeTab === 'signup'
-                            ? 'text-amber-500 border-b-2 border-amber-500'
+                            ? 'text-emerald-600 border-b-2 border-emerald-600'
                             : 'text-gray-500 hover:text-gray-700'
                             }`}
                     >
@@ -177,7 +177,7 @@ export default function Login() {
                                         onChange={(e) => setUsername(e.target.value)}
                                         placeholder="Enter your username"
                                         required
-                                        className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition-all"
+                                        className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all"
                                     />
                                 </div>
                             </div>
@@ -192,7 +192,7 @@ export default function Login() {
                                         onChange={(e) => setPassword(e.target.value)}
                                         placeholder="Enter your password"
                                         required
-                                        className="w-full pl-10 pr-10 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition-all"
+                                        className="w-full pl-10 pr-10 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all"
                                     />
                                     <button
                                         type="button"
@@ -207,7 +207,7 @@ export default function Login() {
                             <div className="flex justify-end">
                                 <Link
                                     to="/forgot-password"
-                                    className="text-sm text-amber-500 hover:text-amber-600 font-medium"
+                                    className="text-sm text-emerald-600 hover:text-emerald-700 font-medium"
                                 >
                                     Forgot password?
                                 </Link>
@@ -216,7 +216,7 @@ export default function Login() {
                             <button
                                 type="submit"
                                 disabled={loading}
-                                className="w-full bg-amber-500 text-white font-semibold py-2.5 rounded-lg hover:bg-amber-600 active:bg-amber-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                className="w-full bg-emerald-600 text-white font-semibold py-2.5 rounded-lg hover:bg-emerald-700 active:bg-emerald-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                             >
                                 {loading ? 'Signing in...' : 'Sign In'}
                             </button>
@@ -232,7 +232,7 @@ export default function Login() {
                                         value={signupData.first_name}
                                         onChange={(e) => setSignupData({ ...signupData, first_name: e.target.value })}
                                         placeholder="First name"
-                                        className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition-all"
+                                        className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all"
                                     />
                                 </div>
                                 <div>
@@ -242,7 +242,7 @@ export default function Login() {
                                         value={signupData.last_name}
                                         onChange={(e) => setSignupData({ ...signupData, last_name: e.target.value })}
                                         placeholder="Last name"
-                                        className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition-all"
+                                        className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all"
                                     />
                                 </div>
                             </div>
@@ -257,7 +257,7 @@ export default function Login() {
                                         onChange={(e) => setSignupData({ ...signupData, username: e.target.value })}
                                         placeholder="Choose a username"
                                         required
-                                        className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition-all"
+                                        className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all"
                                     />
                                 </div>
                             </div>
@@ -272,7 +272,7 @@ export default function Login() {
                                         onChange={(e) => setSignupData({ ...signupData, email: e.target.value })}
                                         placeholder="your@email.com"
                                         required
-                                        className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition-all"
+                                        className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all"
                                     />
                                 </div>
                             </div>
@@ -287,7 +287,7 @@ export default function Login() {
                                         onChange={(e) => setSignupData({ ...signupData, password: e.target.value })}
                                         placeholder="Min 8 characters"
                                         required
-                                        className="w-full pl-10 pr-10 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition-all"
+                                        className="w-full pl-10 pr-10 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all"
                                     />
                                     <button
                                         type="button"
@@ -309,7 +309,7 @@ export default function Login() {
                                         onChange={(e) => setSignupData({ ...signupData, password2: e.target.value })}
                                         placeholder="Confirm password"
                                         required
-                                        className="w-full pl-10 pr-10 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition-all"
+                                        className="w-full pl-10 pr-10 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all"
                                     />
                                     <button
                                         type="button"
@@ -324,7 +324,7 @@ export default function Login() {
                             <button
                                 type="submit"
                                 disabled={loading}
-                                className="w-full bg-amber-500 text-white font-semibold py-2.5 rounded-lg hover:bg-amber-600 active:bg-amber-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                className="w-full bg-emerald-600 text-white font-semibold py-2.5 rounded-lg hover:bg-emerald-700 active:bg-emerald-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                             >
                                 {loading ? 'Creating Account...' : 'Create Account'}
                             </button>
@@ -336,7 +336,7 @@ export default function Login() {
             {/* Back to Store */}
             <button
                 onClick={() => navigate('/')}
-                className="mt-6 flex items-center gap-2 text-sm text-amber-500 hover:text-amber-600 font-medium"
+                className="mt-6 flex items-center gap-2 text-sm text-emerald-600 hover:text-emerald-700 font-medium"
             >
                 <ArrowLeft className="w-4 h-4" />
                 Back to Store

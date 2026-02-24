@@ -1,10 +1,10 @@
-﻿import React from 'react';
+import React from 'react';
 
 export default function NavButton({ icon: Icon, label, active, onClick, badge }) {
     return (
         <button
             onClick={onClick}
-            className={`flex flex-col items-center justify-center py-1.5 sm:py-2 px-2 sm:px-3 rounded-lg transition-colors relative touch-manipulation min-w-[60px] min-h-[60px] sm:min-h-[auto] active:bg-gray-100 ${active ? 'text-amber-500' : 'text-gray-600'
+            className={`flex flex-col items-center justify-center py-1.5 sm:py-2 px-2 sm:px-3 rounded-lg transition-colors relative touch-manipulation min-w-[60px] min-h-[60px] sm:min-h-[auto] active:bg-gray-100 ${active ? 'text-emerald-600' : 'text-gray-600'
                 }`}
         >
             <div className="relative">

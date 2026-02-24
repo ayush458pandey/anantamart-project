@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     ShoppingCart, Search, Plus, Minus, Package,
     Coffee, Eye, FileText, User, X, CheckCircle, GitCompare,
@@ -159,13 +159,13 @@ function LoginView({ onLogin, onCancel, message, hideSignup }) {
                     <div className="flex mb-6 border-b border-gray-100">
                         <button
                             onClick={() => { setIsLogin(true); setError(''); }}
-                            className={`flex-1 pb-3 text-center font-bold text-lg border-b-2 transition-colors ${isLogin ? 'border-amber-500 text-amber-700' : 'border-transparent text-gray-400 hover:text-gray-600'}`}
+                            className={`flex-1 pb-3 text-center font-bold text-lg border-b-2 transition-colors ${isLogin ? 'border-emerald-600 text-emerald-800' : 'border-transparent text-gray-400 hover:text-gray-600'}`}
                         >
                             Sign In
                         </button>
                         <button
                             onClick={() => { setIsLogin(false); setError(''); }}
-                            className={`flex-1 pb-3 text-center font-bold text-lg border-b-2 transition-colors ${!isLogin ? 'border-amber-500 text-amber-700' : 'border-transparent text-gray-400 hover:text-gray-600'}`}
+                            className={`flex-1 pb-3 text-center font-bold text-lg border-b-2 transition-colors ${!isLogin ? 'border-emerald-600 text-emerald-800' : 'border-transparent text-gray-400 hover:text-gray-600'}`}
                         >
                             Sign Up
                         </button>
@@ -192,7 +192,7 @@ function LoginView({ onLogin, onCancel, message, hideSignup }) {
                                     <input
                                         type="text"
                                         required
-                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none"
+                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
                                         value={formData.first_name}
                                         onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
                                     />
@@ -202,7 +202,7 @@ function LoginView({ onLogin, onCancel, message, hideSignup }) {
                                     <input
                                         type="text"
                                         required
-                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none"
+                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
                                         value={formData.last_name}
                                         onChange={(e) => setFormData({ ...formData, last_name: e.target.value })}
                                     />
@@ -212,7 +212,7 @@ function LoginView({ onLogin, onCancel, message, hideSignup }) {
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Business Name (Optional)</label>
                                 <input
                                     type="text"
-                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none"
+                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
                                     value={formData.business_name}
                                     onChange={(e) => setFormData({ ...formData, business_name: e.target.value })}
                                     placeholder="e.g. Sharma Traders"
@@ -227,7 +227,7 @@ function LoginView({ onLogin, onCancel, message, hideSignup }) {
                         <input
                             type="email"
                             required
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none"
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
                             value={formData.email}
                             onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                             placeholder="name@company.com"
@@ -238,7 +238,7 @@ function LoginView({ onLogin, onCancel, message, hideSignup }) {
                         <input
                             type="password"
                             required
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none"
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
                             value={formData.password}
                             onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                             placeholder="••••••••"
@@ -248,7 +248,7 @@ function LoginView({ onLogin, onCancel, message, hideSignup }) {
                     <button
                         type="submit"
                         disabled={loading}
-                        className="w-full bg-amber-500 text-white py-3 rounded-lg font-bold hover:bg-amber-600 transition-colors disabled:opacity-50 shadow-md mt-2"
+                        className="w-full bg-emerald-600 text-white py-3 rounded-lg font-bold hover:bg-emerald-700 transition-colors disabled:opacity-50 shadow-md mt-2"
                     >
                         {loading ? 'Processing...' : (isLogin || hideSignup ? 'Sign In' : 'Create Account')}
                     </button>
@@ -436,7 +436,7 @@ function AppContent() {
         return (
             <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
                 <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 sm:h-16 sm:w-16 border-b-4 border-amber-500 mx-auto mb-4"></div>
+                    <div className="animate-spin rounded-full h-12 w-12 sm:h-16 sm:w-16 border-b-4 border-emerald-600 mx-auto mb-4"></div>
                     <p className="text-gray-600 text-base sm:text-lg">Loading Anantamart...</p>
                 </div>
             </div>
@@ -463,13 +463,13 @@ function AppContent() {
                 <div className="max-w-7xl mx-auto px-3 sm:px-4 py-3 sm:py-4">
                     <div className="flex items-center justify-between sm:justify-start gap-2 sm:gap-4 mb-3 sm:mb-4">
                         <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0 cursor-pointer" onClick={() => setCurrentView('catalog')}>
-                            <Package className="w-6 h-6 sm:w-8 sm:h-8 text-amber-500" />
+                            <Package className="w-6 h-6 sm:w-8 sm:h-8 text-emerald-600" />
                             <div className="hidden sm:block">
-                                <h1 className="text-xl sm:text-2xl font-bold text-amber-500">Anantamart</h1>
+                                <h1 className="text-xl sm:text-2xl font-bold text-emerald-600">Anantamart</h1>
                                 <p className="text-xs text-gray-500">B2B Wholesale Platform</p>
                             </div>
                             <div className="sm:hidden">
-                                <h1 className="text-lg font-bold text-amber-500">Anantamart</h1>
+                                <h1 className="text-lg font-bold text-emerald-600">Anantamart</h1>
                             </div>
                         </div>
 
@@ -510,7 +510,7 @@ function AppContent() {
                             className="p-2 sm:p-2.5 hover:bg-gray-100 active:bg-gray-200 rounded-lg transition-colors touch-manipulation min-w-[44px] min-h-[44px] flex items-center justify-center"
                         >
                             {user ? (
-                                <div className="w-6 h-6 bg-amber-500 rounded-full flex items-center justify-center text-white text-xs font-bold">
+                                <div className="w-6 h-6 bg-emerald-600 rounded-full flex items-center justify-center text-white text-xs font-bold">
                                     {user.first_name ? user.first_name[0] : 'U'}
                                 </div>
                             ) : (
@@ -542,11 +542,11 @@ function AppContent() {
                                 setCurrentView('catalog');
                             }}
                             className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 rounded-lg font-medium text-xs sm:text-sm whitespace-nowrap transition-all touch-manipulation ${selectedCategory === 'all'
-                                ? 'bg-amber-500 text-white shadow-md'
+                                ? 'bg-emerald-600 text-white shadow-md'
                                 : 'bg-gray-200 text-gray-700 active:bg-gray-300'
                                 }`}
                         >
-                            <Package className={`w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0 ${selectedCategory === 'all' ? 'text-white' : 'text-amber-500'}`} />
+                            <Package className={`w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0 ${selectedCategory === 'all' ? 'text-white' : 'text-emerald-600'}`} />
                             <span>All Products</span>
                         </button>
 
@@ -564,11 +564,11 @@ function AppContent() {
                                         setCurrentView('catalog');
                                     }}
                                     className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 rounded-lg font-medium text-xs sm:text-sm whitespace-nowrap transition-all touch-manipulation ${isActive
-                                        ? 'bg-amber-500 text-white shadow-md'
+                                        ? 'bg-emerald-600 text-white shadow-md'
                                         : 'bg-gray-200 text-gray-700 active:bg-gray-300'
                                         }`}
                                 >
-                                    <CategoryIcon className={`w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0 ${isActive ? 'text-white' : 'text-amber-500'}`} />
+                                    <CategoryIcon className={`w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0 ${isActive ? 'text-white' : 'text-emerald-600'}`} />
                                     <span>{category.name}</span>
                                 </button>
                             );
@@ -605,7 +605,7 @@ function AppContent() {
                                     </h3>
                                     <button
                                         onClick={() => setCurrentView('all-brands')}
-                                        className="text-xs sm:text-sm font-medium text-amber-500 hover:text-amber-600 transition-colors flex items-center gap-1"
+                                        className="text-xs sm:text-sm font-medium text-emerald-600 hover:text-emerald-700 transition-colors flex items-center gap-1"
                                     >
                                         View All <span className="text-lg">›</span>
                                     </button>
@@ -626,7 +626,7 @@ function AppContent() {
                                     <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">
                                         {currentCategoryName}
                                     </span>
-                                    <h2 className="text-xl sm:text-2xl font-bold text-amber-700 flex items-center gap-2 mt-0.5">
+                                    <h2 className="text-xl sm:text-2xl font-bold text-emerald-800 flex items-center gap-2 mt-0.5">
                                         {activeSubcategory.name}
                                         <span className="text-xs font-normal text-gray-500 bg-gray-100 px-2 py-1 rounded-full border border-gray-200">
                                             {filteredProducts.length} items
@@ -647,7 +647,7 @@ function AppContent() {
                                     <h3 className="text-sm sm:text-base font-bold text-gray-700">Browse by Subcategory</h3>
                                     <button
                                         onClick={() => setShowSubcategoryView(false)}
-                                        className="text-xs text-amber-500 hover:text-amber-600 font-medium"
+                                        className="text-xs text-emerald-600 hover:text-emerald-700 font-medium"
                                     >
                                         View All Products
                                     </button>
@@ -667,7 +667,7 @@ function AppContent() {
                         {selectedSubcategory && (
                             <button
                                 onClick={handleBackToSubcategories}
-                                className="flex items-center text-sm font-medium text-amber-500 hover:text-amber-600 mb-3 px-1 transition-colors group"
+                                className="flex items-center text-sm font-medium text-emerald-600 hover:text-emerald-700 mb-3 px-1 transition-colors group"
                             >
                                 <ChevronLeft className="w-5 h-5 mr-1 group-hover:-translate-x-1 transition-transform" />
                                 Back to {currentCategoryName}
@@ -705,7 +705,7 @@ function AppContent() {
                                                     <div key={category.id} className="border-b border-gray-100 pb-6 last:border-0">
                                                         <div className="flex items-center justify-between mb-4 px-1">
                                                             <h3 className="text-lg sm:text-xl font-bold text-gray-800 flex items-center gap-2">
-                                                                {CategoryIcon && <CategoryIcon className="w-5 h-5 text-amber-500" />}
+                                                                {CategoryIcon && <CategoryIcon className="w-5 h-5 text-emerald-600" />}
                                                                 {category.name}
                                                             </h3>
                                                             <button
@@ -713,7 +713,7 @@ function AppContent() {
                                                                     setSelectedCategory(category.id);
                                                                     window.scrollTo({ top: 0, behavior: 'smooth' });
                                                                 }}
-                                                                className="text-xs sm:text-sm font-medium text-amber-500 hover:text-amber-600 bg-amber-50 px-3 py-1 rounded-full transition-colors"
+                                                                className="text-xs sm:text-sm font-medium text-emerald-600 hover:text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full transition-colors"
                                                             >
                                                                 View All
                                                             </button>
@@ -735,7 +735,7 @@ function AppContent() {
                                                                             setSelectedCategory(category.id);
                                                                             window.scrollTo({ top: 0, behavior: 'smooth' });
                                                                         }}
-                                                                        className="flex flex-col items-center gap-2 text-gray-500 hover:text-amber-500"
+                                                                        className="flex flex-col items-center gap-2 text-gray-500 hover:text-emerald-600"
                                                                     >
                                                                         <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gray-100 flex items-center justify-center">
                                                                             <span className="text-xl font-bold">→</span>
@@ -989,11 +989,11 @@ function ProductCard({ product, onAddToCart, onViewDetails }) {
                         handleCompareToggle();
                     }}
                     className={`absolute bottom-1.5 left-1.5 sm:bottom-2 sm:left-2 p-1.5 sm:p-2 rounded-full shadow-md hover:bg-gray-50 active:scale-95 transition-all z-10 touch-manipulation min-w-[36px] min-h-[36px] flex items-center justify-center ${isInCompareList
-                        ? 'bg-amber-100 border-2 border-amber-500'
+                        ? 'bg-emerald-100 border-2 border-emerald-600'
                         : 'bg-white'
                         }`}
                 >
-                    <GitCompare className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${isInCompareList ? 'text-amber-500' : 'text-gray-600'}`} />
+                    <GitCompare className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${isInCompareList ? 'text-emerald-600' : 'text-gray-600'}`} />
                 </button>
 
                 <div className="absolute bottom-1.5 right-1.5 sm:bottom-2 sm:right-2 z-10">
@@ -1003,12 +1003,12 @@ function ProductCard({ product, onAddToCart, onViewDetails }) {
                                 e.stopPropagation();
                                 handleAdd();
                             }}
-                            className="bg-amber-500 hover:bg-amber-600 active:bg-amber-700 text-white font-bold px-3 sm:px-5 py-1.5 sm:py-2 rounded-lg shadow-lg active:scale-95 transition-all text-xs sm:text-sm touch-manipulation"
+                            className="bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-bold px-3 sm:px-5 py-1.5 sm:py-2 rounded-lg shadow-lg active:scale-95 transition-all text-xs sm:text-sm touch-manipulation"
                         >
                             + ADD
                         </button>
                     ) : (
-                        <div className="flex items-center bg-white rounded-lg shadow-lg border-2 border-amber-500">
+                        <div className="flex items-center bg-white rounded-lg shadow-lg border-2 border-emerald-600">
                             <button
                                 onClick={(e) => {
                                     e.stopPropagation();
@@ -1016,9 +1016,9 @@ function ProductCard({ product, onAddToCart, onViewDetails }) {
                                 }}
                                 className="p-1.5 sm:p-2 hover:bg-gray-50 active:bg-gray-100 transition-colors touch-manipulation min-w-[36px] min-h-[36px] flex items-center justify-center"
                             >
-                                <Minus className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-500" />
+                                <Minus className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-600" />
                             </button>
-                            <span className="px-2 sm:px-3 font-bold text-amber-500 min-w-[32px] sm:min-w-[36px] text-center text-xs sm:text-sm">
+                            <span className="px-2 sm:px-3 font-bold text-emerald-600 min-w-[32px] sm:min-w-[36px] text-center text-xs sm:text-sm">
                                 {quantity}
                             </span>
                             <button
@@ -1028,7 +1028,7 @@ function ProductCard({ product, onAddToCart, onViewDetails }) {
                                 }}
                                 className="p-1.5 sm:p-2 hover:bg-gray-50 active:bg-gray-100 transition-colors touch-manipulation min-w-[36px] min-h-[36px] flex items-center justify-center"
                             >
-                                <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-500" />
+                                <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-600" />
                             </button>
                         </div>
                     )}
@@ -1037,7 +1037,7 @@ function ProductCard({ product, onAddToCart, onViewDetails }) {
 
             <div className="p-2 sm:p-3">
                 <div className="flex items-center gap-1.5 sm:gap-2 mb-1">
-                    <div className="bg-amber-500 text-white px-2 sm:px-2.5 py-0.5 sm:py-1 rounded">
+                    <div className="bg-emerald-600 text-white px-2 sm:px-2.5 py-0.5 sm:py-1 rounded">
                         <span className="text-xs sm:text-sm font-bold">₹{Math.round(product.base_price)}</span>
                     </div>
                     <span className="text-gray-400 line-through text-[10px] sm:text-xs">
@@ -1053,7 +1053,7 @@ function ProductCard({ product, onAddToCart, onViewDetails }) {
 
                 <h3
                     onClick={onViewDetails}
-                    className="text-xs sm:text-sm font-semibold text-gray-900 line-clamp-2 min-h-[32px] sm:min-h-[36px] mb-1 cursor-pointer hover:text-amber-500 active:text-amber-600 transition-colors"
+                    className="text-xs sm:text-sm font-semibold text-gray-900 line-clamp-2 min-h-[32px] sm:min-h-[36px] mb-1 cursor-pointer hover:text-emerald-600 active:text-emerald-700 transition-colors"
                 >
                     {product.name}
                 </h3>
@@ -1067,7 +1067,7 @@ function ProductCard({ product, onAddToCart, onViewDetails }) {
                 </p>
 
                 <p className="text-[10px] sm:text-[11px] text-gray-600">
-                    <span className="font-semibold text-amber-500">MOQ: {product.moq}</span>
+                    <span className="font-semibold text-emerald-600">MOQ: {product.moq}</span>
                     {' • '}
                     <span>Case: {product.case_size}</span>
                 </p>
@@ -1109,7 +1109,7 @@ function EstimateView({ cart, removeFromCart, updateQuantity, subtotal, cgst, sg
                     return (
                         <div key={item.id} className={`p-3 sm:p-4 flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 ${idx !== cart.items.length - 1 ? 'border-b border-gray-200' : ''}`}>
                             <div className="flex items-center gap-3 sm:gap-4 flex-1 w-full sm:w-auto">
-                                <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-amber-50 to-amber-100 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden">
+                                <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden">
                                     {item.product?.image ? (
                                         <img
                                             src={item.product.image}
@@ -1118,7 +1118,7 @@ function EstimateView({ cart, removeFromCart, updateQuantity, subtotal, cgst, sg
                                             loading="lazy"
                                         />
                                     ) : (
-                                        <Package className="w-8 h-8 sm:w-10 sm:h-10 text-amber-400" />
+                                        <Package className="w-8 h-8 sm:w-10 sm:h-10 text-emerald-400" />
                                     )}
                                 </div>
 
@@ -1126,7 +1126,7 @@ function EstimateView({ cart, removeFromCart, updateQuantity, subtotal, cgst, sg
                                     <h4 className="font-bold text-sm sm:text-base line-clamp-2">{item.product.name}</h4>
                                     <p className="text-xs sm:text-sm text-gray-500">SKU: {item.product.sku}</p>
                                     <p className="text-xs sm:text-sm text-gray-600 mt-0.5 sm:mt-1">MOQ: {item.product.moq} units</p>
-                                    <p className="font-bold text-amber-500 mt-1 text-sm sm:text-base">
+                                    <p className="font-bold text-emerald-600 mt-1 text-sm sm:text-base">
                                         ₹{parseFloat(item.product.base_price).toFixed(2)}
                                     </p>
                                 </div>
@@ -1141,7 +1141,7 @@ function EstimateView({ cart, removeFromCart, updateQuantity, subtotal, cgst, sg
                                     >
                                         <Minus className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600" />
                                     </button>
-                                    <span className="w-12 sm:w-16 text-center font-bold text-amber-500 text-sm sm:text-base">
+                                    <span className="w-12 sm:w-16 text-center font-bold text-emerald-600 text-sm sm:text-base">
                                         {item.quantity}
                                     </span>
                                     <button
@@ -1182,7 +1182,7 @@ function EstimateView({ cart, removeFromCart, updateQuantity, subtotal, cgst, sg
                         <span className="text-gray-600">SGST (9%):</span>
                         <span className="font-bold">₹{sgst.toFixed(2)}</span>
                     </div>
-                    <div className="flex justify-between text-base sm:text-lg font-bold text-amber-500 border-t border-gray-200 pt-2 sm:pt-3 mt-2 sm:mt-3">
+                    <div className="flex justify-between text-base sm:text-lg font-bold text-emerald-600 border-t border-gray-200 pt-2 sm:pt-3 mt-2 sm:mt-3">
                         <span>Total Amount:</span>
                         <span>₹{total.toFixed(2)}</span>
                     </div>
@@ -1191,7 +1191,7 @@ function EstimateView({ cart, removeFromCart, updateQuantity, subtotal, cgst, sg
 
             <button
                 onClick={onCheckout}
-                className="w-full bg-amber-500 text-white font-bold py-3 sm:py-3.5 rounded-lg hover:bg-amber-600 active:bg-amber-700 transition-colors flex items-center justify-center gap-2 touch-manipulation text-sm sm:text-base shadow-lg"
+                className="w-full bg-emerald-600 text-white font-bold py-3 sm:py-3.5 rounded-lg hover:bg-emerald-700 active:bg-emerald-800 transition-colors flex items-center justify-center gap-2 touch-manipulation text-sm sm:text-base shadow-lg"
             >
                 <ShoppingCart className="w-5 h-5" />
                 Proceed to Checkout
@@ -1209,17 +1209,17 @@ function ProfileView({ user, onLogout }) {
             <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-4 sm:mb-6">My Profile</h2>
 
             <div className="bg-white rounded-lg sm:rounded-xl shadow-md overflow-hidden">
-                <div className="bg-gradient-to-r from-amber-500 to-amber-500 p-6 sm:p-8">
+                <div className="bg-gradient-to-r from-emerald-500 to-emerald-600 p-6 sm:p-8">
                     <div className="flex items-center gap-4 sm:gap-6">
-                        <div className="w-16 h-16 sm:w-20 sm:h-20 bg-white rounded-full flex items-center justify-center shadow-lg text-amber-500 font-bold text-2xl">
+                        <div className="w-16 h-16 sm:w-20 sm:h-20 bg-white rounded-full flex items-center justify-center shadow-lg text-emerald-600 font-bold text-2xl">
                             {user.first_name ? user.first_name[0] : 'U'}
                         </div>
                         <div className="flex-1 text-white">
                             <h3 className="text-xl sm:text-2xl font-bold mb-1">
                                 {user.business_name || `${user.first_name} ${user.last_name}`}
                             </h3>
-                            <p className="text-amber-100 text-sm sm:text-base">{user.email}</p>
-                            <span className="inline-block mt-2 bg-amber-600 bg-opacity-50 px-3 py-1 rounded-full text-xs font-medium">
+                            <p className="text-emerald-100 text-sm sm:text-base">{user.email}</p>
+                            <span className="inline-block mt-2 bg-emerald-700 bg-opacity-50 px-3 py-1 rounded-full text-xs font-medium">
                                 {user.is_superuser ? 'Super Admin' : 'Business Account'}
                             </span>
                         </div>
@@ -1229,7 +1229,7 @@ function ProfileView({ user, onLogout }) {
                 <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
                     <div>
                         <h4 className="text-base sm:text-lg font-bold text-gray-800 mb-3 sm:mb-4 flex items-center gap-2">
-                            <Building className="w-5 h-5 text-amber-500" />
+                            <Building className="w-5 h-5 text-emerald-600" />
                             Account Details
                         </h4>
                         <div className="space-y-3 sm:space-y-4">
@@ -1275,7 +1275,7 @@ function NavButton({ icon: Icon, label, active, onClick, badge }) {
     return (
         <button
             onClick={onClick}
-            className={`flex flex-col items-center justify-center py-1.5 sm:py-2 px-2 sm:px-3 rounded-lg transition-colors relative touch-manipulation min-w-[60px] min-h-[60px] sm:min-h-[auto] active:bg-gray-100 ${active ? 'text-amber-500' : 'text-gray-600'
+            className={`flex flex-col items-center justify-center py-1.5 sm:py-2 px-2 sm:px-3 rounded-lg transition-colors relative touch-manipulation min-w-[60px] min-h-[60px] sm:min-h-[auto] active:bg-gray-100 ${active ? 'text-emerald-600' : 'text-gray-600'
                 }`}
         >
             <div className="relative">

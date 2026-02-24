@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { Package, Lock, Eye, EyeOff, CheckCircle } from 'lucide-react';
 import axiosInstance from '../api/axios';
@@ -51,7 +51,7 @@ export default function ResetPassword() {
 
     if (!uid || !token) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-amber-50 to-amber-100 flex flex-col items-center justify-center px-4">
+            <div className="min-h-screen bg-gradient-to-br from-emerald-50 to-emerald-100 flex flex-col items-center justify-center px-4">
                 <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-8 text-center">
                     <h2 className="text-xl font-bold text-red-600 mb-4">Invalid Reset Link</h2>
                     <p className="text-gray-600 mb-6">
@@ -59,7 +59,7 @@ export default function ResetPassword() {
                     </p>
                     <Link
                         to="/forgot-password"
-                        className="inline-block bg-amber-500 text-white font-semibold px-6 py-2.5 rounded-lg hover:bg-amber-600 transition-colors"
+                        className="inline-block bg-emerald-600 text-white font-semibold px-6 py-2.5 rounded-lg hover:bg-emerald-700 transition-colors"
                     >
                         Request New Link
                     </Link>
@@ -70,16 +70,16 @@ export default function ResetPassword() {
 
     if (success) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-amber-50 to-amber-100 flex flex-col items-center justify-center px-4">
+            <div className="min-h-screen bg-gradient-to-br from-emerald-50 to-emerald-100 flex flex-col items-center justify-center px-4">
                 <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-8 text-center">
-                    <CheckCircle className="w-16 h-16 text-amber-500 mx-auto mb-4" />
+                    <CheckCircle className="w-16 h-16 text-emerald-500 mx-auto mb-4" />
                     <h2 className="text-2xl font-bold text-gray-800 mb-2">Password Reset!</h2>
                     <p className="text-gray-600 mb-6">
                         Your password has been successfully reset. You can now sign in with your new password.
                     </p>
                     <button
                         onClick={() => navigate('/login')}
-                        className="w-full bg-amber-500 text-white font-semibold py-2.5 rounded-lg hover:bg-amber-600 transition-colors"
+                        className="w-full bg-emerald-600 text-white font-semibold py-2.5 rounded-lg hover:bg-emerald-700 transition-colors"
                     >
                         Sign In
                     </button>
@@ -89,10 +89,10 @@ export default function ResetPassword() {
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-amber-50 to-amber-100 flex flex-col items-center justify-center px-4">
+        <div className="min-h-screen bg-gradient-to-br from-emerald-50 to-emerald-100 flex flex-col items-center justify-center px-4">
             <div className="flex items-center gap-2 mb-6 cursor-pointer" onClick={() => navigate('/')}>
-                <Package className="w-8 h-8 text-amber-500" />
-                <h1 className="text-2xl font-bold text-amber-500">Anantamart</h1>
+                <Package className="w-8 h-8 text-emerald-600" />
+                <h1 className="text-2xl font-bold text-emerald-600">Anantamart</h1>
             </div>
 
             <div className="w-full max-w-md bg-white rounded-2xl shadow-xl overflow-hidden">
@@ -119,7 +119,7 @@ export default function ResetPassword() {
                                     onChange={(e) => setPassword(e.target.value)}
                                     placeholder="Min 8 characters"
                                     required
-                                    className="w-full pl-10 pr-10 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition-all"
+                                    className="w-full pl-10 pr-10 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all"
                                 />
                                 <button
                                     type="button"
@@ -141,7 +141,7 @@ export default function ResetPassword() {
                                     onChange={(e) => setPassword2(e.target.value)}
                                     placeholder="Confirm new password"
                                     required
-                                    className="w-full pl-10 pr-10 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition-all"
+                                    className="w-full pl-10 pr-10 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all"
                                 />
                             </div>
                         </div>
@@ -149,7 +149,7 @@ export default function ResetPassword() {
                         <button
                             type="submit"
                             disabled={loading}
-                            className="w-full bg-amber-500 text-white font-semibold py-2.5 rounded-lg hover:bg-amber-600 active:bg-amber-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                            className="w-full bg-emerald-600 text-white font-semibold py-2.5 rounded-lg hover:bg-emerald-700 active:bg-emerald-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                         >
                             {loading ? 'Resetting...' : 'Reset Password'}
                         </button>

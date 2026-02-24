@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 
 const BrandGrid = ({ brands, onBrandClick, isLoading }) => {
     // Loading Skeleton (Horizontal)
@@ -27,7 +27,7 @@ const BrandGrid = ({ brands, onBrandClick, isLoading }) => {
                     className="group flex flex-col items-center cursor-pointer flex-shrink-0 snap-start"
                 >
                     {/* COMPACT BOX */}
-                    <div className="w-20 h-20 sm:w-24 sm:h-24 bg-white border border-gray-200 rounded-xl flex items-center justify-center p-3 shadow-sm transition-all duration-200 group-hover:shadow-md group-hover:border-amber-500 group-hover:-translate-y-1">
+                    <div className="w-20 h-20 sm:w-24 sm:h-24 bg-white border border-gray-200 rounded-xl flex items-center justify-center p-3 shadow-sm transition-all duration-200 group-hover:shadow-md group-hover:border-emerald-500 group-hover:-translate-y-1">
                         <img
                             src={brand.logo || "/api/placeholder/100/100"}
                             alt={brand.name}
@@ -37,7 +37,7 @@ const BrandGrid = ({ brands, onBrandClick, isLoading }) => {
                     </div>
 
                     {/* LABEL */}
-                    <span className="mt-2 text-[10px] sm:text-xs font-medium text-gray-600 text-center truncate w-20 sm:w-24 px-1 group-hover:text-amber-600">
+                    <span className="mt-2 text-[10px] sm:text-xs font-medium text-gray-600 text-center truncate w-20 sm:w-24 px-1 group-hover:text-emerald-700">
                         {brand.name}
                     </span>
                 </div>

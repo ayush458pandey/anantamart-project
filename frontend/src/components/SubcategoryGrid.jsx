@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import { Package } from 'lucide-react';
 
 /**
@@ -43,7 +43,7 @@ export default function SubcategoryGrid({
                     className="group flex flex-col items-center cursor-pointer"
                 >
                     {/* Compact Box Container */}
-                    <div className={`w-20 h-20 sm:w-24 sm:h-24 bg-white border border-gray-200 rounded-xl flex items-center justify-center shadow-sm transition-all duration-200 group-hover:shadow-md group-hover:border-amber-500 group-hover:-translate-y-1 overflow-hidden ${subcategory.image_url ? '' : 'p-2'}`}>
+                    <div className={`w-20 h-20 sm:w-24 sm:h-24 bg-white border border-gray-200 rounded-xl flex items-center justify-center shadow-sm transition-all duration-200 group-hover:shadow-md group-hover:border-emerald-500 group-hover:-translate-y-1 overflow-hidden ${subcategory.image_url ? '' : 'p-2'}`}>
                         {subcategory.image_url ? (
                             <img
                                 src={subcategory.image_url}
@@ -53,12 +53,12 @@ export default function SubcategoryGrid({
                             />
                         ) : (
                             // Fallback Icon
-                            <Package className="w-8 h-8 text-amber-500 opacity-50" />
+                            <Package className="w-8 h-8 text-emerald-600 opacity-50" />
                         )}
                     </div>
 
                     {/* Compact Name Label */}
-                    <span className="mt-2 text-[10px] sm:text-xs font-medium text-gray-600 text-center truncate w-full px-1 group-hover:text-amber-600">
+                    <span className="mt-2 text-[10px] sm:text-xs font-medium text-gray-600 text-center truncate w-full px-1 group-hover:text-emerald-700">
                         {subcategory.name}
                     </span>
                 </div>
