@@ -140,7 +140,7 @@ def dashboard_view(request):
         top_buyers = list(
             active_orders
             .values(
-                user_id=F('user__id'),
+                buyer_id=F('user__id'),
                 username=F('user__username'),
                 first_name=F('user__first_name'),
                 last_name=F('user__last_name'),
@@ -153,7 +153,7 @@ def dashboard_view(request):
         )
         top_buyers_list = [
             {
-                'user_id': b['user_id'],
+                'user_id': b['buyer_id'],
                 'name': f"{b['first_name'] or ''} {b['last_name'] or ''}".strip() or b['username'],
                 'business_name': '',
                 'total_spend': float(b['total_spend'] or 0),
@@ -168,7 +168,7 @@ def dashboard_view(request):
             profiles = {
                 p.user_id: p.business_name
                 for p in UserProfile.objects.filter(
-                    user_id__in=[b['user_id'] for b in top_buyers]
+                    user_id__in=[b['buyer_id'] for b in top_buyers]
                 )
             }
             for buyer in top_buyers_list:
