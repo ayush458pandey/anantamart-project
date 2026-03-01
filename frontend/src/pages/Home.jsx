@@ -299,12 +299,30 @@ export default function Home() {
     // If a brand is selected, show the brand page
     if (selectedBrand) {
         return (
-            <BrandPage
-                brand={selectedBrand}
-                onBack={() => setSelectedBrand(null)}
-                onProductClick={(product) => selectProduct(product)}
-                onAddToCart={addToCart}
-            />
+            <>
+                <BrandPage
+                    brand={selectedBrand}
+                    onBack={() => setSelectedBrand(null)}
+                    onProductClick={(product) => selectProduct(product)}
+                    onAddToCart={addToCart}
+                />
+                {selectedProduct && (
+                    <ProductDetail
+                        product={selectedProduct}
+                        onClose={() => setSelectedProduct(null)}
+                        onAddToCart={addToCart}
+                        onBrandClick={(brandName, brandId) => {
+                            setSelectedProduct(null);
+                            const brand = brands.find(b => String(b.id) === String(brandId) || b.name === brandName);
+                            if (brand) {
+                                selectBrand(brand);
+                                setShowSubcategoryView(false);
+                                window.scrollTo({ top: 0, behavior: 'smooth' });
+                            }
+                        }}
+                    />
+                )}
+            </>
         );
     }
 
