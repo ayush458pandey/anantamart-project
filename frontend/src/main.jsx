@@ -8,6 +8,7 @@ import { CartProvider } from './context/CartContext';
 // Import ComparisonProvider here (It's easier to find from the root folder)
 import { ComparisonProvider } from './context/ComparisonContext';
 import { ToastProvider } from './context/ToastContext';
+import { Analytics } from '@vercel/analytics/react';
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
@@ -17,6 +18,7 @@ createRoot(document.getElementById('root')).render(
           <ComparisonProvider>
             <ToastProvider>
               <App />
+              <Analytics />
             </ToastProvider>
           </ComparisonProvider>
         </CartProvider>
