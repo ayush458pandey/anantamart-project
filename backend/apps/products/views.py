@@ -54,10 +54,7 @@ class ProductViewSet(viewsets.ModelViewSet):
         context['request'] = self.request
         return context
     
-    # Cache product list for 2 minutes (reduces DB load on repeated requests)
-    @method_decorator(cache_page(120))
-    def list(self, request, *args, **kwargs):
-        return super().list(request, *args, **kwargs)
+
     
     @action(detail=False, methods=['get'])
     def filter_options(self, request):

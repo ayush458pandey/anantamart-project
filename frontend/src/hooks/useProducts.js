@@ -5,7 +5,7 @@ import axios from '../api/axios';
 let cachedProducts = null;
 let cachedCategories = null;
 let lastFetchTime = 0;
-const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+const CACHE_TTL = 1 * 60 * 1000; // 1 minute
 
 export const useProducts = () => {
   const [products, setProducts] = useState(cachedProducts || []);
