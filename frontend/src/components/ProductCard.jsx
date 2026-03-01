@@ -1,13 +1,20 @@
-import React from 'react';
+import React, { useState, useRef } from 'react';
 import { Package, Plus, Minus, GitCompare } from 'lucide-react';
 import { useComparison } from '../context/ComparisonContext';
 
 export default function ProductCard({ product, cart, onAddToCart, removeFromCart, onViewDetails, onNavigateToCategory }) {
-    // 1. Check if this specific product is already in the global cart
-    const cartItem = cart?.items?.find(item => item.product.id === product.id);
+    const [mode, setMode] = useState('pcs'); // 'pcs' or 'case'
+    const [isEditing, setIsEditing] = useState(false);
+    const [editValue, setEditValue] = useState('');
+    const inputRef = useRef(null);
 
-    // 2. If in cart, use that quantity. If not, default to MOQ.
+    // Check if this product is in the cart
+    const cartItem = cart?.items?.find(item => item.product.id === product.id);
     const quantity = cartItem ? cartItem.quantity : (product.moq || 1);
+
+    const moq = product.moq || 1;
+    const caseSize = product.case_size || 1;
+    const step = mode === 'case' ? caseSize : moq;
 
     const { addToCompare, removeFromCompare, compareList } = useComparison();
     const isInCompareList = compareList.some(p => p.id === product.id);
@@ -20,32 +27,58 @@ export default function ProductCard({ product, cart, onAddToCart, removeFromCart
         }
     };
 
+    // Round to nearest valid MOQ multiple (must be >= moq)
+    const roundToMoq = (val) => {
+        const num = parseInt(val, 10);
+        if (isNaN(num) || num < moq) return moq;
+        return Math.round(num / moq) * moq;
+    };
+
     // Add to cart (Initial Add)
     const handleAdd = () => {
-        onAddToCart(product.id, product.moq || 1);
+        onAddToCart(product.id, step);
     };
 
-    // Increase Quantity
+    // Increase
     const handleIncrement = () => {
-        const step = product.moq || 1;
-        const newQty = quantity + step;
-        onAddToCart(product.id, newQty);
+        onAddToCart(product.id, quantity + step);
     };
 
-    // Decrease Quantity
+    // Decrease
     const handleDecrement = () => {
-        const step = product.moq || 1;
-
-        // If decreasing would go below MOQ, we remove the item
         if (quantity <= step) {
             if (cartItem && removeFromCart) {
-                removeFromCart(cartItem.id); // Remove using the Cart Item ID
+                removeFromCart(cartItem.id);
             }
         } else {
-            // Otherwise, just lower the quantity
             onAddToCart(product.id, quantity - step);
         }
     };
+
+    // Editable quantity: tap the number to type
+    const startEditing = (e) => {
+        e.stopPropagation();
+        setEditValue(String(quantity));
+        setIsEditing(true);
+        setTimeout(() => inputRef.current?.select(), 50);
+    };
+
+    const commitEdit = () => {
+        const rounded = roundToMoq(editValue);
+        onAddToCart(product.id, rounded);
+        setIsEditing(false);
+    };
+
+    const handleEditKeyDown = (e) => {
+        if (e.key === 'Enter') commitEdit();
+        if (e.key === 'Escape') setIsEditing(false);
+    };
+
+    // Display helpers
+    const displayQty = mode === 'case'
+        ? `${Math.floor(quantity / caseSize)} cs`
+        : quantity;
+    const unitLabel = product.unit || 'pcs';
 
     const discountPercent = product.mrp ? Math.round(((product.mrp - product.base_price) / product.mrp) * 100) : 0;
 
@@ -115,9 +148,29 @@ export default function ProductCard({ product, cart, onAddToCart, removeFromCart
                             >
                                 <Minus className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-600" />
                             </button>
-                            <span className="px-2 sm:px-3 font-bold text-emerald-600 min-w-[32px] sm:min-w-[36px] text-center text-xs sm:text-sm">
-                                {quantity}
-                            </span>
+
+                            {isEditing ? (
+                                <input
+                                    ref={inputRef}
+                                    type="number"
+                                    value={editValue}
+                                    onChange={(e) => setEditValue(e.target.value)}
+                                    onBlur={commitEdit}
+                                    onKeyDown={handleEditKeyDown}
+                                    onClick={(e) => e.stopPropagation()}
+                                    className="w-14 sm:w-16 text-center font-bold text-emerald-600 text-xs sm:text-sm border-0 outline-none bg-emerald-50 rounded py-0.5 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                    autoFocus
+                                />
+                            ) : (
+                                <span
+                                    onClick={startEditing}
+                                    className="px-2 sm:px-3 font-bold text-emerald-600 min-w-[32px] sm:min-w-[36px] text-center text-xs sm:text-sm cursor-text hover:bg-emerald-50 rounded py-0.5 transition-colors"
+                                    title="Tap to type quantity"
+                                >
+                                    {displayQty}
+                                </span>
+                            )}
+
                             <button
                                 onClick={(e) => {
                                     e.stopPropagation();
@@ -193,7 +246,7 @@ export default function ProductCard({ product, cart, onAddToCart, removeFromCart
                     </div>
                 )}
 
-                {/* Show category/subcategory so users know where the product is - CLICKABLE */}
+                {/* Show category/subcategory - CLICKABLE */}
                 {(product.category_name || product.subcategory_name) && (
                     <p
                         onClick={(e) => {
@@ -208,15 +261,36 @@ export default function ProductCard({ product, cart, onAddToCart, removeFromCart
                     </p>
                 )}
 
-                <p className="text-[10px] sm:text-[11px] text-gray-600 mb-0.5 sm:mb-1">
-                    1 pack ({product.moq} {product.unit || 'ml'})
+                {/* MOQ + Case info */}
+                <p className="text-[10px] sm:text-[11px] text-gray-600 mb-1">
+                    <span className="font-semibold text-emerald-600">MOQ: {moq} {unitLabel}</span>
+                    {' • '}
+                    <span>Case: {caseSize} {unitLabel}</span>
                 </p>
 
-                <p className="text-[10px] sm:text-[11px] text-gray-600">
-                    <span className="font-semibold text-emerald-600">MOQ: {product.moq}</span>
-                    {' • '}
-                    <span>Case: {product.case_size}</span>
-                </p>
+                {/* Pcs / Case Toggle */}
+                {caseSize > moq && (
+                    <div className="flex rounded-md overflow-hidden border border-gray-200 text-[10px] sm:text-[11px] font-semibold">
+                        <button
+                            onClick={(e) => { e.stopPropagation(); setMode('pcs'); }}
+                            className={`flex-1 py-1 px-2 transition-colors ${mode === 'pcs'
+                                ? 'bg-emerald-600 text-white'
+                                : 'bg-gray-50 text-gray-600 hover:bg-gray-100'
+                                }`}
+                        >
+                            {unitLabel}
+                        </button>
+                        <button
+                            onClick={(e) => { e.stopPropagation(); setMode('case'); }}
+                            className={`flex-1 py-1 px-2 transition-colors ${mode === 'case'
+                                ? 'bg-emerald-600 text-white'
+                                : 'bg-gray-50 text-gray-600 hover:bg-gray-100'
+                                }`}
+                        >
+                            Case
+                        </button>
+                    </div>
+                )}
             </div>
         </div>
     );
