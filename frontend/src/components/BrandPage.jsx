@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { ArrowLeft, Package } from 'lucide-react';
 import { productService } from '../api/services/productService';
+import ProductCard from './ProductCard';
+import { useCart } from '../context/CartContext';
 
 /**
  * BrandPage Component
@@ -10,6 +12,7 @@ export default function BrandPage({ brand, onBack, onProductClick, onAddToCart }
     const [products, setProducts] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const { cart, removeFromCart } = useCart();
 
     useEffect(() => {
         const fetchBrandProducts = async () => {
@@ -106,8 +109,10 @@ export default function BrandPage({ brand, onBack, onProductClick, onAddToCart }
                             <ProductCard
                                 key={product.id}
                                 product={product}
-                                onViewDetails={() => onProductClick(product)}
+                                cart={cart}
+                                removeFromCart={removeFromCart}
                                 onAddToCart={onAddToCart}
+                                onViewDetails={() => onProductClick(product)}
                             />
                         ))}
                     </div>
@@ -117,83 +122,3 @@ export default function BrandPage({ brand, onBack, onProductClick, onAddToCart }
     );
 }
 
-// Simplified Product Card for Brand Page
-function ProductCard({ product, onViewDetails, onAddToCart }) {
-    const [quantity, setQuantity] = useState(product.moq || 1);
-
-    const handleAdd = () => {
-        onAddToCart(product.id, quantity);
-    };
-
-    const discountPercent = Math.round(((product.mrp - product.base_price) / product.mrp) * 100);
-
-    return (
-        <div className="bg-white rounded-lg sm:rounded-xl shadow-sm hover:shadow-md transition-all overflow-hidden">
-            {/* Image */}
-            <div
-                className="relative bg-gradient-to-br from-gray-50 to-gray-100 cursor-pointer"
-                style={{ aspectRatio: '4 / 3' }}
-                onClick={onViewDetails}
-            >
-                {product.image_url ? (
-                    <img
-                        src={product.image_url}
-                        alt={product.name}
-                        className="absolute inset-0 w-full h-full object-contain p-2 sm:p-4"
-                        loading="lazy"
-                    />
-                ) : (
-                    <div className="absolute inset-0 flex items-center justify-center">
-                        <Package className="w-8 h-8 sm:w-12 sm:h-12 text-gray-300" />
-                    </div>
-                )}
-
-                {/* Stock Badge */}
-                <div className="absolute top-2 left-2">
-                    <span className={`text-[10px] font-bold px-2 py-1 rounded-full ${product.stock_status === 'in-stock'
-                        ? 'bg-green-600 text-white'
-                        : 'bg-orange-500 text-white'
-                        }`}>
-                        {product.stock_status === 'in-stock' ? 'In Stock' : 'Out of Stock'}
-                    </span>
-                </div>
-            </div>
-
-            {/* Details */}
-            <div className="p-2 sm:p-3">
-                <div className="flex items-center gap-2 mb-1">
-                    <div className="bg-emerald-600 text-white px-2 py-0.5 rounded">
-                        <span className="text-xs sm:text-sm font-bold">₹{Math.round(product.base_price)}</span>
-                    </div>
-                    <span className="text-gray-400 line-through text-[10px] sm:text-xs">
-                        ₹{Math.round(product.mrp)}
-                    </span>
-                </div>
-
-                {discountPercent > 0 && (
-                    <div className="text-[10px] sm:text-[11px] text-gray-600 mb-1 font-semibold">
-                        {discountPercent}% OFF
-                    </div>
-                )}
-
-                <h3
-                    onClick={onViewDetails}
-                    className="text-xs sm:text-sm font-semibold text-gray-900 line-clamp-2 min-h-[32px] mb-1 cursor-pointer hover:text-emerald-600"
-                >
-                    {product.name}
-                </h3>
-
-                <p className="text-[10px] sm:text-[11px] text-gray-500 mb-1">
-                    SKU: {product.sku}
-                </p>
-
-                <button
-                    onClick={handleAdd}
-                    className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 rounded-lg text-xs sm:text-sm mt-2"
-                >
-                    + ADD
-                </button>
-            </div>
-        </div>
-    );
-}
