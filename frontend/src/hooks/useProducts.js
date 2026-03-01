@@ -36,18 +36,37 @@ export const useProducts = () => {
         setLoading(true);
       }
 
-      const [categoriesRes, productsRes] = await Promise.all([
-        axios.get('/categories/'),
-        axios.get('/products/'),
-      ]);
-
+      // Fetch categories
+      const categoriesRes = await axios.get('/categories/');
       const categoriesData = Array.isArray(categoriesRes.data)
         ? categoriesRes.data
         : (categoriesRes.data.results || []);
 
-      let productsData = Array.isArray(productsRes.data)
-        ? productsRes.data
-        : (productsRes.data.results || []);
+      // Fetch ALL pages of products (handles DRF pagination)
+      let productsData = [];
+      let nextUrl = '/products/';
+      while (nextUrl) {
+        const productsRes = await axios.get(nextUrl);
+        const data = productsRes.data;
+        if (Array.isArray(data)) {
+          // No pagination — got raw array
+          productsData = data;
+          break;
+        } else {
+          productsData = productsData.concat(data.results || []);
+          // Extract relative URL for next page (remove base URL if present)
+          if (data.next) {
+            try {
+              const url = new URL(data.next);
+              nextUrl = url.pathname.replace(/^\/api/, '') + url.search;
+            } catch {
+              nextUrl = null;
+            }
+          } else {
+            nextUrl = null;
+          }
+        }
+      }
 
       // Fix Image Logic for Cloudinary
       productsData = productsData.map(product => {
