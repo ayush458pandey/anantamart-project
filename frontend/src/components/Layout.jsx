@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate, useLocation, Outlet } from 'react-router-dom';
-import { Package, ShoppingCart, Search, User } from 'lucide-react';
+import { Package, ShoppingCart, Search, User, BarChart3 } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import Footer from './Footer';
@@ -55,6 +55,17 @@ export default function Layout() {
                                 </span>
                             )}
                         </button>
+
+                        {/* Admin Dashboard - Staff Only */}
+                        {user?.is_staff && (
+                            <button
+                                onClick={() => navigate('/admin')}
+                                className="p-2 sm:p-2.5 hover:bg-gray-100 active:bg-gray-200 rounded-lg transition-colors touch-manipulation min-w-[44px] min-h-[44px] flex items-center justify-center"
+                                title="Admin Dashboard"
+                            >
+                                <BarChart3 className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-600" />
+                            </button>
+                        )}
 
                         <button
                             onClick={() => navigate(user ? '/profile' : '/login')}

@@ -1,11 +1,14 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from .views import OrderViewSet, create_razorpay_order, verify_razorpay_payment, validate_stock
-
+from .dashboard import dashboard_view
 router = DefaultRouter()
 router.register(r'', OrderViewSet, basename='orders')
 
 urlpatterns = [
+    # Admin Dashboard
+    path('dashboard/', dashboard_view, name='admin_dashboard'),
+
     # Stock Validation (before payment)
     path('validate-stock/', validate_stock, name='validate_stock'),
 

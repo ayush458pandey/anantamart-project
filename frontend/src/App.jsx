@@ -13,6 +13,7 @@ const ProfilePage = lazy(() => import('./pages/ProfilePage'));
 const ComparePage = lazy(() => import('./pages/ComparePage'));
 const ForgotPassword = lazy(() => import('./pages/ForgotPassword'));
 const ResetPassword = lazy(() => import('./pages/ResetPassword'));
+const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
 
 // Minimal loading fallback
 const PageLoader = () => (
@@ -38,6 +39,7 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
+        <Route path="/admin" element={<AdminDashboard />} />
 
         {/* Catch-all redirect */}
         <Route path="*" element={<Navigate to="/" replace />} />
