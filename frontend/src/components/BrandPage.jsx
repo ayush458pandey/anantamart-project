@@ -8,7 +8,7 @@ import { useCart } from '../context/CartContext';
  * BrandPage Component
  * Displays all products from a specific brand
  */
-export default function BrandPage({ brand, onBack, onProductClick, onAddToCart }) {
+export default function BrandPage({ brand, onBack, onProductClick, onAddToCart, updateQuantity }) {
     const [products, setProducts] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -111,6 +111,7 @@ export default function BrandPage({ brand, onBack, onProductClick, onAddToCart }
                                 product={product}
                                 cart={cart}
                                 removeFromCart={removeFromCart}
+                                updateQuantity={updateQuantity}
                                 onAddToCart={onAddToCart}
                                 onViewDetails={() => onProductClick(product)}
                             />

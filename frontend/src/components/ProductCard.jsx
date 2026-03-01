@@ -2,7 +2,7 @@ import React, { useState, useRef } from 'react';
 import { Package, Plus, Minus, GitCompare } from 'lucide-react';
 import { useComparison } from '../context/ComparisonContext';
 
-export default function ProductCard({ product, cart, onAddToCart, removeFromCart, onViewDetails, onNavigateToCategory }) {
+export default function ProductCard({ product, cart, onAddToCart, removeFromCart, updateQuantity, onViewDetails, onNavigateToCategory }) {
     const [mode, setMode] = useState('pcs'); // 'pcs' or 'case'
     const [isEditing, setIsEditing] = useState(false);
     const [editValue, setEditValue] = useState('');
@@ -34,24 +34,26 @@ export default function ProductCard({ product, cart, onAddToCart, removeFromCart
         return Math.round(num / moq) * moq;
     };
 
-    // Add to cart (Initial Add)
+    // Add to cart (Initial Add) — uses addToCart (POST, creates item)
     const handleAdd = () => {
         onAddToCart(product.id, step);
     };
 
-    // Increase
+    // Increase — uses updateQuantity (PUT, sets exact qty)
     const handleIncrement = () => {
-        onAddToCart(product.id, quantity + step);
+        if (cartItem && updateQuantity) {
+            updateQuantity(cartItem.id, quantity + step);
+        }
     };
 
-    // Decrease
+    // Decrease — uses updateQuantity (PUT, sets exact qty)
     const handleDecrement = () => {
         if (quantity <= step) {
             if (cartItem && removeFromCart) {
                 removeFromCart(cartItem.id);
             }
-        } else {
-            onAddToCart(product.id, quantity - step);
+        } else if (cartItem && updateQuantity) {
+            updateQuantity(cartItem.id, quantity - step);
         }
     };
 
@@ -65,7 +67,11 @@ export default function ProductCard({ product, cart, onAddToCart, removeFromCart
 
     const commitEdit = () => {
         const rounded = roundToMoq(editValue);
-        onAddToCart(product.id, rounded);
+        if (cartItem && updateQuantity) {
+            updateQuantity(cartItem.id, rounded);
+        } else {
+            onAddToCart(product.id, rounded);
+        }
         setIsEditing(false);
     };
 

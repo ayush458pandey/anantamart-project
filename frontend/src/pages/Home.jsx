@@ -59,7 +59,7 @@ export default function Home() {
     const intentionalNavRef = React.useRef({ subcategoryId: null, navigating: false });
 
     const { products, categories, loading, error } = useProducts();
-    const { cart, addToCart, removeFromCart } = useCart();
+    const { cart, addToCart, removeFromCart, updateQuantity } = useCart();
 
     // --- Browser back button / swipe support ---
     // Push a history entry when entering a deeper view
@@ -305,6 +305,7 @@ export default function Home() {
                     onBack={() => setSelectedBrand(null)}
                     onProductClick={(product) => selectProduct(product)}
                     onAddToCart={addToCart}
+                    updateQuantity={updateQuantity}
                 />
                 {selectedProduct && (
                     <ProductDetail
@@ -546,6 +547,7 @@ export default function Home() {
                                                             product={product}
                                                             cart={cart}
                                                             removeFromCart={removeFromCart}
+                                                            updateQuantity={updateQuantity}
                                                             onAddToCart={addToCart}
                                                             onViewDetails={() => setSelectedProduct(product)}
                                                             onNavigateToCategory={navigateToCategory}
@@ -584,6 +586,7 @@ export default function Home() {
                                         product={product}
                                         cart={cart}
                                         removeFromCart={removeFromCart}
+                                        updateQuantity={updateQuantity}
                                         onAddToCart={addToCart}
                                         onViewDetails={() => selectProduct(product)}
                                         onNavigateToCategory={navigateToCategory}
