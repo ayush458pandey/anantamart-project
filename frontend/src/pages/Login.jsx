@@ -3,6 +3,7 @@ import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { Package, Eye, EyeOff, Mail, Lock, User, ArrowLeft } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import axiosInstance from '../api/axios';
+import { GoogleLogin } from '@react-oauth/google';
 
 export default function Login() {
     const [activeTab, setActiveTab] = useState('signin');
@@ -33,6 +34,25 @@ export default function Login() {
     // Where to redirect after login
     const redirectTo = location.state?.from || '/';
     const message = location.state?.message || '';
+
+    // Google Sign-In handler
+    const handleGoogleSuccess = async (credentialResponse) => {
+        setError('');
+        setLoading(true);
+        try {
+            const res = await axiosInstance.post('/user/google-login/', {
+                credential: credentialResponse.credential
+            });
+            const tokens = { access: res.data.access, refresh: res.data.refresh };
+            login(res.data.user, tokens);
+            navigate(redirectTo, { replace: true });
+        } catch (err) {
+            const msg = err.response?.data?.error || 'Google sign-in failed';
+            setError(msg);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const handleSignIn = async (e) => {
         e.preventDefault();
@@ -166,6 +186,7 @@ export default function Login() {
 
                     {activeTab === 'signin' ? (
                         /* SIGN IN FORM */
+                        <>
                         <form onSubmit={handleSignIn} className="space-y-4">
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Username</label>
@@ -221,6 +242,26 @@ export default function Login() {
                                 {loading ? 'Signing in...' : 'Sign In'}
                             </button>
                         </form>
+
+                        {/* Divider */}
+                        <div className="flex items-center my-5">
+                            <div className="flex-1 border-t border-gray-200"></div>
+                            <span className="px-3 text-xs text-gray-400 font-medium">or continue with</span>
+                            <div className="flex-1 border-t border-gray-200"></div>
+                        </div>
+
+                        {/* Google Sign-In */}
+                        <div className="flex justify-center">
+                            <GoogleLogin
+                                onSuccess={handleGoogleSuccess}
+                                onError={() => setError('Google sign-in failed')}
+                                theme="outline"
+                                size="large"
+                                width="100%"
+                                text="signin_with"
+                            />
+                        </div>
+                        </>
                     ) : (
                         /* SIGN UP FORM */
                         <form onSubmit={handleSignUp} className="space-y-4">

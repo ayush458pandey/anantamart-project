@@ -9,20 +9,23 @@ import { CartProvider } from './context/CartContext';
 import { ComparisonProvider } from './context/ComparisonContext';
 import { ToastProvider } from './context/ToastContext';
 import { Analytics } from '@vercel/analytics/react';
+import { GoogleOAuthProvider } from '@react-oauth/google';
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <BrowserRouter>
-      <AuthProvider>
-        <CartProvider>
-          <ComparisonProvider>
-            <ToastProvider>
-              <App />
-              <Analytics />
-            </ToastProvider>
-          </ComparisonProvider>
-        </CartProvider>
-      </AuthProvider>
-    </BrowserRouter>
+    <GoogleOAuthProvider clientId="crek4p60hrug0s098qv50i45u6edcpet.apps.googleusercontent.com">
+      <BrowserRouter>
+        <AuthProvider>
+          <CartProvider>
+            <ComparisonProvider>
+              <ToastProvider>
+                <App />
+                <Analytics />
+              </ToastProvider>
+            </ComparisonProvider>
+          </CartProvider>
+        </AuthProvider>
+      </BrowserRouter>
+    </GoogleOAuthProvider>
   </StrictMode>,
 )
