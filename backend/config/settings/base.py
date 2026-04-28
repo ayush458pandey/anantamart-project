@@ -194,6 +194,9 @@ if not DEBUG:
 RAZORPAY_KEY_ID = os.environ.get('RAZORPAY_KEY_ID', '')
 RAZORPAY_KEY_SECRET = os.environ.get('RAZORPAY_KEY_SECRET', '')
 
+# --- GOOGLE SIGN-IN ---
+GOOGLE_CLIENT_ID = os.environ.get('GOOGLE_CLIENT_ID', 'crek4p60hrug0s098qv50i45u6edcpet.apps.googleusercontent.com')
+
 # --- Smart Selects Configuration ---
 USE_DJANGO_JQUERY = True
 JQUERY_URL = False
