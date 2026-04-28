@@ -247,4 +247,4 @@ DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 SERVER_EMAIL = EMAIL_HOST_USER
 
 # List of admin emails to receive order notifications
-ADMIN_EMAILS = [os.environ.get('ADMIN_EMAIL', 'admin@ananta-mart.in')]
+ADMIN_EMAILS = [os.environ.get('ADMIN_EMAIL', 'ayush458pandey@gmail.com')]
