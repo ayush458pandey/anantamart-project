@@ -9,6 +9,7 @@ import { CartProvider } from './context/CartContext';
 import { ComparisonProvider } from './context/ComparisonContext';
 import { ToastProvider } from './context/ToastContext';
 import { Analytics } from '@vercel/analytics/react';
+import { SpeedInsights } from '@vercel/speed-insights/react';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 
 createRoot(document.getElementById('root')).render(
@@ -21,6 +22,7 @@ createRoot(document.getElementById('root')).render(
               <ToastProvider>
                 <App />
                 <Analytics />
+                <SpeedInsights />
               </ToastProvider>
             </ComparisonProvider>
           </CartProvider>
