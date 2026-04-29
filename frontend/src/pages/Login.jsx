@@ -264,6 +264,7 @@ export default function Login() {
                         </>
                     ) : (
                         /* SIGN UP FORM */
+                        <>
                         <form onSubmit={handleSignUp} className="space-y-4">
                             <div className="grid grid-cols-2 gap-3">
                                 <div>
@@ -370,6 +371,26 @@ export default function Login() {
                                 {loading ? 'Creating Account...' : 'Create Account'}
                             </button>
                         </form>
+
+                        {/* Divider */}
+                        <div className="flex items-center my-5">
+                            <div className="flex-1 border-t border-gray-200"></div>
+                            <span className="px-3 text-xs text-gray-400 font-medium">or sign up with</span>
+                            <div className="flex-1 border-t border-gray-200"></div>
+                        </div>
+
+                        {/* Google Sign-Up */}
+                        <div className="flex justify-center">
+                            <GoogleLogin
+                                onSuccess={handleGoogleSuccess}
+                                onError={() => setError('Google sign-in failed')}
+                                theme="outline"
+                                size="large"
+                                width="100%"
+                                text="signup_with"
+                            />
+                        </div>
+                        </>
                     )}
                 </div>
             </div>
