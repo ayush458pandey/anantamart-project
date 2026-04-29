@@ -178,18 +178,20 @@ class GoogleLoginView(APIView):
             if not email:
                 return Response({'error': 'Email not found in Google account'}, status=status.HTTP_400_BAD_REQUEST)
 
-            # Get or create user
-            user, created = User.objects.get_or_create(
-                email=email,
-                defaults={
-                    'username': email.split('@')[0],
-                    'first_name': first_name,
-                    'last_name': last_name,
-                }
-            )
+            # Find existing user by email, or create new one
+            user = User.objects.filter(email=email).first()
+            created = False
 
-            # If user exists but was found by email, update name if blank
-            if not created:
+            if not user:
+                user = User.objects.create_user(
+                    username=email.split('@')[0],
+                    email=email,
+                    first_name=first_name,
+                    last_name=last_name,
+                )
+                created = True
+            else:
+                # Update name if blank
                 if not user.first_name:
                     user.first_name = first_name
                 if not user.last_name:
