@@ -117,7 +117,6 @@ def send_order_confirmation_email(order):
         except Exception as e:
             logger.error(f"Failed to send order email: {str(e)}")
 
-    # Start sending in a background thread
-    email_thread = threading.Thread(target=_send)
-    email_thread.start()
+    # Send synchronously so Gunicorn doesn't kill the thread before it finishes
+    _send()
     return True
