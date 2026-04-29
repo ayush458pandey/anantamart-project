@@ -97,32 +97,51 @@ def send_order_confirmation_email(order):
         """
         
         text_content = strip_tags(html_content)
-        
         # Recipients
-        recipient_list = [order.user.email] if order.user.email else []
-        bcc_list = getattr(settings, 'ADMIN_EMAILS', [])
-        
-        msg = EmailMultiAlternatives(
-            subject=subject,
-            body=text_content,
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            to=recipient_list,
-            bcc=bcc_list
-        )
-        msg.attach_alternative(html_content, "text/html")
-
-        # Send asynchronously to avoid blocking the API request and causing 30s timeouts
-        def _send_async(email_msg, order_num):
+        # Resend requires at least one 'to' address. Since the domain is unverified, 
+        # it might only work for the admin email. If the user's email is different, we add it but Resend might drop it.
+        # It's safest to just put all recipients in the 'to' list for the free tier testing.
+        admin_email = getattr(settings, 'ADMIN_EMAILS', ['ayush458pandey@gmail.com'])[0]
+        recipient_list = [admin_email]
+        if order.user.email and order.user.email != admin_email:
+            recipient_list.append(order.user.email)
+            
+        # Send asynchronously using the Resend API
+        def _send_async(html_body, order_num):
+            import requests
+            import os
             try:
-                print(f"Attempting to send order email for {order_num} via {settings.EMAIL_HOST}:{settings.EMAIL_PORT}...")
-                email_msg.send(fail_silently=False)
-                print(f"SUCCESS: Order confirmation email sent for Order #{order_num}")
-                logger.info(f"Order confirmation email sent for Order #{order_num}")
+                print(f"Attempting to send order email for {order_num} via Resend API...")
+                
+                # Use environment variable if it exists, otherwise fallback to the provided key
+                api_key = os.environ.get("RESEND_API_KEY", "re_EGgBEdZw_4BG4277skpWzU8bTjXPbzVJZ")
+                
+                payload = {
+                    "from": "Anantamart <onboarding@resend.dev>",
+                    "to": recipient_list,
+                    "subject": subject,
+                    "html": html_body
+                }
+
+                headers = {
+                    "Authorization": f"Bearer {api_key}",
+                    "Content-Type": "application/json"
+                }
+
+                response = requests.post("https://api.resend.com/emails", json=payload, headers=headers)
+                
+                if response.status_code in [200, 201]:
+                    print(f"SUCCESS: Order confirmation email sent for Order #{order_num}")
+                    logger.info(f"Order confirmation email sent for Order #{order_num}")
+                else:
+                    print(f"CRITICAL EMAIL ERROR: Resend API failed with status {response.status_code}: {response.text}")
+                    logger.error(f"Resend API Error: {response.text}")
+
             except Exception as e:
                 print(f"CRITICAL EMAIL ERROR: Failed to send order email: {str(e)}")
                 logger.error(f"Failed to send order email: {str(e)}")
 
-        email_thread = threading.Thread(target=_send_async, args=(msg, order.order_number))
+        email_thread = threading.Thread(target=_send_async, args=(html_content, order.order_number))
         email_thread.daemon = True
         email_thread.start()
 
