@@ -114,9 +114,12 @@ def send_order_confirmation_email(order):
         # Send asynchronously to avoid blocking the API request and causing 30s timeouts
         def _send_async(email_msg, order_num):
             try:
+                print(f"Attempting to send order email for {order_num} via {settings.EMAIL_HOST}:{settings.EMAIL_PORT}...")
                 email_msg.send(fail_silently=False)
+                print(f"SUCCESS: Order confirmation email sent for Order #{order_num}")
                 logger.info(f"Order confirmation email sent for Order #{order_num}")
             except Exception as e:
+                print(f"CRITICAL EMAIL ERROR: Failed to send order email: {str(e)}")
                 logger.error(f"Failed to send order email: {str(e)}")
 
         email_thread = threading.Thread(target=_send_async, args=(msg, order.order_number))
