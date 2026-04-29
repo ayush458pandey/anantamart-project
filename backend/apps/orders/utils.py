@@ -113,8 +113,12 @@ def send_order_confirmation_email(order):
             try:
                 print(f"Attempting to send order email for {order_num} via Resend API...")
                 
-                # Use environment variable if it exists, otherwise fallback to the provided key
-                api_key = os.environ.get("RESEND_API_KEY", "re_EGgBEdZw_4BG4277skpWzU8bTjXPbzVJZ")
+                # Use environment variable for security
+                api_key = os.environ.get("RESEND_API_KEY")
+                
+                if not api_key:
+                    logger.error("RESEND_API_KEY is not set in environment variables!")
+                    return
                 
                 payload = {
                     "from": "Anantamart <onboarding@resend.dev>",
