@@ -13,6 +13,7 @@ import razorpay
 from django.conf import settings
 from django.db import transaction
 from django.db.models import F
+from .utils import send_order_confirmation_email
 
 class OrderViewSet(viewsets.ModelViewSet):
     serializer_class = OrderSerializer
@@ -125,6 +126,9 @@ class OrderViewSet(viewsets.ModelViewSet):
                     cart.items.all().delete()
                 except Cart.DoesNotExist:
                     pass
+
+            # --- STEP 5: Send Confirmation Email ---
+            send_order_confirmation_email(order)
 
             serializer = self.get_serializer(order)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
