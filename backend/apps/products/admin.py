@@ -27,7 +27,18 @@ class BrandAdmin(admin.ModelAdmin):
 class ProductImageInline(admin.TabularInline):
     model = ProductImage
     extra = 1
-    fields = ['image', 'order', 'is_primary', 'alt_text']
+    fields = ['image', 'image_size_display', 'order', 'is_primary', 'alt_text']
+    readonly_fields = ['image_size_display']
+
+    def image_size_display(self, obj):
+        if obj.image:
+            try:
+                size_kb = obj.image.size / 1024
+                return f"{size_kb:.2f} KB"
+            except Exception:
+                return "Unknown"
+        return "-"
+    image_size_display.short_description = 'Size'
 
 class PriceTierInline(admin.TabularInline):
     model = PriceTier
@@ -46,7 +57,17 @@ class ProductAdmin(admin.ModelAdmin):
     
     list_editable = ['stock', 'is_active', 'base_price', 'tax_rate']
     
-    readonly_fields = ['created_at', 'updated_at']
+    readonly_fields = ['created_at', 'updated_at', 'image_size_display']
+    
+    def image_size_display(self, obj):
+        if obj.image:
+            try:
+                size_kb = obj.image.size / 1024
+                return f"{size_kb:.2f} KB"
+            except Exception:
+                return "Unknown size"
+        return "No image"
+    image_size_display.short_description = 'Main Image Size'
     
     fieldsets = (
         ('Basic Information', {
@@ -67,7 +88,7 @@ class ProductAdmin(admin.ModelAdmin):
             'fields': ('stock', 'stock_status', 'moq', 'case_size')
         }),
         ('Images', {
-            'fields': ('image',)
+            'fields': ('image', 'image_size_display')
         }),
         ('Legacy Fields', {
             'fields': ('brand',),
@@ -84,10 +105,21 @@ class ProductAdmin(admin.ModelAdmin):
 
 @admin.register(ProductImage)
 class ProductImageAdmin(admin.ModelAdmin):
-    list_display = ['product', 'order', 'is_primary', 'created_at']
+    list_display = ['product', 'image_size_display', 'order', 'is_primary', 'created_at']
     list_filter = ['is_primary', 'created_at']
     search_fields = ['product__name', 'alt_text']
     list_editable = ['order', 'is_primary']
+    readonly_fields = ['image_size_display']
+
+    def image_size_display(self, obj):
+        if obj.image:
+            try:
+                size_kb = obj.image.size / 1024
+                return f"{size_kb:.2f} KB"
+            except Exception:
+                return "Unknown"
+        return "-"
+    image_size_display.short_description = 'Size'
 
 @admin.register(PriceTier)
 class PriceTierAdmin(admin.ModelAdmin):
