@@ -1,12 +1,27 @@
 from rest_framework import serializers
 from .models import Product, Category, PriceTier, ProductImage, Subcategory, Brand
 
-class CategorySerializer(serializers.ModelSerializer):
+def optimize_cloudinary_url(url):
+    """Automatically compress and optimize Cloudinary images"""
+    if url and isinstance(url, str) and 'res.cloudinary.com' in url and '/upload/' in url and 'q_auto' not in url:
+        return url.replace('/upload/', '/upload/q_auto,f_auto/', 1)
+    return url
+
+class OptimizedImageMixin:
+    """Mixin to apply Cloudinary optimization to all URL fields in the serializer"""
+    def to_representation(self, instance):
+        ret = super().to_representation(instance)
+        for key, value in ret.items():
+            if isinstance(value, str) and 'res.cloudinary.com' in value:
+                ret[key] = optimize_cloudinary_url(value)
+        return ret
+
+class CategorySerializer(OptimizedImageMixin, serializers.ModelSerializer):
     class Meta:
         model = Category
         fields = ['id', 'name', 'description', 'icon', 'image', 'is_active']
 
-class SubcategorySerializer(serializers.ModelSerializer):
+class SubcategorySerializer(OptimizedImageMixin, serializers.ModelSerializer):
     category_name = serializers.CharField(source='category.name', read_only=True)
     image_url = serializers.SerializerMethodField()
     product_count = serializers.SerializerMethodField()
@@ -26,7 +41,7 @@ class SubcategorySerializer(serializers.ModelSerializer):
         # Use pre-annotated count from viewset queryset (avoids N+1)
         return getattr(obj, '_product_count', obj.products.filter(is_active=True).count())
 
-class BrandSerializer(serializers.ModelSerializer):
+class BrandSerializer(OptimizedImageMixin, serializers.ModelSerializer):
     logo_url = serializers.SerializerMethodField()
     product_count = serializers.SerializerMethodField()
     
@@ -52,7 +67,7 @@ class PriceTierSerializer(serializers.ModelSerializer):
         fields = ['min_quantity', 'max_quantity', 'price']
 
 # ✅ Defined BEFORE ProductSerializer
-class ProductImageSerializer(serializers.ModelSerializer):
+class ProductImageSerializer(OptimizedImageMixin, serializers.ModelSerializer):
     image_url = serializers.SerializerMethodField()
     
     class Meta:
@@ -66,7 +81,7 @@ class ProductImageSerializer(serializers.ModelSerializer):
                 return request.build_absolute_uri(obj.image.url)
         return None
 
-class ProductSerializer(serializers.ModelSerializer):
+class ProductSerializer(OptimizedImageMixin, serializers.ModelSerializer):
     category_name = serializers.CharField(source='category.name', read_only=True)
     subcategory_name = serializers.CharField(source='subcategory.name', read_only=True, allow_null=True)
     brand_name = serializers.SerializerMethodField()
