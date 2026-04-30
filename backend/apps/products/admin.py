@@ -10,6 +10,7 @@ class CategoryAdmin(admin.ModelAdmin):
 @admin.register(Subcategory)
 class SubcategoryAdmin(admin.ModelAdmin):
     list_display = ['name', 'category', 'is_active', 'created_at']
+    list_select_related = ['category']
     list_filter = ['category', 'is_active']
     search_fields = ['name', 'description', 'category__name']
     list_editable = ['is_active']
@@ -49,6 +50,7 @@ class PriceTierInline(admin.TabularInline):
 class ProductAdmin(admin.ModelAdmin):
     # 🟢 Added 'hsn_code' to the list view
     list_display = ['name', 'sku', 'brand_ref', 'category', 'subcategory', 'base_price', 'tax_rate', 'hsn_code', 'stock', 'stock_status', 'is_active']
+    list_select_related = ['category', 'subcategory', 'brand_ref']
     
     list_filter = ['category', 'subcategory', 'brand_ref', 'is_active', 'stock_status', 'tax_rate', 'dietary_preference']
     
@@ -106,6 +108,7 @@ class ProductAdmin(admin.ModelAdmin):
 @admin.register(ProductImage)
 class ProductImageAdmin(admin.ModelAdmin):
     list_display = ['product', 'image_size_display', 'order', 'is_primary', 'created_at']
+    list_select_related = ['product']
     list_filter = ['is_primary', 'created_at']
     search_fields = ['product__name', 'alt_text']
     list_editable = ['order', 'is_primary']
@@ -124,5 +127,6 @@ class ProductImageAdmin(admin.ModelAdmin):
 @admin.register(PriceTier)
 class PriceTierAdmin(admin.ModelAdmin):
     list_display = ['product', 'min_quantity', 'max_quantity', 'price']
+    list_select_related = ['product']
     list_filter = ['product__category']
     search_fields = ['product__name']
