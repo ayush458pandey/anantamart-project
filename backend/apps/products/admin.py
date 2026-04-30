@@ -42,7 +42,7 @@ class ProductAdmin(admin.ModelAdmin):
     list_filter = ['category', 'subcategory', 'brand_ref', 'is_active', 'stock_status', 'tax_rate', 'dietary_preference']
     
     # 🟢 Added 'hsn_code' to search (so you can search by it)
-    search_fields = ['name', 'sku', 'hsn_code', 'brand__name', 'brand_ref__name', 'description']
+    search_fields = ['name', 'sku', 'hsn_code', 'brand', 'brand_ref__name', 'description']
     
     list_editable = ['stock', 'is_active', 'base_price', 'tax_rate']
     
