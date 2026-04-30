@@ -237,48 +237,62 @@ export default function Home() {
 
     if (loading) {
         return (
-            <div className="animate-pulse">
-                {/* Skeleton Search Bar */}
-                <div className="h-10 bg-gray-200 rounded-lg mb-4"></div>
+            <>
+                {/* Desktop Search Portal Skeleton */}
+                {document.getElementById('desktop-search-container') && createPortal(
+                    <div className="flex items-center bg-gray-100 rounded-lg px-3 py-2 w-full animate-pulse">
+                        <div className="w-5 h-5 bg-gray-200 rounded-full flex-shrink-0"></div>
+                        <div className="flex-1 ml-2 h-5 bg-gray-200 rounded w-32"></div>
+                    </div>,
+                    document.getElementById('desktop-search-container')
+                )}
 
-                {/* Skeleton Category Tabs */}
-                <div className="flex gap-2 mb-6 overflow-hidden">
-                    {[1, 2, 3, 4, 5].map(i => (
-                        <div key={i} className="h-9 w-24 bg-gray-200 rounded-lg flex-shrink-0"></div>
-                    ))}
-                </div>
+                {/* Mobile Search + Category Tabs Skeleton */}
+                {document.getElementById('header-extension') && createPortal(
+                    <div className="px-3 sm:px-4 pb-2 pt-1 bg-white sm:hidden animate-pulse">
+                        <div className="h-10 bg-gray-100 rounded-lg mb-2"></div>
+                        <div className="flex gap-2 overflow-hidden pb-1">
+                            {[1, 2, 3, 4, 5].map(i => (
+                                <div key={i} className="h-9 w-24 bg-gray-100 rounded-lg flex-shrink-0"></div>
+                            ))}
+                        </div>
+                    </div>,
+                    document.getElementById('header-extension')
+                )}
 
-                {/* Skeleton Brand Row */}
-                <div className="mb-6">
-                    <div className="h-5 w-32 bg-gray-200 rounded mb-3"></div>
-                    <div className="flex gap-3 overflow-hidden">
-                        {[1, 2, 3, 4, 5, 6].map(i => (
-                            <div key={i} className="w-20 h-20 bg-gray-200 rounded-xl flex-shrink-0"></div>
+                <div className="animate-pulse mt-2 sm:mt-4">
+                    {/* Skeleton Brand Row */}
+                    <div className="mb-6">
+                        <div className="h-5 w-32 bg-gray-200 rounded mb-3"></div>
+                        <div className="flex gap-3 overflow-hidden">
+                            {[1, 2, 3, 4, 5, 6].map(i => (
+                                <div key={i} className="w-20 h-20 sm:w-24 sm:h-24 bg-gray-200 rounded-xl flex-shrink-0"></div>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Skeleton Product Cards */}
+                    <div className="h-5 w-28 bg-gray-200 rounded mb-3"></div>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4">
+                        {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(i => (
+                            <div key={i} className="bg-white rounded-xl p-3 shadow-sm border border-gray-100">
+                                <div className="h-32 sm:h-40 bg-gray-200 rounded-lg mb-3"></div>
+                                <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+                                <div className="h-3 bg-gray-200 rounded w-1/2 mb-3"></div>
+                                <div className="h-6 bg-gray-200 rounded w-1/3"></div>
+                            </div>
                         ))}
                     </div>
-                </div>
 
-                {/* Skeleton Product Cards */}
-                <div className="h-5 w-28 bg-gray-200 rounded mb-3"></div>
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-                    {[1, 2, 3, 4, 5, 6, 7, 8].map(i => (
-                        <div key={i} className="bg-white rounded-xl p-3 shadow-sm">
-                            <div className="h-28 bg-gray-200 rounded-lg mb-3"></div>
-                            <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
-                            <div className="h-3 bg-gray-200 rounded w-1/2 mb-2"></div>
-                            <div className="h-5 bg-gray-200 rounded w-1/3"></div>
+                    {/* Loading message */}
+                    <div className="text-center mt-6">
+                        <div className="inline-flex items-center gap-2 text-gray-500 text-sm">
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-emerald-600"></div>
+                            Loading Anantamart...
                         </div>
-                    ))}
-                </div>
-
-                {/* Loading message */}
-                <div className="text-center mt-6">
-                    <div className="inline-flex items-center gap-2 text-gray-500 text-sm">
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-emerald-600"></div>
-                        Loading Anantamart...
                     </div>
                 </div>
-            </div>
+            </>
         );
     }
 
