@@ -26,6 +26,5 @@ urllib3==2.6.2
 whitenoise==6.11.0
 django-smart-selects
 google-auth
-django-unfold
 redis
 django-redis
