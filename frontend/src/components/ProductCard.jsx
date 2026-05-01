@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { Package, Plus, Minus, GitCompare } from 'lucide-react';
 import { useComparison } from '../context/ComparisonContext';
+import { formatCaseSize } from '../utils/formatters';
 
 export default function ProductCard({ product, cart, onAddToCart, removeFromCart, updateQuantity, onViewDetails, onNavigateToCategory }) {
     const [mode, setMode] = useState('pcs'); // 'pcs' or 'case'
@@ -271,7 +272,7 @@ export default function ProductCard({ product, cart, onAddToCart, removeFromCart
                 <p className="text-[10px] sm:text-[11px] text-gray-600 mb-1">
                     <span className="font-semibold text-emerald-600">MOQ: {moq === 1 ? unitLabel : `${moq} ${unitLabel}`}</span>
                     {' • '}
-                    <span>Case: {caseSize === 1 ? unitLabel : `${caseSize} ${unitLabel}`}</span>
+                    <span>Case: {formatCaseSize(caseSize, unitLabel)}</span>
                 </p>
 
                 {/* Pcs / Case Toggle */}

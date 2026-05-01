@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { X, Plus, Minus, ShoppingCart, Package, Truck, Shield } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useToast } from '../context/ToastContext';
+import { formatCaseSize } from '../utils/formatters';
 
 export default function ProductDetail({ product, onClose, onAddToCart, onBrandClick }) {
   const { fetchCart } = useCart();
@@ -322,7 +323,7 @@ export default function ProductDetail({ product, onClose, onAddToCart, onBrandCl
                 {product.dietary_preference && <DetailRow label="Dietary Preference" value={product.dietary_preference} />}
                 {product.usage_recommendation && <DetailRow label="Usage Recommendation" value={product.usage_recommendation} />}
                 <DetailRow label="MOQ" value={product.moq === 1 ? (product.unit || 'unit') : `${product.moq} ${product.unit || 'units'}`} />
-                <DetailRow label="Case Size" value={product.case_size === 1 ? (product.unit || 'unit') : `${product.case_size} ${product.unit || 'units'}`} />
+                <DetailRow label="Case Size" value={formatCaseSize(product.case_size, product.unit)} />
                 <DetailRow label="Stock Available" value={`${product.stock} units`} />
               </div>
 
