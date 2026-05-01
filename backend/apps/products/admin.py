@@ -1,14 +1,15 @@
 from django.contrib import admin
+from unfold.admin import ModelAdmin, TabularInline
 from .models import Category, Product, PriceTier, ProductImage, Subcategory, Brand
 
 @admin.register(Category)
-class CategoryAdmin(admin.ModelAdmin):
+class CategoryAdmin(ModelAdmin):
     list_display = ['name', 'is_active', 'created_at']
     list_filter = ['is_active']
     search_fields = ['name', 'description']
 
 @admin.register(Subcategory)
-class SubcategoryAdmin(admin.ModelAdmin):
+class SubcategoryAdmin(ModelAdmin):
     list_display = ['name', 'category', 'is_active', 'created_at']
     list_select_related = ['category']
     list_filter = ['category', 'is_active']
@@ -17,7 +18,7 @@ class SubcategoryAdmin(admin.ModelAdmin):
     fields = ['name', 'category', 'description', 'image', 'icon_name', 'is_active']
 
 @admin.register(Brand)
-class BrandAdmin(admin.ModelAdmin):
+class BrandAdmin(ModelAdmin):
     list_display = ['name', 'slug', 'is_active', 'created_at']
     list_filter = ['is_active']
     search_fields = ['name', 'description']
@@ -25,7 +26,7 @@ class BrandAdmin(admin.ModelAdmin):
     prepopulated_fields = {'slug': ('name',)}
     fields = ['name', 'slug', 'logo', 'description', 'is_active']
 
-class ProductImageInline(admin.TabularInline):
+class ProductImageInline(TabularInline):
     model = ProductImage
     extra = 1
     fields = ['image', 'image_size_display', 'order', 'is_primary', 'alt_text']
@@ -41,13 +42,13 @@ class ProductImageInline(admin.TabularInline):
         return "-"
     image_size_display.short_description = 'Size'
 
-class PriceTierInline(admin.TabularInline):
+class PriceTierInline(TabularInline):
     model = PriceTier
     extra = 1
     fields = ['min_quantity', 'max_quantity', 'price']
 
 @admin.register(Product)
-class ProductAdmin(admin.ModelAdmin):
+class ProductAdmin(ModelAdmin):
     # 🟢 Added 'hsn_code' to the list view
     list_display = ['name', 'sku', 'brand_ref', 'category', 'subcategory', 'base_price', 'tax_rate', 'hsn_code', 'stock', 'stock_status', 'is_active']
     list_select_related = ['category', 'subcategory', 'subcategory__category', 'brand_ref']
@@ -106,7 +107,7 @@ class ProductAdmin(admin.ModelAdmin):
     inlines = [ProductImageInline, PriceTierInline]
 
 @admin.register(ProductImage)
-class ProductImageAdmin(admin.ModelAdmin):
+class ProductImageAdmin(ModelAdmin):
     list_display = ['product', 'image_size_display', 'order', 'is_primary', 'created_at']
     list_select_related = ['product']
     list_filter = ['is_primary', 'created_at']
@@ -125,7 +126,7 @@ class ProductImageAdmin(admin.ModelAdmin):
     image_size_display.short_description = 'Size'
 
 @admin.register(PriceTier)
-class PriceTierAdmin(admin.ModelAdmin):
+class PriceTierAdmin(ModelAdmin):
     list_display = ['product', 'min_quantity', 'max_quantity', 'price']
     list_select_related = ['product']
     list_filter = ['product__category']
