@@ -29,7 +29,6 @@ if RENDER_EXTERNAL_HOSTNAME:
 # --- APPLICATION DEFINITION ---
 INSTALLED_APPS = [
     'cloudinary_storage',          # MUST be above django.contrib.staticfiles
-    'unfold',                      # MUST be above django.contrib.admin
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -272,31 +271,4 @@ else:
     }
 
 # List of admin emails to receive order notifications
-ADMIN_EMAILS = [os.environ.get('ADMIN_EMAIL', 'ayush458pandey@gmail.com')]
-
-# --- UNFOLD ADMIN UI CONFIGURATION ---
-from django.templatetags.static import static
-
-UNFOLD = {
-    "SITE_TITLE": "AnantaMart Admin",
-    "SITE_HEADER": "AnantaMart",
-    "SITE_URL": "/",
-    "SITE_SYMBOL": "speed",
-    "SHOW_HISTORY": True,
-    "SHOW_VIEW_ON_SITE": True,
-    "COLORS": {
-        "primary": {
-            "50": "236 253 245",
-            "100": "209 250 229",
-            "200": "167 243 208",
-            "300": "110 231 183",
-            "400": "52 211 153",
-            "500": "16 185 129",
-            "600": "5 150 105",
-            "700": "4 120 87",
-            "800": "6 95 70",
-            "900": "6 78 59",
-            "950": "2 44 34",
-        },
-    },
-}
+ADMIN_EMAILS = [os.environ.get('ADMIN_EMAIL', 'ayush458pandey@gmail.com')]

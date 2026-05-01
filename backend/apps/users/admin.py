@@ -1,22 +1,7 @@
 from django.contrib import admin
-from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
-from django.contrib.auth.admin import GroupAdmin as BaseGroupAdmin
-from django.contrib.auth.models import User, Group
-from unfold.admin import ModelAdmin
 from .models import Address
 
-admin.site.unregister(User)
-admin.site.unregister(Group)
-
-@admin.register(User)
-class UserAdmin(BaseUserAdmin, ModelAdmin):
-    pass
-
-@admin.register(Group)
-class GroupAdmin(BaseGroupAdmin, ModelAdmin):
-    pass
-
 @admin.register(Address)
-class AddressAdmin(ModelAdmin):
+class AddressAdmin(admin.ModelAdmin):
     list_display = ['user', 'name', 'city', 'pincode', 'address_type', 'is_default']
     list_filter = ['address_type', 'city']
