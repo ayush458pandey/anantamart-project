@@ -321,8 +321,8 @@ export default function ProductDetail({ product, onClose, onAddToCart, onBrandCl
                 {product.packaging_type && <DetailRow label="Packaging Type" value={product.packaging_type} />}
                 {product.dietary_preference && <DetailRow label="Dietary Preference" value={product.dietary_preference} />}
                 {product.usage_recommendation && <DetailRow label="Usage Recommendation" value={product.usage_recommendation} />}
-                <DetailRow label="MOQ" value={`${product.moq} units`} />
-                <DetailRow label="Case Size" value={`${product.case_size} units`} />
+                <DetailRow label="MOQ" value={product.moq === 1 ? (product.unit || 'unit') : `${product.moq} ${product.unit || 'units'}`} />
+                <DetailRow label="Case Size" value={product.case_size === 1 ? (product.unit || 'unit') : `${product.case_size} ${product.unit || 'units'}`} />
                 <DetailRow label="Stock Available" value={`${product.stock} units`} />
               </div>
 

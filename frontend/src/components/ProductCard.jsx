@@ -269,9 +269,9 @@ export default function ProductCard({ product, cart, onAddToCart, removeFromCart
 
                 {/* MOQ + Case info */}
                 <p className="text-[10px] sm:text-[11px] text-gray-600 mb-1">
-                    <span className="font-semibold text-emerald-600">MOQ: {moq} {unitLabel}</span>
+                    <span className="font-semibold text-emerald-600">MOQ: {moq === 1 ? unitLabel : `${moq} ${unitLabel}`}</span>
                     {' • '}
-                    <span>Case: {caseSize} {unitLabel}</span>
+                    <span>Case: {caseSize === 1 ? unitLabel : `${caseSize} ${unitLabel}`}</span>
                 </p>
 
                 {/* Pcs / Case Toggle */}

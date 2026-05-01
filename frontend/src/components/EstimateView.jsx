@@ -58,7 +58,7 @@ export default function EstimateView({ cart, removeFromCart, updateQuantity, sub
                                         )}
                                     </h4>
                                     <p className="text-xs sm:text-sm text-gray-500">SKU: {item.product.sku}</p>
-                                    <p className="text-xs sm:text-sm text-gray-600 mt-0.5 sm:mt-1">MOQ: {item.product.moq} units</p>
+                                    <p className="text-xs sm:text-sm text-gray-600 mt-0.5 sm:mt-1">MOQ: {item.product.moq === 1 ? (item.product.unit || 'unit') : `${item.product.moq} ${item.product.unit || 'units'}`}</p>
                                     <p className="font-bold text-emerald-600 mt-1 text-sm sm:text-base">
                                         ₹{parseFloat(item.product.base_price).toFixed(2)}
                                         <span className="text-[9px] text-gray-400 font-normal ml-1">(incl. GST)</span>
