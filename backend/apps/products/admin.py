@@ -50,7 +50,7 @@ class PriceTierInline(admin.TabularInline):
 class ProductAdmin(admin.ModelAdmin):
     # 🟢 Added 'hsn_code' to the list view
     list_display = ['name', 'sku', 'brand_ref', 'category', 'subcategory', 'base_price', 'tax_rate', 'hsn_code', 'stock', 'stock_status', 'is_active']
-    list_select_related = ['category', 'subcategory', 'brand_ref']
+    list_select_related = ['category', 'subcategory', 'subcategory__category', 'brand_ref']
     
     list_filter = ['category', 'subcategory', 'brand_ref', 'is_active', 'stock_status', 'tax_rate', 'dietary_preference']
     
