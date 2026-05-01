@@ -10,6 +10,11 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
+        migrations.RunSQL('DROP INDEX IF EXISTS products_brand_is_active_25e413d9;'),
+        migrations.RunSQL('DROP INDEX IF EXISTS products_category_is_active_adb3f10a;'),
+        migrations.RunSQL('DROP INDEX IF EXISTS products_product_is_active_2e95eb0a;'),
+        migrations.RunSQL('DROP INDEX IF EXISTS products_product_stock_status_3536489c;'),
+        migrations.RunSQL('DROP INDEX IF EXISTS products_subcategory_is_active_b2fcf626;'),
         migrations.AlterField(
             model_name='brand',
             name='is_active',
