@@ -11,6 +11,30 @@ from apps.products.models import Product
 def get_cart(request):
     if request.user.is_authenticated:
         cart, created = Cart.objects.get_or_create(user=request.user)
+        
+        # Merge anonymous cart if it exists
+        if request.session.session_key:
+            session_cart = Cart.objects.filter(
+                session_key=request.session.session_key, 
+                user__isnull=True
+            ).first()
+            
+            if session_cart and session_cart.items.exists():
+                for item in session_cart.items.all():
+                    cart_item, item_created = CartItem.objects.get_or_create(
+                        cart=cart,
+                        product=item.product,
+                        variant=item.variant,
+                        defaults={'quantity': item.quantity}
+                    )
+                    if not item_created:
+                        cart_item.quantity += item.quantity
+                        cart_item.save()
+                
+                # Delete the session cart items and the cart itself after merging
+                session_cart.items.all().delete()
+                session_cart.delete()
+                
         return cart
     else:
         if not request.session.session_key:

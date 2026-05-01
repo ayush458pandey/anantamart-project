@@ -194,6 +194,9 @@ if not DEBUG:
 RAZORPAY_KEY_ID = os.environ.get('RAZORPAY_KEY_ID', '')
 RAZORPAY_KEY_SECRET = os.environ.get('RAZORPAY_KEY_SECRET', '')
 
+# --- GOOGLE SIGN-IN ---
+GOOGLE_CLIENT_ID = os.environ.get('GOOGLE_CLIENT_ID', '646623686463-crek4p60hrug0s098qv50i45u6edcpet.apps.googleusercontent.com')
+
 # --- Smart Selects Configuration ---
 USE_DJANGO_JQUERY = True
 JQUERY_URL = False
@@ -238,13 +241,13 @@ LOGGING = {
 # --- EMAIL CONFIGURATION (SMTP) ---
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_PORT = 465  # Try SSL port
-EMAIL_USE_TLS = False
-EMAIL_USE_SSL = True
+EMAIL_PORT = 587  # TLS port
+EMAIL_USE_TLS = True
+EMAIL_USE_SSL = False
 EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD')
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 SERVER_EMAIL = EMAIL_HOST_USER
 
 # List of admin emails to receive order notifications
-ADMIN_EMAILS = [os.environ.get('ADMIN_EMAIL', 'admin@ananta-mart.in')]
+ADMIN_EMAILS = [os.environ.get('ADMIN_EMAIL', 'ayush458pandey@gmail.com')]
