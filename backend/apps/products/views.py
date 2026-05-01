@@ -25,6 +25,11 @@ class ProductViewSet(viewsets.ModelViewSet):
     ordering_fields = ['base_price', 'created_at', 'name']
     ordering = ['-created_at']
     
+    @method_decorator(cache_page(300))
+    def list(self, request, *args, **kwargs):
+        """Cache product list for 5 minutes"""
+        return super().list(request, *args, **kwargs)
+    
     def get_queryset(self):
         """
         Override to support filtering by multiple brands and subcategories.
@@ -56,6 +61,7 @@ class ProductViewSet(viewsets.ModelViewSet):
     
 
     
+    @method_decorator(cache_page(300))
     @action(detail=False, methods=['get'])
     def filter_options(self, request):
         """
