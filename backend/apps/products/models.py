@@ -8,7 +8,7 @@ class Category(models.Model):
     # Changed from CharField to ImageField
     image = models.ImageField(upload_to='categories/', null=True, blank=True, help_text="Category Image")
     icon = models.CharField(max_length=50, blank=True, help_text="Icon name (optional)")
-    is_active = models.BooleanField(default=True, db_index=True)
+    is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     
     class Meta:
@@ -24,7 +24,7 @@ class Subcategory(models.Model):
     description = models.TextField(blank=True)
     image = models.ImageField(upload_to='subcategories/', null=True, blank=True, help_text="Subcategory icon/image")
     icon_name = models.CharField(max_length=50, blank=True, help_text="Fallback icon name")
-    is_active = models.BooleanField(default=True, db_index=True)
+    is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     
     class Meta:
@@ -40,7 +40,7 @@ class Brand(models.Model):
     slug = models.SlugField(max_length=100, unique=True, blank=True)
     logo = models.ImageField(upload_to='brands/', null=True, blank=True, help_text="Brand logo")
     description = models.TextField(blank=True)
-    is_active = models.BooleanField(default=True, db_index=True)
+    is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     
     class Meta:
@@ -113,12 +113,12 @@ class Product(models.Model):
     available_colors = models.TextField(blank=True, help_text="Comma separated colors (e.g. Red, Blue, #FF0000)")
     
     stock = models.PositiveIntegerField(default=0)
-    stock_status = models.CharField(max_length=20, choices=STOCK_STATUS_CHOICES, default='in-stock', db_index=True)
+    stock_status = models.CharField(max_length=20, choices=STOCK_STATUS_CHOICES, default='in-stock')
     
     moq = models.PositiveIntegerField(default=1, help_text="Minimum Order Quantity")
     case_size = models.PositiveIntegerField(default=1, help_text="Units per case")
     
-    is_active = models.BooleanField(default=True, db_index=True)
+    is_active = models.BooleanField(default=True)
     has_variants = models.BooleanField(default=False, help_text="Does this product have variants?")
     variant_display_type = models.CharField(max_length=50, default='dropdown', blank=True, help_text="How to display variants")
     created_at = models.DateTimeField(auto_now_add=True)
