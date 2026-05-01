@@ -29,6 +29,7 @@ if RENDER_EXTERNAL_HOSTNAME:
 # --- APPLICATION DEFINITION ---
 INSTALLED_APPS = [
     'cloudinary_storage',          # MUST be above django.contrib.staticfiles
+    'jazzmin',                     # MUST be above django.contrib.admin
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -250,4 +251,23 @@ DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 SERVER_EMAIL = EMAIL_HOST_USER
 
 # List of admin emails to receive order notifications
-ADMIN_EMAILS = [os.environ.get('ADMIN_EMAIL', 'ayush458pandey@gmail.com')]
+ADMIN_EMAILS = [os.environ.get('ADMIN_EMAIL', 'ayush458pandey@gmail.com')]
+
+# --- JAZZMIN ADMIN UI CONFIGURATION ---
+JAZZMIN_SETTINGS = {
+    "site_title": "AnantaMart Admin",
+    "site_header": "AnantaMart",
+    "site_brand": "AnantaMart",
+    "welcome_sign": "Welcome to AnantaMart Admin Dashboard",
+    "copyright": "AnantaMart Ltd",
+    "show_ui_builder": True,
+    "topmenu_links": [
+        {"name": "Home",  "url": "admin:index", "permissions": ["auth.view_user"]},
+        {"name": "View Site", "url": "/", "new_window": True},
+    ],
+}
+
+JAZZMIN_UI_TWEAKS = {
+    "theme": "lumen",
+    "dark_mode_theme": "darkly",
+}
