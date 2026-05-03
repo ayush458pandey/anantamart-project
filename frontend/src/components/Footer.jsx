@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import {
     Package, Facebook, Twitter, Linkedin, Instagram,
     Mail, Phone, MapPin, MessageCircle
@@ -34,12 +35,12 @@ const Footer = () => {
                     <div>
                         <h3 className="font-bold text-gray-800 mb-4 text-base">Company</h3>
                         <ul className="space-y-3 text-sm text-gray-500">
-                            <li><a href="#" className="hover:text-emerald-600 transition-colors">About Us</a></li>
-                            <li><a href="#" className="hover:text-emerald-600 transition-colors">Careers</a></li>
-                            <li><a href="#" className="hover:text-emerald-600 transition-colors">Press & Media</a></li>
-                            <li><a href="#" className="hover:text-emerald-600 transition-colors">Anantamart Blog</a></li>
-                            <li><a href="#" className="hover:text-emerald-600 transition-colors">Privacy Policy</a></li>
-                            <li><a href="#" className="hover:text-emerald-600 transition-colors">Terms of Service</a></li>
+                            <li><Link to="/about" className="hover:text-emerald-600 transition-colors">About Us</Link></li>
+                            <li><Link to="/careers" className="hover:text-emerald-600 transition-colors">Careers</Link></li>
+                            <li><Link to="/press" className="hover:text-emerald-600 transition-colors">Press & Media</Link></li>
+                            <li><Link to="/blog" className="hover:text-emerald-600 transition-colors">Anantamart Blog</Link></li>
+                            <li><Link to="/privacy-policy" className="hover:text-emerald-600 transition-colors">Privacy Policy</Link></li>
+                            <li><Link to="/terms-of-service" className="hover:text-emerald-600 transition-colors">Terms of Service</Link></li>
                         </ul>
                     </div>
 

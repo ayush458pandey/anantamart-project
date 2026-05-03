@@ -14,6 +14,7 @@ const ComparePage = lazy(() => import('./pages/ComparePage'));
 const ForgotPassword = lazy(() => import('./pages/ForgotPassword'));
 const ResetPassword = lazy(() => import('./pages/ResetPassword'));
 const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
+const CompanyPage = lazy(() => import('./pages/CompanyPage'));
 
 // Minimal loading fallback
 const PageLoader = () => (
@@ -33,6 +34,12 @@ function App() {
           <Route path="/orders" element={<OrdersPage />} />
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/compare" element={<ComparePage />} />
+          <Route path="/about" element={<CompanyPage page="about" />} />
+          <Route path="/careers" element={<CompanyPage page="careers" />} />
+          <Route path="/press" element={<CompanyPage page="press" />} />
+          <Route path="/blog" element={<CompanyPage page="blog" />} />
+          <Route path="/privacy-policy" element={<CompanyPage page="privacy" />} />
+          <Route path="/terms-of-service" element={<CompanyPage page="terms" />} />
         </Route>
 
         {/* Standalone pages (no Layout) */}
