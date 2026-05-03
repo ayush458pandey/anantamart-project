@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+
+Disallow: /admin
+Disallow: /cart
+Disallow: /orders
+Disallow: /profile
+Disallow: /reset-password
+
+Sitemap: https://ananta-mart.in/sitemap.xml
