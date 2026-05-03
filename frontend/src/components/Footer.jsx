@@ -17,7 +17,7 @@ const Footer = () => {
                             <span className="text-2xl font-bold tracking-tight">Anantamart</span>
                         </div>
                         <p className="text-gray-500 text-sm leading-relaxed">
-                            Your one-stop B2B wholesale platform where you can buy all kinds of products at competitive prices.
+                            India's leading B2B wholesale platform. Your one-stop B2B wholesale platform where you can buy all kinds of products at competitive prices.
                         </p>
                         <div className="flex gap-4 pt-4">
                             <SocialIcon Icon={Instagram} />
