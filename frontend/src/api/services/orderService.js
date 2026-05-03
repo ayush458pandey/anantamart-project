@@ -24,5 +24,15 @@ export const orderService = {
   getOrderById: async (id) => {
     const response = await axiosInstance.get(`/orders/${id}/`);
     return response.data;
+  },
+
+  createPaymentOrder: async (amount) => {
+    const response = await axiosInstance.post('/orders/payment/create/', { amount });
+    return response.data;
+  },
+
+  verifyRazorpayPayment: async (paymentDetails) => {
+    const response = await axiosInstance.post('/orders/payment/verify/', paymentDetails);
+    return response.data;
   }
 };

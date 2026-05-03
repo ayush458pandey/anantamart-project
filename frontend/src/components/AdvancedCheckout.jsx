@@ -68,6 +68,11 @@ const deliveryOptions = [
 // Helper function to load Razorpay script
 const loadRazorpay = (src) => {
   return new Promise((resolve) => {
+    if (window.Razorpay) {
+      resolve(true);
+      return;
+    }
+
     const script = document.createElement("script");
     script.src = src;
     script.onload = () => resolve(true);
@@ -292,20 +297,7 @@ export default function AdvancedCheckout({ cart, onClose, onPlaceOrder }) {
         return;
       }
 
-      const orderResponse = await fetch('https://api.ananta-mart.in/api/orders/payment/create/', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ amount: total })
-      });
-
-      if (!orderResponse.ok) {
-        throw new Error(`Server error: ${orderResponse.status}`);
-      }
-
-      const orderData = await orderResponse.json();
+      const orderData = await orderService.createPaymentOrder(total);
       if (orderData.error) throw new Error(orderData.error);
 
       const options = {
@@ -316,10 +308,20 @@ export default function AdvancedCheckout({ cart, onClose, onPlaceOrder }) {
         description: "Payment for Order",
         order_id: orderData.order_id,
         handler: async function (response) {
+          await orderService.verifyRazorpayPayment({
+            razorpay_order_id: response.razorpay_order_id,
+            razorpay_payment_id: response.razorpay_payment_id,
+            razorpay_signature: response.razorpay_signature
+          });
           await placeFinalOrder(addressObj, 'Paid', response);
         },
         prefill: {
           contact: addressObj.phone_number
+        },
+        modal: {
+          ondismiss: function () {
+            setIsProcessing(false);
+          }
         },
         theme: { color: "#10b981" }
       };
@@ -809,19 +811,7 @@ export default function AdvancedCheckout({ cart, onClose, onPlaceOrder }) {
                       return;
                     }
 
-                    // Create Razorpay order
-                    const token = localStorage.getItem('access_token');
-                    const orderResponse = await fetch('https://api.ananta-mart.in/api/orders/payment/create/', {
-                      method: 'POST',
-                      headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
-                      },
-                      body: JSON.stringify({ amount: total })
-                    });
-
-                    if (!orderResponse.ok) throw new Error(`Server error: ${orderResponse.status}`);
-                    const orderData = await orderResponse.json();
+                    const orderData = await orderService.createPaymentOrder(total);
                     if (orderData.error) throw new Error(orderData.error);
 
                     // Open Razorpay payment
@@ -834,9 +824,19 @@ export default function AdvancedCheckout({ cart, onClose, onPlaceOrder }) {
                       order_id: orderData.order_id,
                       handler: async function (response) {
                         // Payment successful — now create backorder
+                        await orderService.verifyRazorpayPayment({
+                          razorpay_order_id: response.razorpay_order_id,
+                          razorpay_payment_id: response.razorpay_payment_id,
+                          razorpay_signature: response.razorpay_signature
+                        });
                         await placeFinalOrder(addr, 'Paid', response, true);
                       },
                       prefill: { contact: addr.phone_number },
+                      modal: {
+                        ondismiss: function () {
+                          setIsProcessing(false);
+                        }
+                      },
                       theme: { color: "#10b981" }
                     };
 
