@@ -17,7 +17,7 @@ const Footer = () => {
                             <span className="text-2xl font-bold tracking-tight">Anantamart</span>
                         </div>
                         <p className="text-gray-500 text-sm leading-relaxed">
-                            India's leading B2B wholesale platform. We connect retailers with verified manufacturers to source genuine products at best prices.
+                            India's leading B2B wholesale platform. Your one-stop B2B wholesale platform where you can buy all kinds of products at competitive prices.
                         </p>
                         <div className="flex gap-4 pt-4">
                             <SocialIcon Icon={Instagram} />
@@ -26,7 +26,7 @@ const Footer = () => {
                             <SocialIcon Icon={Facebook} />
                         </div>
                         <div className="pt-4 text-xs text-gray-400">
-                            © 2026 Ananta Mart Pvt Ltd
+                            © 2026 Ananta Mart 
                         </div>
                     </div>
 
