@@ -6,7 +6,7 @@ class CartItemInline(admin.TabularInline):
     model = CartItem
     extra = 0
     readonly_fields = ['total_price']
-    fields = ['product', 'quantity', 'total_price']
+    fields = ['product', 'variant', 'quantity', 'total_price']
 
 
 @admin.register(Cart)
@@ -20,7 +20,7 @@ class CartAdmin(admin.ModelAdmin):
 
 @admin.register(CartItem)
 class CartItemAdmin(admin.ModelAdmin):
-    list_display = ['id', 'cart', 'product', 'quantity', 'total_price']
+    list_display = ['id', 'cart', 'product', 'variant', 'quantity', 'total_price']
     list_filter = ['cart', 'product']
-    search_fields = ['product__name']
+    search_fields = ['product__name', 'variant']
     readonly_fields = ['total_price']
