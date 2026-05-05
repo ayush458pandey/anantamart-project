@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import {
   X, CreditCard, Smartphone, Building2, Wallet,
-  CheckCircle, MapPin, Truck, Package, AlertCircle, Plus, Loader, FileText
+  CheckCircle, MapPin, Truck, Package, AlertCircle, Plus, Loader, FileText, QrCode
 } from 'lucide-react';
+import { QRCodeSVG } from 'qrcode.react';
 import InvoiceGenerator from './InvoiceGenerator';
 import AddressForm from './AddressForm';
 import { orderService } from '../api/services/orderService';
@@ -31,6 +32,13 @@ const paymentMethods = [
     icon: Building2,
     description: 'All major banks',
     color: 'indigo'
+  },
+  {
+    id: 'qr-scan',
+    name: 'Scan & Pay (UPI QR)',
+    icon: QrCode,
+    description: 'Scan QR with any UPI app',
+    color: 'blue'
   },
   {
     id: 'advance',
@@ -98,6 +106,11 @@ export default function AdvancedCheckout({ cart, onClose, onPlaceOrder }) {
   const [completedOrder, setCompletedOrder] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [stockWarning, setStockWarning] = useState(null); // {items: [...], addressObj}
+  const [utrNumber, setUtrNumber] = useState('');
+
+  // UPI QR config
+  const UPI_ID = import.meta.env.VITE_UPI_ID || '125008896654@cnrb';
+  const UPI_NAME = 'Ananta Mart';
 
   // Load Addresses on Mount
   useEffect(() => {
@@ -286,6 +299,17 @@ export default function AdvancedCheckout({ cart, onClose, onPlaceOrder }) {
       // 1. Manual Advance - Skip Razorpay
       if (selectedPayment === 'advance') {
         await placeFinalOrder(addressObj, 'Pending');
+        return;
+      }
+
+      // 1b. QR Scan Payment - Skip Razorpay, use UTR
+      if (selectedPayment === 'qr-scan') {
+        if (!utrNumber.trim()) {
+          alert('Please enter the UTR / Transaction ID after making payment');
+          setIsProcessing(false);
+          return;
+        }
+        await placeFinalOrder(addressObj, 'Pending', { razorpay_payment_id: utrNumber.trim() });
         return;
       }
 
@@ -719,6 +743,32 @@ export default function AdvancedCheckout({ cart, onClose, onPlaceOrder }) {
                   </div>
                 </div>
 
+                {/* QR Code Payment Section */}
+                {selectedPayment === 'qr-scan' && (
+                  <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-5 text-center">
+                    <h3 className="font-bold text-lg mb-1">Scan & Pay ₹{total.toFixed(2)}</h3>
+                    <p className="text-sm text-gray-600 mb-4">Scan with any UPI app (GPay, PhonePe, Paytm)</p>
+                    <div className="inline-block bg-white p-4 rounded-xl shadow-md mb-4">
+                      <QRCodeSVG
+                        value={`upi://pay?pa=${UPI_ID}&pn=${encodeURIComponent(UPI_NAME)}&am=${total.toFixed(2)}&cu=INR&tn=${encodeURIComponent('Order Payment - Ananta Mart')}`}
+                        size={200}
+                        level="H"
+                      />
+                    </div>
+                    <p className="text-xs text-gray-500 mb-3">UPI ID: {UPI_ID}</p>
+                    <div className="max-w-sm mx-auto">
+                      <label className="block text-sm font-bold text-gray-700 mb-1 text-left">UTR / Transaction ID</label>
+                      <input
+                        type="text"
+                        value={utrNumber}
+                        onChange={(e) => setUtrNumber(e.target.value)}
+                        placeholder="Enter UTR after payment"
+                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none text-center text-lg tracking-wider"
+                      />
+                      <p className="text-xs text-gray-400 mt-1">Find the UTR in your payment app's transaction details</p>
+                    </div>
+                  </div>
+                )}
                 <div className="flex gap-3">
                   <button
                     onClick={() => setStep(2)}
