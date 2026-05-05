@@ -1,7 +1,10 @@
-import React from 'react';
-import { FileText, Package, Plus, Minus, ShoppingCart } from 'lucide-react';
+import React, { useState } from 'react';
+import { FileText, Package, Plus, Minus, ShoppingCart, Download } from 'lucide-react';
+import InvoiceGenerator from './InvoiceGenerator';
 
 export default function EstimateView({ cart, removeFromCart, updateQuantity, subtotal, cgst, sgst, total, onCheckout }) {
+    const [showEstimatePDF, setShowEstimatePDF] = useState(false);
+
     if (!cart || cart.items.length === 0) {
         return (
             <div className="flex flex-col items-center justify-center py-16 sm:py-20 px-4">
@@ -123,13 +126,33 @@ export default function EstimateView({ cart, removeFromCart, updateQuantity, sub
                 </div>
             </div>
 
-            <button
-                onClick={onCheckout}
-                className="w-full bg-emerald-600 text-white font-bold py-3 sm:py-3.5 rounded-lg hover:bg-emerald-700 active:bg-emerald-800 transition-colors flex items-center justify-center gap-2 touch-manipulation text-sm sm:text-base shadow-lg"
-            >
-                <ShoppingCart className="w-5 h-5" />
-                Proceed to Checkout
-            </button>
+            <div className="flex gap-3 mb-4">
+                <button
+                    onClick={() => setShowEstimatePDF(true)}
+                    className="flex-1 bg-blue-600 text-white font-bold py-3 sm:py-3.5 rounded-lg hover:bg-blue-700 active:bg-blue-800 transition-colors flex items-center justify-center gap-2 touch-manipulation text-sm sm:text-base shadow-lg"
+                >
+                    <Download className="w-5 h-5" />
+                    Download Estimate
+                </button>
+                <button
+                    onClick={onCheckout}
+                    className="flex-1 bg-emerald-600 text-white font-bold py-3 sm:py-3.5 rounded-lg hover:bg-emerald-700 active:bg-emerald-800 transition-colors flex items-center justify-center gap-2 touch-manipulation text-sm sm:text-base shadow-lg"
+                >
+                    <ShoppingCart className="w-5 h-5" />
+                    Proceed to Checkout
+                </button>
+            </div>
+
+            {showEstimatePDF && (
+                <InvoiceGenerator
+                    type="estimate"
+                    orderData={{
+                        items: cart.items,
+                        pricing: { subtotal, discount: 0, cgst, sgst, delivery: 0, total }
+                    }}
+                    onClose={() => setShowEstimatePDF(false)}
+                />
+            )}
         </div>
     );
 }
