@@ -173,7 +173,7 @@ export default function InvoiceGenerator({ orderData, onClose, type = 'invoice' 
             {/* ═══ Invoice Content (captured for PDF) ═══ */}
             <div
               ref={invoiceRef}
-              className="bg-white border-2 border-gray-800 min-w-[680px]"
+              className="bg-white border-2 border-gray-800"
               style={{ fontFamily: 'Arial, Helvetica, sans-serif' }}
             >
 
@@ -183,7 +183,7 @@ export default function InvoiceGenerator({ orderData, onClose, type = 'invoice' 
               </div>
 
               {/* ─── Row 2: Company Info + Invoice Details ─── */}
-              <div className="grid grid-cols-2 border-b-2 border-gray-800">
+              <div className="grid grid-cols-1 sm:grid-cols-2 border-b-2 border-gray-800">
                 {/* Left: Company */}
                 <div className="border-r border-gray-400 p-3 text-xs leading-relaxed">
                   <p className="text-base font-bold mb-1">Tailoring Mart</p>
@@ -197,7 +197,7 @@ export default function InvoiceGenerator({ orderData, onClose, type = 'invoice' 
                 </div>
 
                 {/* Right: Invoice details */}
-                <div className="text-xs">
+                <div className="text-xs border-t sm:border-t-0">
                   <table className="w-full border-collapse">
                     <tbody>
                       <tr>
@@ -235,7 +235,7 @@ export default function InvoiceGenerator({ orderData, onClose, type = 'invoice' 
               </div>
 
               {/* ─── Row 4: Items Table ─── */}
-              <div className="border-b-2 border-gray-800">
+              <div className="border-b-2 border-gray-800 overflow-x-auto">
                 <table className="w-full border-collapse">
                   <thead>
                     <tr>
@@ -312,9 +312,9 @@ export default function InvoiceGenerator({ orderData, onClose, type = 'invoice' 
               </div>
 
               {/* ─── Row 5: Amount in Words + Amounts Summary ─── */}
-              <div className="grid grid-cols-2 border-b-2 border-gray-800">
+              <div className="grid grid-cols-1 sm:grid-cols-2 border-b-2 border-gray-800">
                 {/* Left: Amount in words */}
-                <div className="border-r border-gray-400 p-3 text-xs">
+                <div className="border-b sm:border-b-0 sm:border-r border-gray-400 p-3 text-xs">
                   <p className="font-semibold mb-1">Invoice Amount in Words:</p>
                   <p className="uppercase font-medium">
                     {numberToWords(total)} Rupees Only
@@ -358,7 +358,7 @@ export default function InvoiceGenerator({ orderData, onClose, type = 'invoice' 
 
               {/* ─── Row 6: HSN/SAC Tax Breakdown ─── */}
               {hsnRows.length > 0 && (
-                <div className="border-b-2 border-gray-800">
+                <div className="border-b-2 border-gray-800 overflow-x-auto">
                   <table className="w-full border-collapse text-xs">
                     <thead>
                       <tr>
@@ -402,9 +402,9 @@ export default function InvoiceGenerator({ orderData, onClose, type = 'invoice' 
               )}
 
               {/* ─── Row 7: Bank Details + Terms + Signatory ─── */}
-              <div className="grid grid-cols-3">
+              <div className="grid grid-cols-1 sm:grid-cols-3">
                 {/* Bank Details */}
-                <div className="border-r border-gray-400 p-3 text-xs leading-relaxed">
+                <div className="border-b sm:border-b-0 sm:border-r border-gray-400 p-3 text-xs leading-relaxed">
                   <p className="font-bold mb-1">Bank Details</p>
                   <p>Name: CANARA BANK</p>
                   <p>Branch: STRAND ROAD</p>
@@ -414,7 +414,7 @@ export default function InvoiceGenerator({ orderData, onClose, type = 'invoice' 
                 </div>
 
                 {/* Terms */}
-                <div className="border-r border-gray-400 p-3 text-xs leading-relaxed">
+                <div className="border-b sm:border-b-0 sm:border-r border-gray-400 p-3 text-xs leading-relaxed">
                   <p className="font-bold mb-1">Terms and conditions</p>
                   <p className="text-gray-600">Thank you for doing business with us.</p>
                   {isEstimate ? (
