@@ -29,7 +29,7 @@ export default function InvoiceGenerator({ orderData, onClose, type = 'invoice' 
   const invoiceRef = useRef(null);
 
   const isEstimate = type === 'estimate';
-  const docTitle = isEstimate ? 'Proforma Invoice / Estimate' : 'Tax Invoice';
+  const docTitle = isEstimate ? 'Proforma Invoice' : 'Tax Invoice';
   const docPrefix = isEstimate ? 'EST' : 'INV';
 
   // ── Derive data ────────────────────────────────────────────────
@@ -186,7 +186,8 @@ export default function InvoiceGenerator({ orderData, onClose, type = 'invoice' 
               <div className="grid grid-cols-2 border-b-2 border-gray-800">
                 {/* Left: Company */}
                 <div className="border-r border-gray-400 p-3 text-xs leading-relaxed">
-                  <p className="text-base font-bold mb-1">Ananta Mart</p>
+                  <p className="text-base font-bold mb-1">Tailoring Mart</p>
+                  <p className="text-[10px] text-gray-500">(Trading as Ananta Mart)</p>
                   <p>76, Purusottam Roy Street, Khengra Patty</p>
                   <p>Strand Road, Kolkata, West Bengal - 700007</p>
                   <p>Phone: +91 6291467226</p>
