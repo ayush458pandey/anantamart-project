@@ -174,6 +174,7 @@ export default function InvoiceGenerator({ orderData, onClose, type = 'invoice' 
             <div
               ref={invoiceRef}
               className="bg-white border-2 border-gray-800"
+              data-invoice-content
               style={{ fontFamily: 'Arial, Helvetica, sans-serif' }}
             >
 
@@ -232,6 +233,7 @@ export default function InvoiceGenerator({ orderData, onClose, type = 'invoice' 
                 <p>{customerAddress}</p>
                 {customerPhone && <p>Contact No: {customerPhone}</p>}
                 {customerState && <p>State: {customerState}</p>}
+                {addr.gstin && <p className="font-semibold">GSTIN: {addr.gstin}</p>}
               </div>
 
               {/* ─── Row 4: Items Table ─── */}
