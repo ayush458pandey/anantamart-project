@@ -296,9 +296,14 @@ export default function AdvancedCheckout({ cart, onClose, onPlaceOrder }) {
         return;
       }
 
-      // 1. Manual Advance - Skip Razorpay
+      // 1. Manual Advance (Bank Transfer) - Skip Razorpay, require UTR
       if (selectedPayment === 'advance') {
-        await placeFinalOrder(addressObj, 'Pending');
+        if (!utrNumber.trim()) {
+          alert('Please enter the UTR / Transaction Reference after making payment');
+          setIsProcessing(false);
+          return;
+        }
+        await placeFinalOrder(addressObj, 'Pending', { razorpay_payment_id: utrNumber.trim() });
         return;
       }
 
@@ -766,6 +771,32 @@ export default function AdvancedCheckout({ cart, onClose, onPlaceOrder }) {
                         className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none text-center text-lg tracking-wider"
                       />
                       <p className="text-xs text-gray-400 mt-1">Find the UTR in your payment app's transaction details</p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Bank Transfer / Advance Payment Section */}
+                {selectedPayment === 'advance' && (
+                  <div className="bg-indigo-50 border-2 border-indigo-200 rounded-xl p-5">
+                    <h3 className="font-bold text-lg mb-3">Bank Transfer (NEFT / RTGS)</h3>
+                    <p className="text-sm text-gray-600 mb-4">Transfer ₹{total.toFixed(2)} to the account below:</p>
+                    <div className="bg-white rounded-lg p-4 mb-4 text-sm space-y-1.5">
+                      <p><span className="font-semibold text-gray-700">Bank:</span> Canara Bank</p>
+                      <p><span className="font-semibold text-gray-700">Branch:</span> Strand Road, Kolkata</p>
+                      <p><span className="font-semibold text-gray-700">Account Name:</span> Tailoring Mart</p>
+                      <p><span className="font-semibold text-gray-700">Account No:</span> <span className="font-mono tracking-wider">125008896654</span></p>
+                      <p><span className="font-semibold text-gray-700">IFSC Code:</span> <span className="font-mono tracking-wider">CNRB0000303</span></p>
+                    </div>
+                    <div className="max-w-sm mx-auto">
+                      <label className="block text-sm font-bold text-gray-700 mb-1 text-left">UTR / Transaction Reference *</label>
+                      <input
+                        type="text"
+                        value={utrNumber}
+                        onChange={(e) => setUtrNumber(e.target.value)}
+                        placeholder="Enter UTR after bank transfer"
+                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-indigo-500 focus:outline-none text-center text-lg tracking-wider"
+                      />
+                      <p className="text-xs text-gray-400 mt-1">Find the UTR in your bank statement or net banking receipt</p>
                     </div>
                   </div>
                 )}
