@@ -20,12 +20,7 @@ class OrderViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
     
     def get_queryset(self):
-        return Order.objects.filter(user=self.request.user).prefetch_related(
-            'items__product__category',
-            'items__product__subcategory',
-            'items__product__brand_ref',
-            'items__product__images'
-        )
+        return Order.objects.filter(user=self.request.user).prefetch_related('items__product')
     
     def create(self, request):
         """Create a new order"""
