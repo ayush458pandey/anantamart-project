@@ -106,21 +106,21 @@ export default function InvoiceGenerator({ orderData, onClose, type = 'invoice' 
       const { jsPDF } = await import('jspdf');
 
       const canvas = await html2canvas(invoiceRef.current, {
-        scale: 2,
+        scale: 1.5,
         useCORS: true,
         backgroundColor: '#ffffff',
         scrollX: 0,
         scrollY: -window.scrollY,
       });
 
-      const imgData = canvas.toDataURL('image/png');
+      const imgData = canvas.toDataURL('image/jpeg', 0.6);
       const pdf = new jsPDF('p', 'mm', 'a4');
       const pdfW = pdf.internal.pageSize.getWidth();
       const pdfH = pdf.internal.pageSize.getHeight();
       const imgH = (canvas.height * pdfW) / canvas.width;
 
       let y = 0;
-      pdf.addImage(imgData, 'PNG', 0, y, pdfW, imgH);
+      pdf.addImage(imgData, 'JPEG', 0, y, pdfW, imgH);
       let remaining = imgH - pdfH;
       while (remaining > 0) {
         y -= pdfH;
