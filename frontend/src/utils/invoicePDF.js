@@ -61,6 +61,8 @@ export function generateInvoicePDF(orderData, type = 'invoice') {
   const totalQty = items.reduce((s, i) => s + (i.quantity || 0), 0);
   const deliveryOption = orderData?.delivery_option || '';
 
+  const isIGST = customerState && customerState.toLowerCase() !== 'west bengal' && customerState.toLowerCase() !== 'wb';
+
   // HSN breakdown
   const discountRate = subtotal > 0 ? discount / subtotal : 0;
   const hsnMap = {};
@@ -237,8 +239,12 @@ export function generateInvoicePDF(orderData, type = 'invoice') {
     ['Sub total', `Rs. ${subtotal.toFixed(2)}`],
   ];
   if (discount > 0) amountLines.push(['Discount', `- Rs. ${discount.toFixed(2)}`]);
-  amountLines.push(['CGST', `Rs. ${(hsnTotalTax / 2).toFixed(2)}`]);
-  amountLines.push(['SGST', `Rs. ${(hsnTotalTax / 2).toFixed(2)}`]);
+  if (isIGST) {
+    amountLines.push(['IGST', `Rs. ${hsnTotalTax.toFixed(2)}`]);
+  } else {
+    amountLines.push(['CGST', `Rs. ${(hsnTotalTax / 2).toFixed(2)}`]);
+    amountLines.push(['SGST', `Rs. ${(hsnTotalTax / 2).toFixed(2)}`]);
+  }
   amountLines.push(['Total', `Rs. ${total.toFixed(2)}`]);
   if (!isEstimate) {
     amountLines.push(['Received', `Rs. ${received.toFixed(2)}`]);
@@ -260,26 +266,48 @@ export function generateInvoicePDF(orderData, type = 'invoice') {
 
   // ── Row 6: HSN/SAC Breakdown ──
   if (hsnRows.length > 0) {
-    const hsnData = hsnRows.map(r => [
-      r.hsn,
-      `Rs. ${r.taxable.toFixed(2)}`,
-      `${(r.gstRate / 2).toFixed(1)}%`,
-      `Rs. ${r.cgst.toFixed(2)}`,
-      `${(r.gstRate / 2).toFixed(1)}%`,
-      `Rs. ${r.sgst.toFixed(2)}`,
-      `Rs. ${r.total.toFixed(2)}`,
-    ]);
-    hsnData.push([
-      'Total',
-      `Rs. ${hsnTotalTaxable.toFixed(2)}`,
-      '', `Rs. ${(hsnTotalTax / 2).toFixed(2)}`,
-      '', `Rs. ${(hsnTotalTax / 2).toFixed(2)}`,
-      `Rs. ${hsnTotalTax.toFixed(2)}`,
-    ]);
-
-    autoTable(pdf, {
-      startY: y,
-      head: [
+    let hsnData, hsnHead;
+    if (isIGST) {
+      hsnData = hsnRows.map(r => [
+        r.hsn,
+        `Rs. ${r.taxable.toFixed(2)}`,
+        `${r.gstRate.toFixed(1)}%`,
+        `Rs. ${r.total.toFixed(2)}`,
+        `Rs. ${r.total.toFixed(2)}`,
+      ]);
+      hsnData.push([
+        'Total',
+        `Rs. ${hsnTotalTaxable.toFixed(2)}`,
+        '', `Rs. ${hsnTotalTax.toFixed(2)}`,
+        `Rs. ${hsnTotalTax.toFixed(2)}`,
+      ]);
+      hsnHead = [
+        [
+          { content: 'HSN/SAC', rowSpan: 2 },
+          { content: 'Taxable Amount', rowSpan: 2 },
+          { content: 'IGST', colSpan: 2 },
+          { content: 'Total Tax Amount', rowSpan: 2 },
+        ],
+        ['Rate', 'Amount'],
+      ];
+    } else {
+      hsnData = hsnRows.map(r => [
+        r.hsn,
+        `Rs. ${r.taxable.toFixed(2)}`,
+        `${(r.gstRate / 2).toFixed(1)}%`,
+        `Rs. ${r.cgst.toFixed(2)}`,
+        `${(r.gstRate / 2).toFixed(1)}%`,
+        `Rs. ${r.sgst.toFixed(2)}`,
+        `Rs. ${r.total.toFixed(2)}`,
+      ]);
+      hsnData.push([
+        'Total',
+        `Rs. ${hsnTotalTaxable.toFixed(2)}`,
+        '', `Rs. ${(hsnTotalTax / 2).toFixed(2)}`,
+        '', `Rs. ${(hsnTotalTax / 2).toFixed(2)}`,
+        `Rs. ${hsnTotalTax.toFixed(2)}`,
+      ]);
+      hsnHead = [
         [
           { content: 'HSN/SAC', rowSpan: 2 },
           { content: 'Taxable Amount', rowSpan: 2 },
@@ -288,7 +316,12 @@ export function generateInvoicePDF(orderData, type = 'invoice') {
           { content: 'Total Tax Amount', rowSpan: 2 },
         ],
         ['Rate', 'Amount', 'Rate', 'Amount'],
-      ],
+      ];
+    }
+
+    autoTable(pdf, {
+      startY: y,
+      head: hsnHead,
       body: hsnData,
       theme: 'grid',
       margin: { left: M, right: M },
