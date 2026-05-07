@@ -178,14 +178,14 @@ export function generateInvoicePDF(orderData, type = 'invoice') {
       hsn,
       qty.toString(),
       unit,
-      `₹${price.toFixed(2)}`,
+      `Rs. ${price.toFixed(2)}`,
       `${gstRate}%`,
-      `₹${itemTotal.toFixed(2)}`
+      `Rs. ${itemTotal.toFixed(2)}`
     ];
   });
 
   // Total row
-  itemsData.push(['', '', '', totalQty.toString(), '', '', 'Total', `₹${subtotal.toFixed(2)}`]);
+  itemsData.push(['', '', '', totalQty.toString(), '', '', 'Total', `Rs. ${subtotal.toFixed(2)}`]);
 
   autoTable(pdf, {
     startY: y,
@@ -230,15 +230,15 @@ export function generateInvoicePDF(orderData, type = 'invoice') {
 
   // Right: Amounts table
   const amountLines = [
-    ['Sub total', `₹ ${subtotal.toFixed(2)}`],
+    ['Sub total', `Rs. ${subtotal.toFixed(2)}`],
   ];
-  if (discount > 0) amountLines.push(['Discount', `- ₹ ${discount.toFixed(2)}`]);
-  amountLines.push(['CGST', `₹ ${(hsnTotalTax / 2).toFixed(2)}`]);
-  amountLines.push(['SGST', `₹ ${(hsnTotalTax / 2).toFixed(2)}`]);
-  amountLines.push(['Total', `₹ ${total.toFixed(2)}`]);
+  if (discount > 0) amountLines.push(['Discount', `- Rs. ${discount.toFixed(2)}`]);
+  amountLines.push(['CGST', `Rs. ${(hsnTotalTax / 2).toFixed(2)}`]);
+  amountLines.push(['SGST', `Rs. ${(hsnTotalTax / 2).toFixed(2)}`]);
+  amountLines.push(['Total', `Rs. ${total.toFixed(2)}`]);
   if (!isEstimate) {
-    amountLines.push(['Received', `₹ ${received.toFixed(2)}`]);
-    amountLines.push(['Balance', `₹ ${balance.toFixed(2)}`]);
+    amountLines.push(['Received', `Rs. ${received.toFixed(2)}`]);
+    amountLines.push(['Balance', `Rs. ${balance.toFixed(2)}`]);
   }
 
   const amtRowH = row5H / amountLines.length;
@@ -258,19 +258,19 @@ export function generateInvoicePDF(orderData, type = 'invoice') {
   if (hsnRows.length > 0) {
     const hsnData = hsnRows.map(r => [
       r.hsn,
-      `₹ ${r.taxable.toFixed(2)}`,
+      `Rs. ${r.taxable.toFixed(2)}`,
       `${(r.gstRate / 2).toFixed(1)}%`,
-      `₹ ${r.cgst.toFixed(2)}`,
+      `Rs. ${r.cgst.toFixed(2)}`,
       `${(r.gstRate / 2).toFixed(1)}%`,
-      `₹ ${r.sgst.toFixed(2)}`,
-      `₹ ${r.total.toFixed(2)}`,
+      `Rs. ${r.sgst.toFixed(2)}`,
+      `Rs. ${r.total.toFixed(2)}`,
     ]);
     hsnData.push([
       'Total',
-      `₹ ${hsnTotalTaxable.toFixed(2)}`,
-      '', `₹ ${(hsnTotalTax / 2).toFixed(2)}`,
-      '', `₹ ${(hsnTotalTax / 2).toFixed(2)}`,
-      `₹ ${hsnTotalTax.toFixed(2)}`,
+      `Rs. ${hsnTotalTaxable.toFixed(2)}`,
+      '', `Rs. ${(hsnTotalTax / 2).toFixed(2)}`,
+      '', `Rs. ${(hsnTotalTax / 2).toFixed(2)}`,
+      `Rs. ${hsnTotalTax.toFixed(2)}`,
     ]);
 
     autoTable(pdf, {
