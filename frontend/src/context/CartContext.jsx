@@ -48,26 +48,54 @@ export const CartProvider = ({ children }) => {
   };
 
   const removeFromCart = async (productId) => {
+    // 1. Snapshot previous state
+    const previousCart = { ...cart };
+    
+    // 2. Optimistic UI update
+    setCart(prev => ({
+      ...prev,
+      items: prev.items.filter(item => item.id !== productId),
+      total_items: prev.total_items - (prev.items.find(i => i.id === productId)?.quantity || 0)
+    }));
+
     try {
-      setLoading(true);
+      // Don't set loading state to avoid UI freezing
       const data = await cartService.removeFromCart(productId);
-      setCart(data);
+      setCart(data); // Sync with true backend state
     } catch (err) {
+      setCart(previousCart); // Revert on failure
       setError('Failed to remove item');
-    } finally {
-      setLoading(false);
     }
   };
 
   const updateQuantity = async (itemId, quantity) => {
+    // 1. Snapshot previous state
+    const previousCart = { ...cart };
+    
+    // 2. Optimistic UI update
+    setCart(prev => {
+      let quantityDiff = 0;
+      const newItems = prev.items.map(item => {
+        if (item.id === itemId) {
+          quantityDiff = quantity - item.quantity;
+          return { ...item, quantity: quantity };
+        }
+        return item;
+      });
+      return {
+        ...prev,
+        items: newItems,
+        total_items: prev.total_items + quantityDiff
+      };
+    });
+
     try {
-      setLoading(true);
+      // Don't set loading state to avoid UI freezing
       const data = await cartService.updateCartItem(itemId, quantity);
-      setCart(data);
+      setCart(data); // Sync with true backend state
     } catch (err) {
+      setCart(previousCart); // Revert on failure
       setError('Failed to update quantity');
-    } finally {
-      setLoading(false);
     }
   };
 
