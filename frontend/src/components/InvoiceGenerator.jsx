@@ -1,5 +1,6 @@
 import { useState, useRef } from 'react';
 import { X, Download, Printer, Loader } from 'lucide-react';
+import { generateInvoicePDF } from '../utils/invoicePDF';
 
 // ── Number to Words (Indian system) ────────────────────────────────
 function numberToWords(num) {
@@ -99,47 +100,9 @@ export default function InvoiceGenerator({ orderData, onClose, type = 'invoice' 
 
   // ── PDF Download ───────────────────────────────────────────────
   const handleDownloadPDF = async () => {
-    if (!invoiceRef.current) return;
     setIsGeneratingPDF(true);
     try {
-      const html2canvas = (await import('html2canvas')).default;
-      const { jsPDF } = await import('jspdf');
-
-      const el = invoiceRef.current;
-      // Force fixed width for clean A4 PDF capture
-      const origStyle = el.style.cssText;
-      el.style.width = '800px';
-      el.style.minWidth = '800px';
-      el.style.maxWidth = '800px';
-
-      const canvas = await html2canvas(el, {
-        scale: 1.5,
-        useCORS: true,
-        backgroundColor: '#ffffff',
-        scrollX: 0,
-        scrollY: 0,
-        windowWidth: 850,
-      });
-
-      // Restore original style
-      el.style.cssText = origStyle;
-
-      const imgData = canvas.toDataURL('image/jpeg', 0.65);
-      const pdf = new jsPDF('p', 'mm', 'a4');
-      const pdfW = pdf.internal.pageSize.getWidth();
-      const pdfH = pdf.internal.pageSize.getHeight();
-      const imgH = (canvas.height * pdfW) / canvas.width;
-
-      let y = 0;
-      pdf.addImage(imgData, 'JPEG', 0, y, pdfW, imgH);
-      let remaining = imgH - pdfH;
-      while (remaining > 0) {
-        y -= pdfH;
-        pdf.addPage();
-        pdf.addImage(imgData, 'JPEG', 0, y, pdfW, imgH);
-        remaining -= pdfH;
-      }
-      pdf.save(`${invoiceNumber}.pdf`);
+      generateInvoicePDF(orderData, type);
     } catch (err) {
       console.error('PDF generation failed:', err);
       alert('Failed to generate PDF. Please try printing instead.');

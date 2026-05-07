@@ -1,52 +1,13 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState } from 'react';
 import { FileText, Package, Plus, Minus, ShoppingCart, Download, X, Loader } from 'lucide-react';
-import InvoiceGenerator from './InvoiceGenerator';
+import { generateInvoicePDF } from '../utils/invoicePDF';
 
 export default function EstimateView({ cart, removeFromCart, updateQuantity, subtotal, cgst, sgst, total, onCheckout }) {
     const [showBuyerForm, setShowBuyerForm] = useState(false);
-    const [isGenerating, setIsGenerating] = useState(false);
-    const [buyerDetails, setBuyerDetails] = useState(null);
     const [formData, setFormData] = useState({
         name: '', address: '', city: '', state: '', pincode: '', phone: '', hasGST: false, gstin: ''
     });
-    const hiddenInvoiceRef = useRef(null);
 
-    // Auto-download PDF when buyerDetails is set
-    useEffect(() => {
-        if (buyerDetails && hiddenInvoiceRef.current) {
-            const timer = setTimeout(async () => {
-                try {
-                    setIsGenerating(true);
-                    const el = hiddenInvoiceRef.current.querySelector('[data-invoice-content]');
-                    if (!el) { setIsGenerating(false); setBuyerDetails(null); return; }
-
-                    const html2canvas = (await import('html2canvas')).default;
-                    const { jsPDF } = await import('jspdf');
-
-                    const canvas = await html2canvas(el, { scale: 1.5, useCORS: true, backgroundColor: '#ffffff' });
-                    const imgData = canvas.toDataURL('image/jpeg', 0.6);
-                    const pdf = new jsPDF('p', 'mm', 'a4');
-                    const pdfW = pdf.internal.pageSize.getWidth();
-                    const pdfH = pdf.internal.pageSize.getHeight();
-                    const imgH = (canvas.height * pdfW) / canvas.width;
-
-                    let y = 0;
-                    pdf.addImage(imgData, 'JPEG', 0, y, pdfW, imgH);
-                    let remaining = imgH - pdfH;
-                    while (remaining > 0) { y -= pdfH; pdf.addPage(); pdf.addImage(imgData, 'JPEG', 0, y, pdfW, imgH); remaining -= pdfH; }
-
-                    pdf.save(`Estimate-${Date.now().toString().slice(-8)}.pdf`);
-                } catch (err) {
-                    console.error('PDF failed:', err);
-                    alert('Failed to generate PDF');
-                } finally {
-                    setIsGenerating(false);
-                    setBuyerDetails(null);
-                }
-            }, 500);
-            return () => clearTimeout(timer);
-        }
-    }, [buyerDetails]);
 
     if (!cart || cart.items.length === 0) {
         return (
@@ -78,15 +39,19 @@ export default function EstimateView({ cart, removeFromCart, updateQuantity, sub
             alert('Please enter your GSTIN number');
             return;
         }
-        setBuyerDetails({
-            name: formData.name,
-            street_address: formData.address,
-            city: formData.city,
-            state: formData.state,
-            pincode: formData.pincode,
-            phone_number: formData.phone,
-            gstin: formData.hasGST ? formData.gstin : ''
-        });
+        generateInvoicePDF({
+            items: cart.items,
+            delivery_address: {
+                name: formData.name,
+                street_address: formData.address,
+                city: formData.city,
+                state: formData.state,
+                pincode: formData.pincode,
+                phone_number: formData.phone,
+                gstin: formData.hasGST ? formData.gstin : ''
+            },
+            pricing: { subtotal, discount: 0, cgst, sgst, delivery: 0, total }
+        }, 'estimate');
         setShowBuyerForm(false);
     };
 
@@ -159,10 +124,9 @@ export default function EstimateView({ cart, removeFromCart, updateQuantity, sub
             <div className="flex gap-3 mb-4">
                 <button
                     onClick={() => setShowBuyerForm(true)}
-                    disabled={isGenerating}
-                    className="flex-1 bg-blue-600 text-white font-bold py-3 sm:py-3.5 rounded-lg hover:bg-blue-700 active:bg-blue-800 transition-colors flex items-center justify-center gap-2 touch-manipulation text-sm sm:text-base shadow-lg disabled:bg-gray-300"
+                    className="flex-1 bg-blue-600 text-white font-bold py-3 sm:py-3.5 rounded-lg hover:bg-blue-700 active:bg-blue-800 transition-colors flex items-center justify-center gap-2 touch-manipulation text-sm sm:text-base shadow-lg"
                 >
-                    {isGenerating ? (<><Loader className="w-5 h-5 animate-spin" /> Generating...</>) : (<><Download className="w-5 h-5" /> Download Estimate</>)}
+                    <Download className="w-5 h-5" /> Download Estimate
                 </button>
                 <button
                     onClick={onCheckout}
@@ -242,19 +206,6 @@ export default function EstimateView({ cart, removeFromCart, updateQuantity, sub
             )}
 
             {/* ── Hidden Invoice for PDF capture ── */}
-            {buyerDetails && (
-                <div ref={hiddenInvoiceRef} style={{ position: 'fixed', left: '-9999px', top: 0, width: '800px' }}>
-                    <InvoiceGenerator
-                        type="estimate"
-                        orderData={{
-                            items: cart.items,
-                            delivery_address: buyerDetails,
-                            pricing: { subtotal, discount: 0, cgst, sgst, delivery: 0, total }
-                        }}
-                        onClose={() => setBuyerDetails(null)}
-                    />
-                </div>
-            )}
         </div>
     );
 }
