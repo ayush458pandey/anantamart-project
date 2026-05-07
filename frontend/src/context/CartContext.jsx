@@ -63,8 +63,10 @@ export const CartProvider = ({ children }) => {
       const data = await cartService.removeFromCart(productId);
       setCart(data); // Sync with true backend state
     } catch (err) {
-      setCart(previousCart); // Revert on failure
-      setError('Failed to remove item');
+      if (err.response?.status !== 404) {
+        setCart(previousCart); // Revert on failure only if it's not a 404
+        setError('Failed to remove item');
+      }
     }
   };
 
@@ -94,8 +96,10 @@ export const CartProvider = ({ children }) => {
       const data = await cartService.updateCartItem(itemId, quantity);
       setCart(data); // Sync with true backend state
     } catch (err) {
-      setCart(previousCart); // Revert on failure
-      setError('Failed to update quantity');
+      if (err.response?.status !== 404) {
+        setCart(previousCart); // Revert on failure only if it's not a 404
+        setError('Failed to update quantity');
+      }
     }
   };
 
