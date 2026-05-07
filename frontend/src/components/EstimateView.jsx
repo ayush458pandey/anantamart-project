@@ -2,10 +2,20 @@ import React, { useState } from 'react';
 import { FileText, Package, Plus, Minus, ShoppingCart, Download, X, Loader } from 'lucide-react';
 import { generateInvoicePDF } from '../utils/invoicePDF';
 
+const INDIAN_STATES = [
+    "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh", "Goa", "Gujarat", "Haryana", "Himachal Pradesh", "Jharkhand", "Karnataka", "Kerala", "Madhya Pradesh", "Maharashtra", "Manipur", "Meghalaya", "Mizoram", "Nagaland", "Odisha", "Punjab", "Rajasthan", "Sikkim", "Tamil Nadu", "Telangana", "Tripura", "Uttar Pradesh", "Uttarakhand", "West Bengal", "Andaman and Nicobar Islands", "Chandigarh", "Dadra and Nagar Haveli and Daman and Diu", "Delhi", "Lakshadweep", "Puducherry"
+];
+
 export default function EstimateView({ cart, removeFromCart, updateQuantity, subtotal, cgst, sgst, total, onCheckout }) {
     const [showBuyerForm, setShowBuyerForm] = useState(false);
-    const [formData, setFormData] = useState({
-        name: '', address: '', city: '', state: '', pincode: '', phone: '', hasGST: false, gstin: ''
+    const [formData, setFormData] = useState(() => {
+        try {
+            const saved = localStorage.getItem('estimateBuyerDetails');
+            if (saved) return JSON.parse(saved);
+        } catch (e) {
+            console.warn('Failed to load saved buyer details');
+        }
+        return { name: '', address: '', city: '', state: 'West Bengal', pincode: '', phone: '', hasGST: false, gstin: '' };
     });
 
 
@@ -38,6 +48,20 @@ export default function EstimateView({ cart, removeFromCart, updateQuantity, sub
         if (formData.hasGST && !formData.gstin.trim()) {
             alert('Please enter your GSTIN number');
             return;
+        }
+        if (formData.phone && !/^\d{10}$/.test(formData.phone.replace(/\D/g, ''))) {
+            alert('Please enter a valid 10-digit phone number');
+            return;
+        }
+        if (formData.pincode && !/^\d{6}$/.test(formData.pincode.trim())) {
+            alert('Please enter a valid 6-digit PIN code');
+            return;
+        }
+
+        try {
+            localStorage.setItem('estimateBuyerDetails', JSON.stringify(formData));
+        } catch (e) {
+            console.warn('Failed to save buyer details');
         }
         generateInvoicePDF({
             items: cart.items,
@@ -160,7 +184,12 @@ export default function EstimateView({ cart, removeFromCart, updateQuantity, sub
                                 </div>
                                 <div>
                                     <label className="block text-sm font-semibold text-gray-700 mb-1">State</label>
-                                    <input type="text" value={formData.state} onChange={e => setFormData(f => ({...f, state: e.target.value}))} placeholder="State" className={inputClass} />
+                                    <select value={formData.state} onChange={e => setFormData(f => ({...f, state: e.target.value}))} className={inputClass}>
+                                        <option value="">Select State</option>
+                                        {INDIAN_STATES.map(state => (
+                                            <option key={state} value={state}>{state}</option>
+                                        ))}
+                                    </select>
                                 </div>
                             </div>
                             <div className="grid grid-cols-2 gap-3">
@@ -170,7 +199,7 @@ export default function EstimateView({ cart, removeFromCart, updateQuantity, sub
                                 </div>
                                 <div>
                                     <label className="block text-sm font-semibold text-gray-700 mb-1">Phone *</label>
-                                    <input type="tel" required value={formData.phone} onChange={e => setFormData(f => ({...f, phone: e.target.value}))} placeholder="+91 98765 43210" className={inputClass} />
+                                    <input type="tel" maxLength="10" required value={formData.phone} onChange={e => setFormData(f => ({...f, phone: e.target.value.replace(/\D/g, '')}))} placeholder="10-digit mobile" className={inputClass} />
                                 </div>
                             </div>
 
