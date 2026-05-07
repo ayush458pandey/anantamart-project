@@ -105,15 +105,26 @@ export default function InvoiceGenerator({ orderData, onClose, type = 'invoice' 
       const html2canvas = (await import('html2canvas')).default;
       const { jsPDF } = await import('jspdf');
 
-      const canvas = await html2canvas(invoiceRef.current, {
+      const el = invoiceRef.current;
+      // Force fixed width for clean A4 PDF capture
+      const origStyle = el.style.cssText;
+      el.style.width = '800px';
+      el.style.minWidth = '800px';
+      el.style.maxWidth = '800px';
+
+      const canvas = await html2canvas(el, {
         scale: 1.5,
         useCORS: true,
         backgroundColor: '#ffffff',
         scrollX: 0,
-        scrollY: -window.scrollY,
+        scrollY: 0,
+        windowWidth: 850,
       });
 
-      const imgData = canvas.toDataURL('image/jpeg', 0.6);
+      // Restore original style
+      el.style.cssText = origStyle;
+
+      const imgData = canvas.toDataURL('image/jpeg', 0.65);
       const pdf = new jsPDF('p', 'mm', 'a4');
       const pdfW = pdf.internal.pageSize.getWidth();
       const pdfH = pdf.internal.pageSize.getHeight();
@@ -125,7 +136,7 @@ export default function InvoiceGenerator({ orderData, onClose, type = 'invoice' 
       while (remaining > 0) {
         y -= pdfH;
         pdf.addPage();
-        pdf.addImage(imgData, 'PNG', 0, y, pdfW, imgH);
+        pdf.addImage(imgData, 'JPEG', 0, y, pdfW, imgH);
         remaining -= pdfH;
       }
       pdf.save(`${invoiceNumber}.pdf`);
