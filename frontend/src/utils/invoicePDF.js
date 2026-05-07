@@ -21,7 +21,7 @@ function numberToWords(num) {
  * @param {Object} orderData - order/cart data
  * @param {'invoice'|'estimate'} type
  */
-export function generateInvoicePDF(orderData, type = 'invoice') {
+export async function generateInvoicePDF(orderData, type = 'invoice') {
   const isEstimate = type === 'estimate';
   const docTitle = isEstimate ? 'Proforma Invoice' : 'Tax Invoice';
   const docPrefix = isEstimate ? 'EST' : 'INV';
@@ -84,6 +84,17 @@ export function generateInvoicePDF(orderData, type = 'invoice') {
 
   // ── PDF Setup ──
   const pdf = new jsPDF('p', 'mm', 'a4');
+  
+  // Load custom font to support ₹ symbol
+  try {
+    const { robotoBase64 } = await import('./roboto-b64.js');
+    pdf.addFileToVFS('Roboto-Regular.ttf', robotoBase64);
+    pdf.addFont('Roboto-Regular.ttf', 'Roboto', 'normal');
+    pdf.setFont('Roboto');
+  } catch (e) {
+    console.warn("Could not load Roboto font, fallback to helvetica", e);
+  }
+
   const W = pdf.internal.pageSize.getWidth();   // 210
   const H = pdf.internal.pageSize.getHeight();  // 297
   const M = 10; // margin
@@ -96,7 +107,7 @@ export function generateInvoicePDF(orderData, type = 'invoice') {
   // ── Row 1: Title ──
   drawRect(M, y, cW, 8, 0.5);
   pdf.setFontSize(12);
-  pdf.setFont('helvetica', 'bold');
+  pdf.setFont(pdf.getFont().fontName, 'bold');
   pdf.text(docTitle, W / 2, y + 5.5, { align: 'center' });
   y += 8;
 
@@ -108,19 +119,19 @@ export function generateInvoicePDF(orderData, type = 'invoice') {
 
   // Left: Company
   pdf.setFontSize(10);
-  pdf.setFont('helvetica', 'bold');
+  pdf.setFont(pdf.getFont().fontName, 'bold');
   pdf.text('Tailoring Mart', M + 3, y + 5);
   pdf.setFontSize(6.5);
-  pdf.setFont('helvetica', 'normal');
+  pdf.setFont(pdf.getFont().fontName, 'normal');
   pdf.text('(Trading as Ananta Mart)', M + 3, y + 8.5);
   pdf.setFontSize(7);
   pdf.text('76, Purusottam Roy Street, Khengra Patty', M + 3, y + 12);
   pdf.text('Strand Road, Kolkata, West Bengal - 700007', M + 3, y + 15);
   pdf.text('Phone: +91 6291467226', M + 3, y + 18);
   pdf.text('Email: ayush458pandey@gmail.com', M + 3, y + 21);
-  pdf.setFont('helvetica', 'bold');
+  pdf.setFont(pdf.getFont().fontName, 'bold');
   pdf.text('GSTIN: 19EHXPP0921F1ZW', M + 3, y + 25);
-  pdf.setFont('helvetica', 'normal');
+  pdf.setFont(pdf.getFont().fontName, 'normal');
   pdf.text('State: West Bengal', M + 3, y + 28);
 
   // Right: Invoice details table
@@ -138,10 +149,10 @@ export function generateInvoicePDF(orderData, type = 'invoice') {
     const ry = y + i * detailRowH;
     if (i > 0) drawLine(midX, ry, M + cW, ry);
     drawLine(midX + rW / 2, ry, midX + rW / 2, ry + detailRowH);
-    pdf.setFont('helvetica', 'bold');
+    pdf.setFont(pdf.getFont().fontName, 'bold');
     pdf.setFontSize(7);
     pdf.text(row[0], rX + 2, ry + detailRowH / 2 + 1);
-    pdf.setFont('helvetica', 'normal');
+    pdf.setFont(pdf.getFont().fontName, 'normal');
     pdf.text(row[1], midX + rW / 2 + 3, ry + detailRowH / 2 + 1);
   });
   y += row2H;
@@ -157,7 +168,7 @@ export function generateInvoicePDF(orderData, type = 'invoice') {
   drawRect(M, y, cW, billH, 0.5);
   pdf.setFontSize(7);
   billLines.forEach((line, i) => {
-    pdf.setFont('helvetica', i <= 1 ? 'bold' : 'normal');
+    pdf.setFont(pdf.getFont().fontName, i <= 1 ? 'bold' : 'normal');
     pdf.text(line, M + 3, y + 4 + i * 3.5);
   });
   y += billH;
@@ -178,14 +189,14 @@ export function generateInvoicePDF(orderData, type = 'invoice') {
       hsn,
       qty.toString(),
       unit,
-      `Rs. ${price.toFixed(2)}`,
+      `₹${price.toFixed(2)}`,
       `${gstRate}%`,
-      `Rs. ${itemTotal.toFixed(2)}`
+      `₹${itemTotal.toFixed(2)}`
     ];
   });
 
   // Total row
-  itemsData.push(['', '', '', totalQty.toString(), '', '', 'Total', `Rs. ${subtotal.toFixed(2)}`]);
+  itemsData.push(['', '', '', totalQty.toString(), '', '', 'Total', `₹${subtotal.toFixed(2)}`]);
 
   autoTable(pdf, {
     startY: y,
@@ -193,7 +204,7 @@ export function generateInvoicePDF(orderData, type = 'invoice') {
     body: itemsData,
     theme: 'grid',
     margin: { left: M, right: M },
-    styles: { fontSize: 7, cellPadding: 1.5, lineColor: [150, 150, 150], lineWidth: 0.2, font: 'helvetica' },
+    styles: { fontSize: 7, cellPadding: 1.5, lineColor: [150, 150, 150], lineWidth: 0.2, font: pdf.getFont().fontName },
     headStyles: { fillColor: [240, 240, 240], textColor: [30, 30, 30], fontStyle: 'bold', halign: 'center' },
     columnStyles: {
       0: { halign: 'center', cellWidth: 8 },
@@ -206,6 +217,11 @@ export function generateInvoicePDF(orderData, type = 'invoice') {
       7: { halign: 'right', cellWidth: 28 },
     },
     didParseCell: (data) => {
+      // Bold the item name column
+      if (data.section === 'body' && data.column.index === 1) {
+        data.cell.styles.fontStyle = 'bold';
+      }
+      // Bold the total row
       if (data.row.index === itemsData.length - 1) {
         data.cell.styles.fontStyle = 'bold';
       }
@@ -220,9 +236,9 @@ export function generateInvoicePDF(orderData, type = 'invoice') {
 
   // Left: Amount in words
   pdf.setFontSize(7);
-  pdf.setFont('helvetica', 'bold');
+  pdf.setFont(pdf.getFont().fontName, 'bold');
   pdf.text('Invoice Amount in Words:', M + 3, y + 5);
-  pdf.setFont('helvetica', 'normal');
+  pdf.setFont(pdf.getFont().fontName, 'normal');
   pdf.setFontSize(7);
   const amountWords = numberToWords(total) + ' Rupees Only';
   const splitWords = pdf.splitTextToSize(amountWords.toUpperCase(), cW / 2 - 6);
@@ -230,15 +246,15 @@ export function generateInvoicePDF(orderData, type = 'invoice') {
 
   // Right: Amounts table
   const amountLines = [
-    ['Sub total', `Rs. ${subtotal.toFixed(2)}`],
+    ['Sub total', `₹ ${subtotal.toFixed(2)}`],
   ];
-  if (discount > 0) amountLines.push(['Discount', `- Rs. ${discount.toFixed(2)}`]);
-  amountLines.push(['CGST', `Rs. ${(hsnTotalTax / 2).toFixed(2)}`]);
-  amountLines.push(['SGST', `Rs. ${(hsnTotalTax / 2).toFixed(2)}`]);
-  amountLines.push(['Total', `Rs. ${total.toFixed(2)}`]);
+  if (discount > 0) amountLines.push(['Discount', `- ₹ ${discount.toFixed(2)}`]);
+  amountLines.push(['CGST', `₹ ${(hsnTotalTax / 2).toFixed(2)}`]);
+  amountLines.push(['SGST', `₹ ${(hsnTotalTax / 2).toFixed(2)}`]);
+  amountLines.push(['Total', `₹ ${total.toFixed(2)}`]);
   if (!isEstimate) {
-    amountLines.push(['Received', `Rs. ${received.toFixed(2)}`]);
-    amountLines.push(['Balance', `Rs. ${balance.toFixed(2)}`]);
+    amountLines.push(['Received', `₹ ${received.toFixed(2)}`]);
+    amountLines.push(['Balance', `₹ ${balance.toFixed(2)}`]);
   }
 
   const amtRowH = row5H / amountLines.length;
@@ -247,7 +263,7 @@ export function generateInvoicePDF(orderData, type = 'invoice') {
     if (i > 0) drawLine(midX, ry, M + cW, ry);
     drawLine(midX + rW / 2 + 5, ry, midX + rW / 2 + 5, ry + amtRowH);
     const isBold = row[0] === 'Total' || row[0] === 'Balance';
-    pdf.setFont('helvetica', isBold ? 'bold' : 'normal');
+    pdf.setFont(pdf.getFont().fontName, isBold ? 'bold' : 'normal');
     pdf.setFontSize(7);
     pdf.text(row[0], rX + 2, ry + amtRowH / 2 + 1);
     pdf.text(row[1], M + cW - 3, ry + amtRowH / 2 + 1, { align: 'right' });
@@ -258,19 +274,19 @@ export function generateInvoicePDF(orderData, type = 'invoice') {
   if (hsnRows.length > 0) {
     const hsnData = hsnRows.map(r => [
       r.hsn,
-      `Rs. ${r.taxable.toFixed(2)}`,
+      `₹ ${r.taxable.toFixed(2)}`,
       `${(r.gstRate / 2).toFixed(1)}%`,
-      `Rs. ${r.cgst.toFixed(2)}`,
+      `₹ ${r.cgst.toFixed(2)}`,
       `${(r.gstRate / 2).toFixed(1)}%`,
-      `Rs. ${r.sgst.toFixed(2)}`,
-      `Rs. ${r.total.toFixed(2)}`,
+      `₹ ${r.sgst.toFixed(2)}`,
+      `₹ ${r.total.toFixed(2)}`,
     ]);
     hsnData.push([
       'Total',
-      `Rs. ${hsnTotalTaxable.toFixed(2)}`,
-      '', `Rs. ${(hsnTotalTax / 2).toFixed(2)}`,
-      '', `Rs. ${(hsnTotalTax / 2).toFixed(2)}`,
-      `Rs. ${hsnTotalTax.toFixed(2)}`,
+      `₹ ${hsnTotalTaxable.toFixed(2)}`,
+      '', `₹ ${(hsnTotalTax / 2).toFixed(2)}`,
+      '', `₹ ${(hsnTotalTax / 2).toFixed(2)}`,
+      `₹ ${hsnTotalTax.toFixed(2)}`,
     ]);
 
     autoTable(pdf, {
@@ -288,9 +304,13 @@ export function generateInvoicePDF(orderData, type = 'invoice') {
       body: hsnData,
       theme: 'grid',
       margin: { left: M, right: M },
-      styles: { fontSize: 6.5, cellPadding: 1.2, lineColor: [150, 150, 150], lineWidth: 0.2, font: 'helvetica', halign: 'center' },
+      styles: { fontSize: 6.5, cellPadding: 1.2, lineColor: [150, 150, 150], lineWidth: 0.2, font: pdf.getFont().fontName, halign: 'center' },
       headStyles: { fillColor: [240, 240, 240], textColor: [30, 30, 30], fontStyle: 'bold' },
       didParseCell: (data) => {
+        // Bold the taxable amount column
+        if (data.section === 'body' && data.column.index === 1) {
+          data.cell.styles.fontStyle = 'bold';
+        }
         if (data.row.index === hsnData.length - 1) {
           data.cell.styles.fontStyle = 'bold';
         }
@@ -315,9 +335,9 @@ export function generateInvoicePDF(orderData, type = 'invoice') {
 
   // Col 1: Bank Details
   pdf.setFontSize(7);
-  pdf.setFont('helvetica', 'bold');
+  pdf.setFont(pdf.getFont().fontName, 'bold');
   pdf.text('Bank Details', M + 3, y + 4);
-  pdf.setFont('helvetica', 'normal');
+  pdf.setFont(pdf.getFont().fontName, 'normal');
   pdf.text('Name: CANARA BANK', M + 3, y + 8);
   pdf.text('Branch: STRAND ROAD', M + 3, y + 11);
   pdf.text('Account No: 125008896654', M + 3, y + 14);
@@ -326,9 +346,9 @@ export function generateInvoicePDF(orderData, type = 'invoice') {
 
   // Col 2: Terms
   const t2X = M + col3W + 3;
-  pdf.setFont('helvetica', 'bold');
+  pdf.setFont(pdf.getFont().fontName, 'bold');
   pdf.text('Terms and conditions', t2X, y + 4);
-  pdf.setFont('helvetica', 'normal');
+  pdf.setFont(pdf.getFont().fontName, 'normal');
   pdf.text('Thank you for doing business with us.', t2X, y + 8);
   if (isEstimate) {
     pdf.text('This is not a tax invoice.', t2X, y + 11);
@@ -341,9 +361,9 @@ export function generateInvoicePDF(orderData, type = 'invoice') {
 
   // Col 3: Signatory
   const t3X = M + col3W * 2 + 3;
-  pdf.setFont('helvetica', 'bold');
+  pdf.setFont(pdf.getFont().fontName, 'bold');
   pdf.text('For: Tailoring Mart', t3X, y + 4);
-  pdf.setFont('helvetica', 'normal');
+  pdf.setFont(pdf.getFont().fontName, 'normal');
   pdf.setFontSize(7);
   pdf.text('Authorized Signatory', t3X, y + 24);
 

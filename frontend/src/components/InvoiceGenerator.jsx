@@ -102,7 +102,7 @@ export default function InvoiceGenerator({ orderData, onClose, type = 'invoice' 
   const handleDownloadPDF = async () => {
     setIsGeneratingPDF(true);
     try {
-      generateInvoicePDF(orderData, type);
+      await generateInvoicePDF(orderData, type);
     } catch (err) {
       console.error('PDF generation failed:', err);
       alert('Failed to generate PDF. Please try printing instead.');

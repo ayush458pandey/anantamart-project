@@ -29,7 +29,7 @@ export default function EstimateView({ cart, removeFromCart, updateQuantity, sub
         updateQuantity(item.id, currentQty + 1);
     };
 
-    const handleFormSubmit = (e) => {
+    const handleFormSubmit = async (e) => {
         e.preventDefault();
         if (!formData.name.trim() || !formData.address.trim() || !formData.phone.trim()) {
             alert('Please fill in all required fields');
@@ -39,20 +39,25 @@ export default function EstimateView({ cart, removeFromCart, updateQuantity, sub
             alert('Please enter your GSTIN number');
             return;
         }
-        generateInvoicePDF({
-            items: cart.items,
-            delivery_address: {
-                name: formData.name,
-                street_address: formData.address,
-                city: formData.city,
-                state: formData.state,
-                pincode: formData.pincode,
-                phone_number: formData.phone,
-                gstin: formData.hasGST ? formData.gstin : ''
-            },
-            pricing: { subtotal, discount: 0, cgst, sgst, delivery: 0, total }
-        }, 'estimate');
-        setShowBuyerForm(false);
+        try {
+            await generateInvoicePDF({
+                items: cart.items,
+                delivery_address: {
+                    name: formData.name,
+                    street_address: formData.address,
+                    city: formData.city,
+                    state: formData.state,
+                    pincode: formData.pincode,
+                    phone_number: formData.phone,
+                    gstin: formData.hasGST ? formData.gstin : ''
+                },
+                pricing: { subtotal, discount: 0, cgst, sgst, delivery: 0, total }
+            }, 'estimate');
+            setShowBuyerForm(false);
+        } catch (err) {
+            console.error('PDF generation failed:', err);
+            alert('Failed to generate PDF. Please try again.');
+        }
     };
 
     const inputClass = "w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500";
