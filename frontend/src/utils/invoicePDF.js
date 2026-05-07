@@ -168,7 +168,7 @@ export function generateInvoicePDF(orderData, type = 'invoice') {
     const qty = item.quantity || 0;
     const itemTotal = parseFloat(item.total_price || price * qty);
     const gstRate = parseFloat(item.product?.gst_rate || item.product?.tax_rate || 18);
-    const unit = item.product?.unit || 'Pcs';
+    const unit = (item.product?.unit || 'Pcs').replace(/^1\s+/i, '');
     const hsn = item.product?.hsn_code || '';
     const name = item.product?.name || 'Item';
     const displayName = item.variant ? `${name} (${item.variant})` : name;
@@ -206,6 +206,10 @@ export function generateInvoicePDF(orderData, type = 'invoice') {
       7: { halign: 'right', cellWidth: 28 },
     },
     didParseCell: (data) => {
+      // Bold the Item Name column
+      if (data.section === 'body' && data.column.index === 1) {
+        data.cell.styles.fontStyle = 'bold';
+      }
       if (data.row.index === itemsData.length - 1) {
         data.cell.styles.fontStyle = 'bold';
       }
@@ -291,6 +295,10 @@ export function generateInvoicePDF(orderData, type = 'invoice') {
       styles: { fontSize: 6.5, cellPadding: 1.2, lineColor: [150, 150, 150], lineWidth: 0.2, font: 'helvetica', halign: 'center' },
       headStyles: { fillColor: [240, 240, 240], textColor: [30, 30, 30], fontStyle: 'bold' },
       didParseCell: (data) => {
+        // Bold the Taxable Amount column
+        if (data.section === 'body' && data.column.index === 1) {
+          data.cell.styles.fontStyle = 'bold';
+        }
         if (data.row.index === hsnData.length - 1) {
           data.cell.styles.fontStyle = 'bold';
         }
