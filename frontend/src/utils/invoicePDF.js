@@ -1,5 +1,5 @@
 import { jsPDF } from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 
 // ── Number to Words (Indian system) ────────────────────────────────
 function numberToWords(num) {
@@ -187,7 +187,7 @@ export function generateInvoicePDF(orderData, type = 'invoice') {
   // Total row
   itemsData.push(['', '', '', totalQty.toString(), '', '', 'Total', `₹${subtotal.toFixed(2)}`]);
 
-  pdf.autoTable({
+  autoTable(pdf, {
     startY: y,
     head: [['S', 'Item name', 'HSN/SAC', 'Qty', 'Unit', 'Price/unit', 'GST', 'Amount']],
     body: itemsData,
@@ -206,7 +206,6 @@ export function generateInvoicePDF(orderData, type = 'invoice') {
       7: { halign: 'right', cellWidth: 28 },
     },
     didParseCell: (data) => {
-      // Bold the total row
       if (data.row.index === itemsData.length - 1) {
         data.cell.styles.fontStyle = 'bold';
       }
@@ -274,7 +273,7 @@ export function generateInvoicePDF(orderData, type = 'invoice') {
       `₹ ${hsnTotalTax.toFixed(2)}`,
     ]);
 
-    pdf.autoTable({
+    autoTable(pdf, {
       startY: y,
       head: [
         [
