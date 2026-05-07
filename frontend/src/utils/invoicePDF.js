@@ -336,7 +336,7 @@ export function generateInvoicePDF(orderData, type = 'invoice') {
   } else {
     pdf.text('Payment is due within 30 days.', t2X, y + 11);
   }
-  pdf.text('All disputes subject to Kolkata', t2X, y + isEstimate ? 17 : 14);
+  pdf.text('All disputes subject to Kolkata', t2X, y + (isEstimate ? 17 : 14));
   pdf.text('jurisdiction.', t2X, y + (isEstimate ? 20 : 17));
 
   // Col 3: Signatory
