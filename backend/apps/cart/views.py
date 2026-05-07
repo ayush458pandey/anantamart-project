@@ -34,6 +34,8 @@ def get_cart(request):
                 # Delete the session cart items and the cart itself after merging
                 session_cart.items.all().delete()
                 session_cart.delete()
+                
+        return cart
     else:
         if not request.session.session_key:
             request.session.create()
@@ -42,16 +44,7 @@ def get_cart(request):
             session_key=request.session.session_key,
             defaults={'user': None}
         )
-        
-    # Deeply prefetch related product models to avoid N+1 queries in serializers
-    cart = Cart.objects.prefetch_related(
-        'items__product__category',
-        'items__product__subcategory',
-        'items__product__brand_ref',
-        'items__product__images'
-    ).get(id=cart.id)
-    
-    return cart
+        return cart
 
 # --- VIEWS ---
 
