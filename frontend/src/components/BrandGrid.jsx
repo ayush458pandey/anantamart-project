@@ -20,7 +20,7 @@ const BrandGrid = ({ brands, onBrandClick, isLoading }) => {
         // overflow-x-auto: enables horizontal scrolling
         // scrollbar-hide: clean look (requires tailwind plugin, or standard CSS)
         <div className="flex flex-nowrap overflow-x-auto gap-3 sm:gap-4 pb-4 -mx-1 px-1 snap-x scrollbar-hide">
-            {brands.map((brand) => (
+            {brands.map((brand, index) => (
                 <div
                     key={brand.id}
                     onClick={() => onBrandClick(brand)}
@@ -32,7 +32,8 @@ const BrandGrid = ({ brands, onBrandClick, isLoading }) => {
                             src={brand.logo || "/api/placeholder/100/100"}
                             alt={brand.name}
                             className="w-full h-full object-contain filter group-hover:brightness-105"
-                            loading="lazy"
+                            loading={index < 4 ? "eager" : "lazy"}
+                            fetchpriority={index < 4 ? "high" : "auto"}
                         />
                     </div>
 

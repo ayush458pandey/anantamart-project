@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import {
     Search, Package,
@@ -270,44 +270,48 @@ export default function Home() {
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
-    const filteredProducts = products.filter(product => {
-        const query = searchQuery.toLowerCase().trim();
-        const productBrandNames = getProductBrandNames(product);
-        const matchesSearch = !query || (
-            (product.name || '').toLowerCase().includes(query) ||
-            (product.sku || '').toLowerCase().includes(query) ||
-            productBrandNames.some(brand => brand.includes(query)) ||
-            (product.description || '').toLowerCase().includes(query) ||
-            (product.category_name || '').toLowerCase().includes(query) ||
-            (product.subcategory_name || '').toLowerCase().includes(query) ||
-            (product.key_features || '').toLowerCase().includes(query)
-        );
-        const matchesCategory = selectedCategory === 'all' || String(getProductCategoryId(product)) === String(selectedCategory);
-        const matchesSubcategory = activeFilterSubcategories.length === 0 ||
-            activeFilterSubcategories.some(subcategoryId => String(getProductSubcategoryId(product)) === String(subcategoryId));
-        const matchesBrand = selectedBrands.length === 0 ||
-            selectedBrands.some(brand => productBrandNames.includes(String(brand).toLowerCase()));
+    const filteredProducts = useMemo(() => {
+        return products.filter(product => {
+            const query = searchQuery.toLowerCase().trim();
+            const productBrandNames = getProductBrandNames(product);
+            const matchesSearch = !query || (
+                (product.name || '').toLowerCase().includes(query) ||
+                (product.sku || '').toLowerCase().includes(query) ||
+                productBrandNames.some(brand => brand.includes(query)) ||
+                (product.description || '').toLowerCase().includes(query) ||
+                (product.category_name || '').toLowerCase().includes(query) ||
+                (product.subcategory_name || '').toLowerCase().includes(query) ||
+                (product.key_features || '').toLowerCase().includes(query)
+            );
+            const matchesCategory = selectedCategory === 'all' || String(getProductCategoryId(product)) === String(selectedCategory);
+            const matchesSubcategory = activeFilterSubcategories.length === 0 ||
+                activeFilterSubcategories.some(subcategoryId => String(getProductSubcategoryId(product)) === String(subcategoryId));
+            const matchesBrand = selectedBrands.length === 0 ||
+                selectedBrands.some(brand => productBrandNames.includes(String(brand).toLowerCase()));
 
-        return matchesSearch && matchesCategory && matchesSubcategory && matchesBrand;
-    });
-
-    const visibleBrands = brands.filter(brand => {
-        if (selectedCategory === 'all') return true;
-        const hasProduct = products.some(p => {
-            const productCatId = String(p.category || p.category_id || (p.category_obj?.id) || '');
-            const currentCatId = String(selectedCategory);
-            if (productCatId !== currentCatId) return false;
-            const targetBrandId = String(brand.id);
-            const targetBrandName = brand.name.toLowerCase();
-            if (p.brand && String(p.brand) === targetBrandId) return true;
-            if (p.brand_id && String(p.brand_id) === targetBrandId) return true;
-            if (typeof p.brand === 'object' && p.brand !== null && String(p.brand.id) === targetBrandId) return true;
-            if (typeof p.brand === 'string' && p.brand.toLowerCase() === targetBrandName) return true;
-            if (p.brand_name && p.brand_name.toLowerCase() === targetBrandName) return true;
-            return false;
+            return matchesSearch && matchesCategory && matchesSubcategory && matchesBrand;
         });
-        return hasProduct;
-    });
+    }, [products, searchQuery, selectedCategory, activeFilterSubcategories, selectedBrands]);
+
+    const visibleBrands = useMemo(() => {
+        return brands.filter(brand => {
+            if (selectedCategory === 'all') return true;
+            const hasProduct = products.some(p => {
+                const productCatId = String(p.category || p.category_id || (p.category_obj?.id) || '');
+                const currentCatId = String(selectedCategory);
+                if (productCatId !== currentCatId) return false;
+                const targetBrandId = String(brand.id);
+                const targetBrandName = brand.name.toLowerCase();
+                if (p.brand && String(p.brand) === targetBrandId) return true;
+                if (p.brand_id && String(p.brand_id) === targetBrandId) return true;
+                if (typeof p.brand === 'object' && p.brand !== null && String(p.brand.id) === targetBrandId) return true;
+                if (typeof p.brand === 'string' && p.brand.toLowerCase() === targetBrandName) return true;
+                if (p.brand_name && p.brand_name.toLowerCase() === targetBrandName) return true;
+                return false;
+            });
+            return hasProduct;
+        });
+    }, [brands, selectedCategory, products]);
 
     const currentCategoryName = categories.find(c => c.id === selectedCategory)?.name || 'All Products';
     const activeSubcategory = subcategories.find(s => s.id === selectedSubcategory);
@@ -692,7 +696,6 @@ export default function Home() {
                                                             onAddToCart={addToCart}
                                                             onViewDetails={() => setSelectedProduct(product)}
                                                             onNavigateToCategory={navigateToCategory}
-                                                            priority={index < 3}
                                                         />
                                                     </div>
                                                 ))}
