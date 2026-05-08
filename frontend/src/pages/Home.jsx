@@ -682,7 +682,7 @@ export default function Home() {
                                                 </button>
                                             </div>
                                             <div className="flex overflow-x-auto gap-3 sm:gap-4 pb-4 -mx-3 px-3 scrollbar-hide snap-x">
-                                                {categoryProducts.slice(0, 8).map((product) => (
+                                                {categoryProducts.slice(0, 8).map((product, index) => (
                                                     <div key={product.id} className="flex-shrink-0 w-[160px] sm:w-[200px] snap-start">
                                                         <ProductCard
                                                             product={product}
@@ -692,6 +692,7 @@ export default function Home() {
                                                             onAddToCart={addToCart}
                                                             onViewDetails={() => setSelectedProduct(product)}
                                                             onNavigateToCategory={navigateToCategory}
+                                                            priority={index < 3}
                                                         />
                                                     </div>
                                                 ))}
@@ -736,7 +737,7 @@ export default function Home() {
 
                                 <div className="flex-1 min-w-0">
                                     <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-2.5 sm:gap-3 md:gap-4 pb-4">
-                                        {filteredProducts.map((product) => (
+                                        {filteredProducts.map((product, index) => (
                                             <ProductCard
                                                 key={product.id}
                                                 product={product}
@@ -746,6 +747,7 @@ export default function Home() {
                                                 onAddToCart={addToCart}
                                                 onViewDetails={() => selectProduct(product)}
                                                 onNavigateToCategory={navigateToCategory}
+                                                priority={index < 4}
                                             />
                                         ))}
                                     </div>

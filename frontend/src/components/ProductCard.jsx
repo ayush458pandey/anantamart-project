@@ -3,7 +3,7 @@ import { Package, Plus, Minus, GitCompare } from 'lucide-react';
 import { useComparison } from '../context/ComparisonContext';
 import { formatCaseSize } from '../utils/formatters';
 
-export default function ProductCard({ product, cart, onAddToCart, removeFromCart, updateQuantity, onViewDetails, onNavigateToCategory }) {
+export default function ProductCard({ product, cart, onAddToCart, removeFromCart, updateQuantity, onViewDetails, onNavigateToCategory, priority = false }) {
     const [mode, setMode] = useState('pcs'); // 'pcs' or 'case'
     const [isEditing, setIsEditing] = useState(false);
     const [editValue, setEditValue] = useState('');
@@ -110,7 +110,8 @@ export default function ProductCard({ product, cart, onAddToCart, removeFromCart
                         src={product.image}
                         alt={product.name}
                         className="absolute inset-0 w-full h-full object-contain p-2 sm:p-4"
-                        loading="lazy"
+                        loading={priority ? "eager" : "lazy"}
+                        fetchpriority={priority ? "high" : "auto"}
                     />
                 ) : (
                     <div className="absolute inset-0 flex items-center justify-center">
