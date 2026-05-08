@@ -35,7 +35,7 @@ export default function Layout() {
                             </div>
                         </div>
 
-                        <div className="hidden sm:flex flex-1 max-w-2xl min-w-0" id="desktop-search-container">
+                        <div className="hidden sm:flex flex-1 max-w-2xl min-w-0 min-h-[40px]" id="desktop-search-container">
                             {location.pathname !== '/' && (
                                 <div className="flex items-center bg-gray-100 rounded-lg px-3 py-2 w-full cursor-pointer" onClick={() => navigate('/')}>
                                     <Search className="w-5 h-5 text-gray-400 flex-shrink-0" />
@@ -82,7 +82,7 @@ export default function Layout() {
                     </div>
                 </div>
                 {/* Portal target: Home.jsx renders search + categories here */}
-                <div id="header-extension"></div>
+                <div id="header-extension" className={location.pathname === '/' ? "min-h-[96px] sm:min-h-0" : ""}></div>
             </header>
 
             {/* Page Content */}
