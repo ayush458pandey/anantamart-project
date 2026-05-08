@@ -19,9 +19,9 @@ class ProductViewSet(viewsets.ModelViewSet):
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     
     # Add brand and subcategory to filterset_fields
-    filterset_fields = ['category', 'subcategory', 'brand', 'is_active']
+    filterset_fields = ['category', 'subcategory', 'brand', 'brand_ref', 'is_active']
     
-    search_fields = ['name', 'sku', 'description', 'brand']
+    search_fields = ['name', 'sku', 'description', 'brand', 'brand_ref__name']
     ordering_fields = ['base_price', 'created_at', 'name']
     ordering = ['-created_at']
     
@@ -42,7 +42,10 @@ class ProductViewSet(viewsets.ModelViewSet):
         if brands:
             brand_list = [b.strip() for b in brands.split(',') if b.strip()]
             if brand_list:
-                queryset = queryset.filter(brand__in=brand_list)
+                queryset = queryset.filter(
+                    Q(brand_ref__name__in=brand_list) |
+                    Q(brand_ref__isnull=True, brand__in=brand_list)
+                )
         
         # Filter by multiple subcategories
         subcategories = self.request.query_params.get('subcategories', '')
@@ -90,10 +93,15 @@ class ProductViewSet(viewsets.ModelViewSet):
         else:
             products_for_brands = products
         
-        # Get unique brands with counts (filtered by subcategory if applicable)
-        brands = products_for_brands.values('brand').annotate(
-            count=Count('id')
-        ).filter(brand__isnull=False).exclude(brand='').order_by('brand')
+        # Get unique brands with counts, preferring the linked Brand model.
+        # The legacy Product.brand field often contains "Generic", even when
+        # brand_ref points to the real brand.
+        brand_counts = {}
+        for product in products_for_brands.select_related('brand_ref').only('brand', 'brand_ref__name'):
+            brand_name = product.brand_ref.name if product.brand_ref else product.brand
+            if not brand_name:
+                continue
+            brand_counts[brand_name] = brand_counts.get(brand_name, 0) + 1
         
         # Get all subcategories with counts (always show all subcategories for the category)
         subcategories = Subcategory.objects.filter(
@@ -105,8 +113,8 @@ class ProductViewSet(viewsets.ModelViewSet):
         
         return Response({
             'brands': [
-                {'name': b['brand'], 'count': b['count']} 
-                for b in brands
+                {'name': name, 'count': count}
+                for name, count in sorted(brand_counts.items())
             ],
             'subcategories': [
                 {

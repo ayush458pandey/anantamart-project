@@ -84,6 +84,7 @@ class ProductImageSerializer(OptimizedImageMixin, serializers.ModelSerializer):
 class ProductSerializer(OptimizedImageMixin, serializers.ModelSerializer):
     category_name = serializers.CharField(source='category.name', read_only=True)
     subcategory_name = serializers.CharField(source='subcategory.name', read_only=True, allow_null=True)
+    brand = serializers.SerializerMethodField()
     brand_name = serializers.SerializerMethodField()
     brand_logo = serializers.SerializerMethodField()
     stock_status = serializers.CharField(read_only=True)
@@ -117,6 +118,9 @@ class ProductSerializer(OptimizedImageMixin, serializers.ModelSerializer):
         if obj.brand_ref:
             return obj.brand_ref.name
         return obj.brand or 'Generic'
+
+    def get_brand(self, obj):
+        return self.get_brand_name(obj)
     
     def get_brand_logo(self, obj):
         if obj.brand_ref and obj.brand_ref.logo:
