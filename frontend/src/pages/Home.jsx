@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import {
     Search, Package,
     Coffee, Utensils, Droplet, Briefcase, Shirt, Home as HomeIcon, Store,
-    ShoppingBag, Box, Tag, Grid, Layers, ChevronLeft
+    ShoppingBag, Box, Tag, Grid, Layers, ChevronLeft, Filter as FilterIcon
 } from 'lucide-react';
 
 import { useProducts } from '../hooks/useProducts';
@@ -530,31 +530,64 @@ export default function Home() {
             )}
 
             {/* Page Title */}
-            <div className="mb-3 sm:mb-4 px-1">
-                {searchQuery ? (
-                    <h2 className="text-base sm:text-lg font-bold text-gray-800">
-                        Search Results for "{searchQuery}"
-                        <span className="text-xs font-normal text-gray-500 bg-gray-100 px-2 py-1 rounded-full border border-gray-200 ml-2">
-                            {filteredProducts.length} items
-                        </span>
-                    </h2>
-                ) : selectedSubcategory && activeSubcategory ? (
-                    <div>
-                        <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            {currentCategoryName}
-                        </span>
-                        <h2 className="text-xl sm:text-2xl font-bold text-emerald-800 flex items-center gap-2 mt-0.5">
-                            {activeSubcategory.name}
+            <div className="mb-3 sm:mb-4 px-1 flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                    {searchQuery ? (
+                        <h2 className="text-base sm:text-lg font-bold text-gray-800">
+                            Search Results for "{searchQuery}"
                             <span className="text-xs font-normal text-gray-500 bg-gray-100 px-2 py-1 rounded-full border border-gray-200">
                                 {filteredProducts.length} items
                             </span>
                         </h2>
-                    </div>
-                ) : (
-                    <h2 className="text-base sm:text-lg font-bold text-gray-800">
-                        {selectedCategory === 'all' ? 'All Products' : currentCategoryName}
-                    </h2>
+                    ) : selectedSubcategory && activeSubcategory ? (
+                        <div>
+                            <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                {currentCategoryName}
+                            </span>
+                            <h2 className="text-xl sm:text-2xl font-bold text-emerald-800 flex items-center gap-2 mt-0.5">
+                                {activeSubcategory.name}
+                                <span className="text-xs font-normal text-gray-500 bg-gray-100 px-2 py-1 rounded-full border border-gray-200">
+                                    {filteredProducts.length} items
+                                </span>
+                            </h2>
+                        </div>
+                    ) : (
+                        <h2 className="text-base sm:text-lg font-bold text-gray-800">
+                            {selectedCategory === 'all' ? 'All Products' : currentCategoryName}
+                        </h2>
+                    )}
+                </div>
+
+                {selectedCategory !== 'all' && (
+                    <button
+                        onClick={() => setMobileFiltersOpen(true)}
+                        className="lg:hidden inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-3 py-2 text-xs font-semibold text-white shadow-sm active:bg-emerald-700"
+                    >
+                        <FilterIcon className="w-4 h-4" />
+                        <span>Filters</span>
+                        {(selectedBrands.length + activeFilterSubcategories.length) > 0 && (
+                            <span className="bg-white text-emerald-700 rounded-full px-1.5 py-0.5 text-[10px] leading-none">
+                                {selectedBrands.length + activeFilterSubcategories.length}
+                            </span>
+                        )}
+                    </button>
                 )}
+            </div>
+
+            <div className="lg:hidden">
+                <FilterSidebar
+                    categoryId={selectedCategory}
+                    filterOptions={filterOptions}
+                    selectedBrands={selectedBrands}
+                    selectedSubcategories={activeFilterSubcategories}
+                    onBrandChange={handleBrandFilterChange}
+                    onSubcategoryChange={handleSubcategoryFilterChange}
+                    onClearAll={clearAllFilters}
+                    isLoading={loadingFilters}
+                    isMobile
+                    isOpen={mobileFiltersOpen}
+                    onToggle={() => setMobileFiltersOpen(open => !open)}
+                />
             </div>
 
             {/* Subcategory Grid */}
@@ -571,22 +604,6 @@ export default function Home() {
                                 onSubcategoryChange={handleSubcategoryFilterChange}
                                 onClearAll={clearAllFilters}
                                 isLoading={loadingFilters}
-                            />
-                        </div>
-
-                        <div className="lg:hidden">
-                            <FilterSidebar
-                                categoryId={selectedCategory}
-                                filterOptions={filterOptions}
-                                selectedBrands={selectedBrands}
-                                selectedSubcategories={activeFilterSubcategories}
-                                onBrandChange={handleBrandFilterChange}
-                                onSubcategoryChange={handleSubcategoryFilterChange}
-                                onClearAll={clearAllFilters}
-                                isLoading={loadingFilters}
-                                isMobile
-                                isOpen={mobileFiltersOpen}
-                                onToggle={() => setMobileFiltersOpen(open => !open)}
                             />
                         </div>
 
@@ -714,22 +731,6 @@ export default function Home() {
                                         onSubcategoryChange={handleSubcategoryFilterChange}
                                         onClearAll={clearAllFilters}
                                         isLoading={loadingFilters}
-                                    />
-                                </div>
-
-                                <div className="lg:hidden">
-                                    <FilterSidebar
-                                        categoryId={selectedCategory}
-                                        filterOptions={filterOptions}
-                                        selectedBrands={selectedBrands}
-                                        selectedSubcategories={activeFilterSubcategories}
-                                        onBrandChange={handleBrandFilterChange}
-                                        onSubcategoryChange={handleSubcategoryFilterChange}
-                                        onClearAll={clearAllFilters}
-                                        isLoading={loadingFilters}
-                                        isMobile
-                                        isOpen={mobileFiltersOpen}
-                                        onToggle={() => setMobileFiltersOpen(open => !open)}
                                     />
                                 </div>
 
