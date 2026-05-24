@@ -7,6 +7,18 @@ let cachedCategories = null;
 let lastFetchTime = 0;
 const CACHE_TTL = 1 * 60 * 1000; // 1 minute
 
+const scheduleAfterPaint = (callback) => {
+  const run = () => window.setTimeout(callback, 1200);
+
+  if (typeof window === 'undefined') {
+    callback();
+  } else if ('requestIdleCallback' in window) {
+    window.requestIdleCallback(run, { timeout: 3000 });
+  } else {
+    run();
+  }
+};
+
 const normalizeProducts = (productsData) => productsData.map(product => ({
   ...product,
   image: product.image_url || product.images?.[0]?.image || product.image,
@@ -34,6 +46,7 @@ export const useProducts = () => {
   const [products, setProducts] = useState(cachedProducts || []);
   const [categories, setCategories] = useState(cachedCategories || []);
   const [loading, setLoading] = useState(!cachedProducts);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState(null);
   const fetchingRef = useRef(false);
 
@@ -80,6 +93,7 @@ export const useProducts = () => {
       setCategories(categoriesData);
       setError(null);
       setLoading(false);
+      setLoadingMore(Boolean(firstPage.nextUrl));
 
       let productsData = firstProductsData;
       let nextUrl = firstPage.nextUrl;
@@ -90,8 +104,16 @@ export const useProducts = () => {
         productsData = productsData.concat(normalizeProducts(nextPage.products));
         cachedProducts = productsData;
         lastFetchTime = Date.now();
-        setProducts(productsData);
         nextUrl = nextPage.nextUrl;
+      }
+
+      if (productsData.length !== firstProductsData.length) {
+        scheduleAfterPaint(() => {
+          setProducts(productsData);
+          setLoadingMore(false);
+        });
+      } else {
+        setLoadingMore(false);
       }
     } catch (err) {
       if (cachedProducts) {
@@ -104,6 +126,7 @@ export const useProducts = () => {
       }
     } finally {
       setLoading(false);
+      setLoadingMore(false);
       fetchingRef.current = false;
     }
   }, []);
@@ -112,5 +135,5 @@ export const useProducts = () => {
     fetchData();
   }, [fetchData]);
 
-  return { products, categories, loading, error, refetch: () => fetchData(true) };
+  return { products, categories, loading, loadingMore, error, refetch: () => fetchData(true) };
 };

@@ -78,7 +78,7 @@ export default function Home() {
     // Ref to track intentional navigation
     const intentionalNavRef = React.useRef({ subcategoryId: null, navigating: false });
 
-    const { products, categories, loading, error } = useProducts();
+    const { products, categories, loading, loadingMore, error } = useProducts();
     const { cart, addToCart, removeFromCart, updateQuantity } = useCart();
     const activeFilterSubcategories = useMemo(() => (
         selectedSubcategory ? [selectedSubcategory] : selectedFilterSubcategories
@@ -694,7 +694,7 @@ export default function Home() {
                                     const CategoryIcon = getCategoryIcon(category.name);
                                     const categoryProducts = productsByCategory.get(String(category.id)) || [];
 
-                                    if (categoryProducts.length === 0) return null;
+                                    if (categoryProducts.length === 0 && !loadingMore) return null;
 
                                     return (
                                         <div key={category.id} className="border-b border-gray-100 pb-6 last:border-0">
@@ -714,6 +714,19 @@ export default function Home() {
                                                 </button>
                                             </div>
                                             <div className="flex overflow-x-auto gap-3 sm:gap-4 pb-4 -mx-3 px-3 scrollbar-hide snap-x">
+                                                {categoryProducts.length === 0 && loadingMore && [1, 2, 3, 4].map((item) => (
+                                                    <div key={item} className="flex-shrink-0 w-[160px] sm:w-[200px] snap-start">
+                                                        <div className="h-[278px] sm:h-[326px] rounded-lg sm:rounded-xl bg-white shadow-sm overflow-hidden animate-pulse">
+                                                            <div className="h-[120px] sm:h-[150px] bg-gray-100"></div>
+                                                            <div className="p-3 space-y-2">
+                                                                <div className="h-6 w-20 rounded bg-gray-100"></div>
+                                                                <div className="h-4 w-full rounded bg-gray-100"></div>
+                                                                <div className="h-4 w-3/4 rounded bg-gray-100"></div>
+                                                                <div className="h-3 w-24 rounded bg-gray-100"></div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                ))}
                                                 {categoryProducts.slice(0, 8).map((product, index) => (
                                                     <div key={product.id} className="flex-shrink-0 w-[160px] sm:w-[200px] snap-start">
                                                         <ProductCard
