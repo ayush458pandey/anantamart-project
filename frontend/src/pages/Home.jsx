@@ -74,7 +74,8 @@ export default function Home() {
     const [showSubcategoryView, setShowSubcategoryView] = useState(true);
     const [brands, setBrands] = useState([]);
     const [selectedBrand, setSelectedBrand] = useState(null);
-    const [loadingBrands, setLoadingBrands] = useState(true);
+    const [loadingBrands, setLoadingBrands] = useState(false);
+    const [showBrandRail, setShowBrandRail] = useState(false);
     const [showAllBrands, setShowAllBrands] = useState(false);
     const [filterOptions, setFilterOptions] = useState(null);
     const [selectedBrands, setSelectedBrands] = useState([]);
@@ -221,21 +222,48 @@ export default function Home() {
         fetchFilterOptions();
     }, [selectedCategory, selectedSubcategory, selectedFilterSubcategories]);
 
-    // Fetch brands for catalog view
+    // Fetch brands after the first catalog paint so brand logos do not compete with LCP.
     useEffect(() => {
+        let cancelled = false;
+        let timeoutId;
+        let idleId;
+
         const fetchBrands = async () => {
             setLoadingBrands(true);
             try {
                 const data = await productService.getBrands();
-                setBrands(data);
+                if (!cancelled) {
+                    setBrands(data);
+                    setShowBrandRail((data?.length || 0) > 0);
+                }
             } catch (err) {
                 console.error('Failed to fetch brands:', err);
-                setBrands([]);
+                if (!cancelled) {
+                    setBrands([]);
+                    setShowBrandRail(false);
+                }
             } finally {
-                setLoadingBrands(false);
+                if (!cancelled) {
+                    setLoadingBrands(false);
+                }
             }
         };
-        fetchBrands();
+
+        const scheduleFetch = () => {
+            timeoutId = window.setTimeout(fetchBrands, 800);
+        };
+
+        if ('requestIdleCallback' in window) {
+            idleId = window.requestIdleCallback(scheduleFetch, { timeout: 2000 });
+        } else {
+            scheduleFetch();
+        }
+
+        return () => {
+            cancelled = true;
+            window.clearTimeout(timeoutId);
+            if (idleId) window.cancelIdleCallback(idleId);
+        };
     }, []);
 
     const handleBackToSubcategories = () => {
@@ -557,7 +585,7 @@ export default function Home() {
             )}
 
             {/* Brand Horizontal Scroll */}
-            {!selectedSubcategory && (loadingBrands || visibleBrands.length > 0) && (
+            {!selectedSubcategory && showBrandRail && visibleBrands.length > 0 && (
                 <div className="mb-8">
                     <div className="flex items-center justify-between mb-3 px-1">
                         <h3 className="text-base sm:text-lg font-bold text-gray-800">
