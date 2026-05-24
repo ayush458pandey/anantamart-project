@@ -67,7 +67,7 @@ export default function Home() {
     const [showSubcategoryView, setShowSubcategoryView] = useState(true);
     const [brands, setBrands] = useState([]);
     const [selectedBrand, setSelectedBrand] = useState(null);
-    const [loadingBrands, setLoadingBrands] = useState(false);
+    const [loadingBrands, setLoadingBrands] = useState(true);
     const [showAllBrands, setShowAllBrands] = useState(false);
     const [filterOptions, setFilterOptions] = useState(null);
     const [selectedBrands, setSelectedBrands] = useState([]);
@@ -80,9 +80,9 @@ export default function Home() {
 
     const { products, categories, loading, error } = useProducts();
     const { cart, addToCart, removeFromCart, updateQuantity } = useCart();
-    const activeFilterSubcategories = selectedSubcategory
-        ? [selectedSubcategory]
-        : selectedFilterSubcategories;
+    const activeFilterSubcategories = useMemo(() => (
+        selectedSubcategory ? [selectedSubcategory] : selectedFilterSubcategories
+    ), [selectedSubcategory, selectedFilterSubcategories]);
 
     // --- Browser back button / swipe support ---
     // Push a history entry when entering a deeper view
@@ -293,25 +293,56 @@ export default function Home() {
         });
     }, [products, searchQuery, selectedCategory, activeFilterSubcategories, selectedBrands]);
 
+    const productsByCategory = useMemo(() => {
+        const groups = new Map();
+
+        products.forEach((product) => {
+            const categoryId = String(getProductCategoryId(product) || '');
+            if (!categoryId) return;
+
+            if (!groups.has(categoryId)) {
+                groups.set(categoryId, []);
+            }
+            groups.get(categoryId).push(product);
+        });
+
+        return groups;
+    }, [products]);
+
+    const brandKeysByCategory = useMemo(() => {
+        const groups = new Map();
+
+        products.forEach((product) => {
+            const categoryId = String(getProductCategoryId(product) || '');
+            if (!categoryId) return;
+
+            if (!groups.has(categoryId)) {
+                groups.set(categoryId, new Set());
+            }
+
+            const keys = groups.get(categoryId);
+            if (product.brand_id) keys.add(`id:${product.brand_id}`);
+            if (typeof product.brand === 'object' && product.brand?.id) keys.add(`id:${product.brand.id}`);
+            if (typeof product.brand === 'number') keys.add(`id:${product.brand}`);
+            getProductBrandNames(product).forEach(name => keys.add(`name:${name}`));
+        });
+
+        return groups;
+    }, [products]);
+
     const visibleBrands = useMemo(() => {
+        const currentCategoryBrandKeys = selectedCategory === 'all'
+            ? null
+            : brandKeysByCategory.get(String(selectedCategory));
+
         return brands.filter(brand => {
             if (selectedCategory === 'all') return true;
-            const hasProduct = products.some(p => {
-                const productCatId = String(p.category || p.category_id || (p.category_obj?.id) || '');
-                const currentCatId = String(selectedCategory);
-                if (productCatId !== currentCatId) return false;
-                const targetBrandId = String(brand.id);
-                const targetBrandName = brand.name.toLowerCase();
-                if (p.brand && String(p.brand) === targetBrandId) return true;
-                if (p.brand_id && String(p.brand_id) === targetBrandId) return true;
-                if (typeof p.brand === 'object' && p.brand !== null && String(p.brand.id) === targetBrandId) return true;
-                if (typeof p.brand === 'string' && p.brand.toLowerCase() === targetBrandName) return true;
-                if (p.brand_name && p.brand_name.toLowerCase() === targetBrandName) return true;
-                return false;
-            });
-            return hasProduct;
+            if (!currentCategoryBrandKeys) return false;
+
+            return currentCategoryBrandKeys.has(`id:${brand.id}`) ||
+                currentCategoryBrandKeys.has(`name:${brand.name.toLowerCase()}`);
         });
-    }, [brands, selectedCategory, products]);
+    }, [brands, selectedCategory, brandKeysByCategory]);
 
     const currentCategoryName = categories.find(c => c.id === selectedCategory)?.name || 'All Products';
     const activeSubcategory = subcategories.find(s => s.id === selectedSubcategory);
@@ -512,7 +543,7 @@ export default function Home() {
             )}
 
             {/* Brand Horizontal Scroll */}
-            {!selectedSubcategory && visibleBrands.length > 0 && (
+            {!selectedSubcategory && (loadingBrands || visibleBrands.length > 0) && (
                 <div className="mb-8">
                     <div className="flex items-center justify-between mb-3 px-1">
                         <h3 className="text-base sm:text-lg font-bold text-gray-800">
@@ -661,10 +692,7 @@ export default function Home() {
                             <div className="space-y-10 border-t border-gray-100 pt-8">
                                 {categories.map((category) => {
                                     const CategoryIcon = getCategoryIcon(category.name);
-                                    const categoryProducts = products.filter(p =>
-                                        String(p.category) === String(category.id) ||
-                                        String(p.category?.id) === String(category.id)
-                                    );
+                                    const categoryProducts = productsByCategory.get(String(category.id)) || [];
 
                                     if (categoryProducts.length === 0) return null;
 
@@ -696,6 +724,7 @@ export default function Home() {
                                                             onAddToCart={addToCart}
                                                             onViewDetails={() => setSelectedProduct(product)}
                                                             onNavigateToCategory={navigateToCategory}
+                                                            priority={index < 3}
                                                         />
                                                     </div>
                                                 ))}

@@ -111,7 +111,7 @@ export default function ProductCard({ product, cart, onAddToCart, removeFromCart
                         alt={product.name}
                         className="absolute inset-0 w-full h-full object-contain p-2 sm:p-4"
                         loading={priority ? "eager" : "lazy"}
-                        fetchpriority={priority ? "high" : "auto"}
+                        fetchPriority={priority ? "high" : "auto"}
                     />
                 ) : (
                     <div className="absolute inset-0 flex items-center justify-center">

@@ -45,8 +45,8 @@ const CategoryDirectory = ({ categories, onSelectCategory }) => {
                                         src={category.image}
                                         alt={category.name}
                                         className="w-full h-full object-cover"
-                                        loading={index < 8 ? "eager" : "lazy"}
-                                        fetchpriority={index < 8 ? "high" : "auto"}
+                                        loading={index < 4 ? "eager" : "lazy"}
+                                        fetchPriority={index < 4 ? "high" : "auto"}
                                     />
                                 ) : (
                                     <Icon className="w-8 h-8 sm:w-10 sm:h-10 text-emerald-600 group-hover:scale-110 transition-transform" />
