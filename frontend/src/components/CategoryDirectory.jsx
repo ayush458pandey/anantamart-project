@@ -4,6 +4,7 @@ import {
     Utensils, Droplet, Briefcase, Shirt,
     Home, Grid, Package
 } from 'lucide-react';
+import { getImageSrcSet, getOptimizedImageUrl } from '../utils/imageUtils';
 
 const getCategoryIcon = (categoryName) => {
     const name = categoryName?.toLowerCase() || '';
@@ -42,11 +43,16 @@ const CategoryDirectory = ({ categories, onSelectCategory }) => {
                             <div className={`w-20 h-20 sm:w-24 sm:h-24 bg-white border border-gray-200 rounded-xl flex items-center justify-center shadow-sm transition-all duration-200 group-hover:shadow-md group-hover:border-emerald-500 group-hover:-translate-y-1 overflow-hidden ${category.image ? '' : 'p-3'}`}>
                                 {category.image ? (
                                     <img
-                                        src={category.image}
+                                        src={getOptimizedImageUrl(category.image, { width: 192 })}
+                                        srcSet={getImageSrcSet(category.image, [96, 160, 192])}
+                                        sizes="(min-width: 640px) 96px, 80px"
                                         alt={category.name}
+                                        width="192"
+                                        height="192"
                                         className="w-full h-full object-cover"
                                         loading={index < 4 ? "eager" : "lazy"}
                                         fetchPriority={index < 4 ? "high" : "auto"}
+                                        decoding={index < 4 ? "sync" : "async"}
                                     />
                                 ) : (
                                     <Icon className="w-8 h-8 sm:w-10 sm:h-10 text-emerald-600 group-hover:scale-110 transition-transform" />

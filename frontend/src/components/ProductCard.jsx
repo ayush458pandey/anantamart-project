@@ -2,6 +2,7 @@ import React, { useState, useRef } from 'react';
 import { Package, Plus, Minus, GitCompare } from 'lucide-react';
 import { useComparison } from '../context/ComparisonContext';
 import { formatCaseSize } from '../utils/formatters';
+import { getImageSrcSet, getOptimizedImageUrl } from '../utils/imageUtils';
 
 export default function ProductCard({ product, cart, onAddToCart, removeFromCart, updateQuantity, onViewDetails, onNavigateToCategory, priority = false }) {
     const [mode, setMode] = useState('pcs'); // 'pcs' or 'case'
@@ -88,6 +89,7 @@ export default function ProductCard({ product, cart, onAddToCart, removeFromCart
     const unitLabel = product.unit || 'pcs';
 
     const discountPercent = product.mrp ? Math.round(((product.mrp - product.base_price) / product.mrp) * 100) : 0;
+    const productImage = getOptimizedImageUrl(product.image, { width: priority ? 520 : 360 });
 
     return (
         <div className="w-full bg-white rounded-lg sm:rounded-xl shadow-sm hover:shadow-md active:shadow-sm transition-all overflow-hidden touch-manipulation">
@@ -107,11 +109,16 @@ export default function ProductCard({ product, cart, onAddToCart, removeFromCart
 
                 {product.image ? (
                     <img
-                        src={product.image}
+                        src={productImage}
+                        srcSet={getImageSrcSet(product.image, [240, 360, 520])}
+                        sizes="(min-width: 1024px) 200px, (min-width: 640px) 200px, 160px"
                         alt={product.name}
+                        width="520"
+                        height="390"
                         className="absolute inset-0 w-full h-full object-contain p-2 sm:p-4"
                         loading={priority ? "eager" : "lazy"}
                         fetchPriority={priority ? "high" : "auto"}
+                        decoding={priority ? "sync" : "async"}
                     />
                 ) : (
                     <div className="absolute inset-0 flex items-center justify-center">

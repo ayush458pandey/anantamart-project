@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { lazy, Suspense, useState, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import {
     Search, Package,
@@ -10,17 +10,24 @@ import { useProducts } from '../hooks/useProducts';
 import { useCart } from '../context/CartContext';
 
 import ProductCard from '../components/ProductCard';
-import ProductDetail from '../components/ProductDetail';
-import AllBrands from '../components/AllBrands';
 
 import SubcategoryGrid from '../components/SubcategoryGrid';
 import BrandGrid from '../components/BrandGrid';
-import BrandPage from '../components/BrandPage';
 import FilterSidebar from '../components/FilterSidebar';
 import { productService } from '../api/services/productService';
 import CategoryDirectory from '../components/CategoryDirectory';
 
 import '../index.css';
+
+const ProductDetail = lazy(() => import('../components/ProductDetail'));
+const AllBrands = lazy(() => import('../components/AllBrands'));
+const BrandPage = lazy(() => import('../components/BrandPage'));
+
+const ViewFallback = () => (
+    <div className="min-h-[45vh] flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600"></div>
+    </div>
+);
 
 // --- HELPER FUNCTIONS ---
 const getCategoryIcon = (category) => {
@@ -426,29 +433,33 @@ export default function Home() {
     if (selectedBrand) {
         return (
             <>
-                <BrandPage
-                    brand={selectedBrand}
-                    allProducts={products}
-                    onBack={() => setSelectedBrand(null)}
-                    onProductClick={(product) => selectProduct(product)}
-                    onAddToCart={addToCart}
-                    updateQuantity={updateQuantity}
-                />
-                {selectedProduct && (
-                    <ProductDetail
-                        product={selectedProduct}
-                        onClose={() => setSelectedProduct(null)}
+                <Suspense fallback={<ViewFallback />}>
+                    <BrandPage
+                        brand={selectedBrand}
+                        allProducts={products}
+                        onBack={() => setSelectedBrand(null)}
+                        onProductClick={(product) => selectProduct(product)}
                         onAddToCart={addToCart}
-                        onBrandClick={(brandName, brandId) => {
-                            setSelectedProduct(null);
-                            const brand = brands.find(b => String(b.id) === String(brandId) || b.name === brandName);
-                            if (brand) {
-                                selectBrand(brand);
-                                setShowSubcategoryView(false);
-                                window.scrollTo({ top: 0, behavior: 'smooth' });
-                            }
-                        }}
+                        updateQuantity={updateQuantity}
                     />
+                </Suspense>
+                {selectedProduct && (
+                    <Suspense fallback={null}>
+                        <ProductDetail
+                            product={selectedProduct}
+                            onClose={() => setSelectedProduct(null)}
+                            onAddToCart={addToCart}
+                            onBrandClick={(brandName, brandId) => {
+                                setSelectedProduct(null);
+                                const brand = brands.find(b => String(b.id) === String(brandId) || b.name === brandName);
+                                if (brand) {
+                                    selectBrand(brand);
+                                    setShowSubcategoryView(false);
+                                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                                }
+                            }}
+                        />
+                    </Suspense>
                 )}
             </>
         );
@@ -457,11 +468,13 @@ export default function Home() {
     // If showing all brands view
     if (showAllBrands) {
         return (
-            <AllBrands
-                brands={brands}
-                onBrandClick={(brand) => { selectBrand(brand); setShowAllBrands(false); }}
-                onBack={() => setShowAllBrands(false)}
-            />
+            <Suspense fallback={<ViewFallback />}>
+                <AllBrands
+                    brands={brands}
+                    onBrandClick={(brand) => { selectBrand(brand); setShowAllBrands(false); }}
+                    onBack={() => setShowAllBrands(false)}
+                />
+            </Suspense>
         );
     }
 
@@ -738,7 +751,7 @@ export default function Home() {
                                                             onAddToCart={addToCart}
                                                             onViewDetails={() => setSelectedProduct(product)}
                                                             onNavigateToCategory={navigateToCategory}
-                                                            priority={index < 3}
+                                                            priority={false}
                                                         />
                                                     </div>
                                                 ))}
@@ -813,20 +826,22 @@ export default function Home() {
 
             {/* Product Detail Modal */}
             {selectedProduct && (
-                <ProductDetail
-                    product={selectedProduct}
-                    onClose={() => setSelectedProduct(null)}
-                    onAddToCart={addToCart}
-                    onBrandClick={(brandName, brandId) => {
-                        setSelectedProduct(null);
-                        const brand = brands.find(b => String(b.id) === String(brandId) || b.name === brandName);
-                        if (brand) {
-                            selectBrand(brand);
-                            setShowSubcategoryView(false);
-                            window.scrollTo({ top: 0, behavior: 'smooth' });
-                        }
-                    }}
-                />
+                <Suspense fallback={null}>
+                    <ProductDetail
+                        product={selectedProduct}
+                        onClose={() => setSelectedProduct(null)}
+                        onAddToCart={addToCart}
+                        onBrandClick={(brandName, brandId) => {
+                            setSelectedProduct(null);
+                            const brand = brands.find(b => String(b.id) === String(brandId) || b.name === brandName);
+                            if (brand) {
+                                selectBrand(brand);
+                                setShowSubcategoryView(false);
+                                window.scrollTo({ top: 0, behavior: 'smooth' });
+                            }
+                        }}
+                    />
+                </Suspense>
             )}
         </>
     );
