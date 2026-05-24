@@ -428,6 +428,7 @@ export default function Home() {
             <>
                 <BrandPage
                     brand={selectedBrand}
+                    allProducts={products}
                     onBack={() => setSelectedBrand(null)}
                     onProductClick={(product) => selectProduct(product)}
                     onAddToCart={addToCart}
