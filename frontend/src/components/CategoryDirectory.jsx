@@ -29,7 +29,7 @@ const CategoryDirectory = ({ categories, onSelectCategory }) => {
             </div>
 
             <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 gap-3 sm:gap-4">
-                {categories.map((category) => {
+                {categories.map((category, index) => {
                     const Icon = getCategoryIcon(category.name);
 
                     return (
@@ -45,6 +45,8 @@ const CategoryDirectory = ({ categories, onSelectCategory }) => {
                                         src={category.image}
                                         alt={category.name}
                                         className="w-full h-full object-cover"
+                                        loading={index < 8 ? "eager" : "lazy"}
+                                        fetchpriority={index < 8 ? "high" : "auto"}
                                     />
                                 ) : (
                                     <Icon className="w-8 h-8 sm:w-10 sm:h-10 text-emerald-600 group-hover:scale-110 transition-transform" />

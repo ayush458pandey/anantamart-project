@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { X, Filter, ChevronDown, ChevronUp } from 'lucide-react';
 
 /**

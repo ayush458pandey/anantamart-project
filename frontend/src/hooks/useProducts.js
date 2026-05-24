@@ -36,28 +36,35 @@ export const useProducts = () => {
         setLoading(true);
       }
 
-      // Fetch categories
-      const categoriesRes = await axios.get('/categories/');
+      // Start both the categories fetch and the first page of products fetch in parallel
+      const categoriesPromise = axios.get('/categories/');
+      const firstProductsPromise = axios.get('/products/');
+
+      const [categoriesRes, firstProductsRes] = await Promise.all([
+        categoriesPromise,
+        firstProductsPromise
+      ]);
+
       const categoriesData = Array.isArray(categoriesRes.data)
         ? categoriesRes.data
         : (categoriesRes.data.results || []);
 
       // Fetch ALL pages of products (handles DRF pagination)
       let productsData = [];
-      let nextUrl = '/products/';
-      while (nextUrl) {
-        const productsRes = await axios.get(nextUrl);
-        const data = productsRes.data;
-        if (Array.isArray(data)) {
+      let currentData = firstProductsRes.data;
+      let nextUrl = null;
+
+      while (true) {
+        if (Array.isArray(currentData)) {
           // No pagination — got raw array
-          productsData = data;
+          productsData = productsData.concat(currentData);
           break;
         } else {
-          productsData = productsData.concat(data.results || []);
+          productsData = productsData.concat(currentData.results || []);
           // Extract relative URL for next page (remove base URL if present)
-          if (data.next) {
+          if (currentData.next) {
             try {
-              const url = new URL(data.next);
+              const url = new URL(currentData.next);
               nextUrl = url.pathname.replace(/^\/api/, '') + url.search;
             } catch {
               nextUrl = null;
@@ -66,6 +73,12 @@ export const useProducts = () => {
             nextUrl = null;
           }
         }
+
+        if (!nextUrl) break;
+
+        // Fetch the next page of products
+        const nextRes = await axios.get(nextUrl);
+        currentData = nextRes.data;
       }
 
       // Fix Image Logic for Cloudinary

@@ -1,9 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import {
     Search, Package,
     Coffee, Utensils, Droplet, Briefcase, Shirt, Home as HomeIcon, Store,
-    ShoppingBag, Box, Tag, Grid, Layers, ChevronLeft
+    ShoppingBag, Box, Tag, Grid, Layers, ChevronLeft, Filter as FilterIcon
 } from 'lucide-react';
 
 import { useProducts } from '../hooks/useProducts';
@@ -16,6 +16,7 @@ import AllBrands from '../components/AllBrands';
 import SubcategoryGrid from '../components/SubcategoryGrid';
 import BrandGrid from '../components/BrandGrid';
 import BrandPage from '../components/BrandPage';
+import FilterSidebar from '../components/FilterSidebar';
 import { productService } from '../api/services/productService';
 import CategoryDirectory from '../components/CategoryDirectory';
 
@@ -40,6 +41,20 @@ const getCategoryIcon = (category) => {
     return Package;
 };
 
+const getEntityId = (value) => {
+    if (value && typeof value === 'object') return value.id;
+    return value;
+};
+
+const getProductCategoryId = (product) => getEntityId(product.category ?? product.category_id);
+const getProductSubcategoryId = (product) => getEntityId(product.subcategory ?? product.subcategory_id);
+
+const getProductBrandNames = (product) => [
+    product.brand_name,
+    typeof product.brand === 'string' ? product.brand : null,
+    product.brand_ref?.name,
+].filter(Boolean).map(name => String(name).toLowerCase());
+
 export default function Home() {
     const [selectedCategory, setSelectedCategory] = useState('all');
     const [searchQuery, setSearchQuery] = useState('');
@@ -54,17 +69,25 @@ export default function Home() {
     const [selectedBrand, setSelectedBrand] = useState(null);
     const [loadingBrands, setLoadingBrands] = useState(false);
     const [showAllBrands, setShowAllBrands] = useState(false);
+    const [filterOptions, setFilterOptions] = useState(null);
+    const [selectedBrands, setSelectedBrands] = useState([]);
+    const [selectedFilterSubcategories, setSelectedFilterSubcategories] = useState([]);
+    const [loadingFilters, setLoadingFilters] = useState(false);
+    const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
     // Ref to track intentional navigation
     const intentionalNavRef = React.useRef({ subcategoryId: null, navigating: false });
 
     const { products, categories, loading, error } = useProducts();
     const { cart, addToCart, removeFromCart, updateQuantity } = useCart();
+    const activeFilterSubcategories = selectedSubcategory
+        ? [selectedSubcategory]
+        : selectedFilterSubcategories;
 
     // --- Browser back button / swipe support ---
     // Push a history entry when entering a deeper view
     useEffect(() => {
-        const handlePopState = (e) => {
+        const handlePopState = () => {
             // When back button is pressed, figure out what to close
             if (selectedProduct) {
                 setSelectedProduct(null);
@@ -138,6 +161,10 @@ export default function Home() {
         }
 
         setSelectedSubcategory(null);
+        setSelectedBrands([]);
+        setSelectedFilterSubcategories([]);
+        setFilterOptions(null);
+        setMobileFiltersOpen(false);
         const fetchSubcategories = async () => {
             if (selectedCategory && selectedCategory !== 'all') {
                 setLoadingSubcategories(true);
@@ -158,6 +185,35 @@ export default function Home() {
         setShowSubcategoryView(true);
     }, [selectedCategory]);
 
+    // Fetch available brand and subcategory filters for the selected category
+    useEffect(() => {
+        const fetchFilterOptions = async () => {
+            if (!selectedCategory || selectedCategory === 'all') {
+                setFilterOptions(null);
+                return;
+            }
+
+            setLoadingFilters(true);
+            try {
+                const subcategoriesForFilterOptions = selectedSubcategory
+                    ? [selectedSubcategory]
+                    : selectedFilterSubcategories;
+                const data = await productService.getFilterOptions(
+                    selectedCategory,
+                    subcategoriesForFilterOptions
+                );
+                setFilterOptions(data);
+            } catch (err) {
+                console.error('Failed to fetch filter options:', err);
+                setFilterOptions(null);
+            } finally {
+                setLoadingFilters(false);
+            }
+        };
+
+        fetchFilterOptions();
+    }, [selectedCategory, selectedSubcategory, selectedFilterSubcategories]);
+
     // Fetch brands for catalog view
     useEffect(() => {
         const fetchBrands = async () => {
@@ -177,11 +233,32 @@ export default function Home() {
 
     const handleBackToSubcategories = () => {
         setSelectedSubcategory(null);
+        setSelectedFilterSubcategories([]);
         setShowSubcategoryView(true);
+    };
+
+    const handleBrandFilterChange = (brands) => {
+        setSelectedBrands(brands);
+        setShowSubcategoryView(false);
+    };
+
+    const handleSubcategoryFilterChange = (subcategories) => {
+        setSelectedSubcategory(null);
+        setSelectedFilterSubcategories(subcategories);
+        setShowSubcategoryView(false);
+    };
+
+    const clearAllFilters = () => {
+        setSelectedBrands([]);
+        setSelectedSubcategory(null);
+        setSelectedFilterSubcategories([]);
+        setShowSubcategoryView(false);
     };
 
     const navigateToCategory = (categoryId, subcategoryId) => {
         setSearchQuery('');
+        setSelectedBrands([]);
+        setSelectedFilterSubcategories([]);
         if (subcategoryId) {
             intentionalNavRef.current = { subcategoryId: subcategoryId, navigating: true };
         }
@@ -193,44 +270,48 @@ export default function Home() {
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
-    const filteredProducts = products.filter(product => {
-        const query = searchQuery.toLowerCase().trim();
-
-        if (query) {
-            return (
+    const filteredProducts = useMemo(() => {
+        return products.filter(product => {
+            const query = searchQuery.toLowerCase().trim();
+            const productBrandNames = getProductBrandNames(product);
+            const matchesSearch = !query || (
                 (product.name || '').toLowerCase().includes(query) ||
                 (product.sku || '').toLowerCase().includes(query) ||
-                (product.brand || '').toLowerCase().includes(query) ||
-                (product.brand_name || '').toLowerCase().includes(query) ||
+                productBrandNames.some(brand => brand.includes(query)) ||
                 (product.description || '').toLowerCase().includes(query) ||
                 (product.category_name || '').toLowerCase().includes(query) ||
                 (product.subcategory_name || '').toLowerCase().includes(query) ||
                 (product.key_features || '').toLowerCase().includes(query)
             );
-        }
+            const matchesCategory = selectedCategory === 'all' || String(getProductCategoryId(product)) === String(selectedCategory);
+            const matchesSubcategory = activeFilterSubcategories.length === 0 ||
+                activeFilterSubcategories.some(subcategoryId => String(getProductSubcategoryId(product)) === String(subcategoryId));
+            const matchesBrand = selectedBrands.length === 0 ||
+                selectedBrands.some(brand => productBrandNames.includes(String(brand).toLowerCase()));
 
-        const matchesCategory = selectedCategory === 'all' || String(product.category) === String(selectedCategory);
-        const matchesSubcategory = !selectedSubcategory || String(product.subcategory) === String(selectedSubcategory);
-        return matchesCategory && matchesSubcategory;
-    });
-
-    const visibleBrands = brands.filter(brand => {
-        if (selectedCategory === 'all') return true;
-        const hasProduct = products.some(p => {
-            const productCatId = String(p.category || p.category_id || (p.category_obj?.id) || '');
-            const currentCatId = String(selectedCategory);
-            if (productCatId !== currentCatId) return false;
-            const targetBrandId = String(brand.id);
-            const targetBrandName = brand.name.toLowerCase();
-            if (p.brand && String(p.brand) === targetBrandId) return true;
-            if (p.brand_id && String(p.brand_id) === targetBrandId) return true;
-            if (typeof p.brand === 'object' && p.brand !== null && String(p.brand.id) === targetBrandId) return true;
-            if (typeof p.brand === 'string' && p.brand.toLowerCase() === targetBrandName) return true;
-            if (p.brand_name && p.brand_name.toLowerCase() === targetBrandName) return true;
-            return false;
+            return matchesSearch && matchesCategory && matchesSubcategory && matchesBrand;
         });
-        return hasProduct;
-    });
+    }, [products, searchQuery, selectedCategory, activeFilterSubcategories, selectedBrands]);
+
+    const visibleBrands = useMemo(() => {
+        return brands.filter(brand => {
+            if (selectedCategory === 'all') return true;
+            const hasProduct = products.some(p => {
+                const productCatId = String(p.category || p.category_id || (p.category_obj?.id) || '');
+                const currentCatId = String(selectedCategory);
+                if (productCatId !== currentCatId) return false;
+                const targetBrandId = String(brand.id);
+                const targetBrandName = brand.name.toLowerCase();
+                if (p.brand && String(p.brand) === targetBrandId) return true;
+                if (p.brand_id && String(p.brand_id) === targetBrandId) return true;
+                if (typeof p.brand === 'object' && p.brand !== null && String(p.brand.id) === targetBrandId) return true;
+                if (typeof p.brand === 'string' && p.brand.toLowerCase() === targetBrandName) return true;
+                if (p.brand_name && p.brand_name.toLowerCase() === targetBrandName) return true;
+                return false;
+            });
+            return hasProduct;
+        });
+    }, [brands, selectedCategory, products]);
 
     const currentCategoryName = categories.find(c => c.id === selectedCategory)?.name || 'All Products';
     const activeSubcategory = subcategories.find(s => s.id === selectedSubcategory);
@@ -453,52 +534,102 @@ export default function Home() {
             )}
 
             {/* Page Title */}
-            <div className="mb-3 sm:mb-4 px-1">
-                {searchQuery ? (
-                    <h2 className="text-base sm:text-lg font-bold text-gray-800">
-                        Search Results for "{searchQuery}"
-                        <span className="text-xs font-normal text-gray-500 bg-gray-100 px-2 py-1 rounded-full border border-gray-200 ml-2">
-                            {filteredProducts.length} items
-                        </span>
-                    </h2>
-                ) : selectedSubcategory && activeSubcategory ? (
-                    <div>
-                        <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            {currentCategoryName}
-                        </span>
-                        <h2 className="text-xl sm:text-2xl font-bold text-emerald-800 flex items-center gap-2 mt-0.5">
-                            {activeSubcategory.name}
+            <div className="mb-3 sm:mb-4 px-1 flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                    {searchQuery ? (
+                        <h2 className="text-base sm:text-lg font-bold text-gray-800">
+                            Search Results for "{searchQuery}"
                             <span className="text-xs font-normal text-gray-500 bg-gray-100 px-2 py-1 rounded-full border border-gray-200">
                                 {filteredProducts.length} items
                             </span>
                         </h2>
-                    </div>
-                ) : (
-                    <h2 className="text-base sm:text-lg font-bold text-gray-800">
-                        {selectedCategory === 'all' ? 'All Products' : currentCategoryName}
-                    </h2>
+                    ) : selectedSubcategory && activeSubcategory ? (
+                        <div>
+                            <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                {currentCategoryName}
+                            </span>
+                            <h2 className="text-xl sm:text-2xl font-bold text-emerald-800 flex items-center gap-2 mt-0.5">
+                                {activeSubcategory.name}
+                                <span className="text-xs font-normal text-gray-500 bg-gray-100 px-2 py-1 rounded-full border border-gray-200">
+                                    {filteredProducts.length} items
+                                </span>
+                            </h2>
+                        </div>
+                    ) : (
+                        <h2 className="text-base sm:text-lg font-bold text-gray-800">
+                            {selectedCategory === 'all' ? 'All Products' : currentCategoryName}
+                        </h2>
+                    )}
+                </div>
+
+                {selectedCategory !== 'all' && (
+                    <button
+                        onClick={() => setMobileFiltersOpen(true)}
+                        className="lg:hidden inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-3 py-2 text-xs font-semibold text-white shadow-sm active:bg-emerald-700"
+                    >
+                        <FilterIcon className="w-4 h-4" />
+                        <span>Filters</span>
+                        {(selectedBrands.length + activeFilterSubcategories.length) > 0 && (
+                            <span className="bg-white text-emerald-700 rounded-full px-1.5 py-0.5 text-[10px] leading-none">
+                                {selectedBrands.length + activeFilterSubcategories.length}
+                            </span>
+                        )}
+                    </button>
                 )}
+            </div>
+
+            <div className="lg:hidden">
+                <FilterSidebar
+                    categoryId={selectedCategory}
+                    filterOptions={filterOptions}
+                    selectedBrands={selectedBrands}
+                    selectedSubcategories={activeFilterSubcategories}
+                    onBrandChange={handleBrandFilterChange}
+                    onSubcategoryChange={handleSubcategoryFilterChange}
+                    onClearAll={clearAllFilters}
+                    isLoading={loadingFilters}
+                    isMobile
+                    isOpen={mobileFiltersOpen}
+                    onToggle={() => setMobileFiltersOpen(open => !open)}
+                />
             </div>
 
             {/* Subcategory Grid */}
             {selectedCategory !== 'all' && showSubcategoryView && subcategories.length > 0 && !searchQuery && (
                 <div className="mb-6">
-                    <div className="flex items-center justify-between mb-3 px-1">
-                        <h3 className="text-sm sm:text-base font-bold text-gray-700">Browse by Subcategory</h3>
-                        <button
-                            onClick={() => setShowSubcategoryView(false)}
-                            className="text-xs text-emerald-600 hover:text-emerald-700 font-medium"
-                        >
-                            View All Products
-                        </button>
+                    <div className="flex gap-4 items-start">
+                        <div className="hidden lg:block">
+                            <FilterSidebar
+                                categoryId={selectedCategory}
+                                filterOptions={filterOptions}
+                                selectedBrands={selectedBrands}
+                                selectedSubcategories={activeFilterSubcategories}
+                                onBrandChange={handleBrandFilterChange}
+                                onSubcategoryChange={handleSubcategoryFilterChange}
+                                onClearAll={clearAllFilters}
+                                isLoading={loadingFilters}
+                            />
+                        </div>
+
+                        <div className="flex-1 min-w-0">
+                            <div className="flex items-center justify-between mb-3 px-1">
+                                <h3 className="text-sm sm:text-base font-bold text-gray-700">Browse by Subcategory</h3>
+                                <button
+                                    onClick={() => setShowSubcategoryView(false)}
+                                    className="text-xs text-emerald-600 hover:text-emerald-700 font-medium"
+                                >
+                                    View All Products
+                                </button>
+                            </div>
+                            <SubcategoryGrid
+                                subcategories={subcategories}
+                                onSubcategoryClick={(subcat) => {
+                                    selectSubcategory(subcat.id);
+                                }}
+                                isLoading={loadingSubcategories}
+                            />
+                        </div>
                     </div>
-                    <SubcategoryGrid
-                        subcategories={subcategories}
-                        onSubcategoryClick={(subcat) => {
-                            selectSubcategory(subcat.id);
-                        }}
-                        isLoading={loadingSubcategories}
-                    />
                 </div>
             )}
 
@@ -555,7 +686,7 @@ export default function Home() {
                                                 </button>
                                             </div>
                                             <div className="flex overflow-x-auto gap-3 sm:gap-4 pb-4 -mx-3 px-3 scrollbar-hide snap-x">
-                                                {categoryProducts.slice(0, 8).map((product) => (
+                                                {categoryProducts.slice(0, 8).map((product, index) => (
                                                     <div key={product.id} className="flex-shrink-0 w-[160px] sm:w-[200px] snap-start">
                                                         <ProductCard
                                                             product={product}
@@ -593,26 +724,45 @@ export default function Home() {
                     ) : (
                         /* SCENARIO B: STANDARD GRID */
                         <>
-                            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2.5 sm:gap-3 md:gap-4 pb-4">
-                                {filteredProducts.map((product) => (
-                                    <ProductCard
-                                        key={product.id}
-                                        product={product}
-                                        cart={cart}
-                                        removeFromCart={removeFromCart}
-                                        updateQuantity={updateQuantity}
-                                        onAddToCart={addToCart}
-                                        onViewDetails={() => selectProduct(product)}
-                                        onNavigateToCategory={navigateToCategory}
+                            <div className="flex gap-4 items-start">
+                                <div className="hidden lg:block">
+                                    <FilterSidebar
+                                        categoryId={selectedCategory}
+                                        filterOptions={filterOptions}
+                                        selectedBrands={selectedBrands}
+                                        selectedSubcategories={activeFilterSubcategories}
+                                        onBrandChange={handleBrandFilterChange}
+                                        onSubcategoryChange={handleSubcategoryFilterChange}
+                                        onClearAll={clearAllFilters}
+                                        isLoading={loadingFilters}
                                     />
-                                ))}
-                            </div>
-                            {filteredProducts.length === 0 && (
-                                <div className="text-center py-12 sm:py-16">
-                                    <Package className="w-12 h-12 sm:w-16 sm:h-16 text-gray-300 mx-auto mb-3" />
-                                    <p className="text-sm sm:text-base text-gray-500">No products found</p>
                                 </div>
-                            )}
+
+                                <div className="flex-1 min-w-0">
+                                    <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-2.5 sm:gap-3 md:gap-4 pb-4">
+                                        {filteredProducts.map((product, index) => (
+                                            <ProductCard
+                                                key={product.id}
+                                                product={product}
+                                                cart={cart}
+                                                removeFromCart={removeFromCart}
+                                                updateQuantity={updateQuantity}
+                                                onAddToCart={addToCart}
+                                                onViewDetails={() => selectProduct(product)}
+                                                onNavigateToCategory={navigateToCategory}
+                                                priority={index < 4}
+                                            />
+                                        ))}
+                                    </div>
+
+                                    {filteredProducts.length === 0 && (
+                                        <div className="text-center py-12 sm:py-16">
+                                            <Package className="w-12 h-12 sm:w-16 sm:h-16 text-gray-300 mx-auto mb-3" />
+                                            <p className="text-sm sm:text-base text-gray-500">No products found</p>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
                         </>
                     )}
                 </>
