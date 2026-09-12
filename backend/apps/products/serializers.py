@@ -19,7 +19,7 @@ class OptimizedImageMixin:
 class CategorySerializer(OptimizedImageMixin, serializers.ModelSerializer):
     class Meta:
         model = Category
-        fields = ['id', 'name', 'description', 'icon', 'image', 'is_active']
+        fields = ['id', 'name', 'short_name', 'description', 'icon', 'image', 'is_active']
 
 class SubcategorySerializer(OptimizedImageMixin, serializers.ModelSerializer):
     category_name = serializers.CharField(source='category.name', read_only=True)

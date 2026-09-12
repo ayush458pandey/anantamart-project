@@ -3,9 +3,9 @@ from .models import Category, Product, PriceTier, ProductImage, Subcategory, Bra
 
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
-    list_display = ['name', 'is_active', 'created_at']
+    list_display = ['name', 'short_name', 'is_active', 'created_at']
     list_filter = ['is_active']
-    search_fields = ['name', 'description']
+    search_fields = ['name', 'short_name', 'description']
 
 @admin.register(Subcategory)
 class SubcategoryAdmin(admin.ModelAdmin):
