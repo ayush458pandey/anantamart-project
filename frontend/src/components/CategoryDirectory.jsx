@@ -2,7 +2,7 @@ import React from 'react';
 import {
     Scissors, Armchair, Sparkles, Coffee,
     Utensils, Droplet, Briefcase, Shirt,
-    Home, Grid, Package
+    Home, Grid, Package, HeartPulse
 } from 'lucide-react';
 import { getImageSrcSet, getOptimizedImageUrl } from '../utils/imageUtils';
 
@@ -11,6 +11,8 @@ const getCategoryIcon = (categoryName) => {
     if (name.includes('scissor') || name.includes('cut')) return Scissors;
     if (name.includes('furniture') || name.includes('chair')) return Armchair;
     if (name.includes('cosmetic') || name.includes('beauty')) return Sparkles;
+    if (name.includes('health') || name.includes('medical') || name.includes('pharma')) return HeartPulse;
+    if (name.includes('hotel') || name.includes('kitchen suppli')) return Utensils;
     if (name.includes('food') || name.includes('beverage')) return Coffee;
     if (name.includes('utensil') || name.includes('restaurant')) return Utensils;
     if (name.includes('clean')) return Droplet;
@@ -59,7 +61,12 @@ const CategoryDirectory = ({ categories, onSelectCategory }) => {
                                 )}
                             </div>
 
-                            <span className="mt-2 text-[10px] sm:text-xs font-medium text-gray-600 text-center truncate w-full px-1 group-hover:text-emerald-700">
+                            {/* Mobile: show short_name (falls back to name) */}
+                            <span className="mt-2 text-[10px] font-medium text-gray-600 text-center w-full px-1 group-hover:text-emerald-700 line-clamp-2 sm:hidden">
+                                {category.short_name || category.name}
+                            </span>
+                            {/* Desktop: always show full name */}
+                            <span className="mt-2 text-xs font-medium text-gray-600 text-center w-full px-1 group-hover:text-emerald-700 line-clamp-2 hidden sm:block">
                                 {category.name}
                             </span>
                         </div>

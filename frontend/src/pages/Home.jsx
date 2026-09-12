@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import {
     Search, Package,
     Coffee, Utensils, Droplet, Briefcase, Shirt, Home as HomeIcon, Store,
-    ShoppingBag, Box, Tag, Grid, Layers, ChevronLeft, Filter as FilterIcon
+    ShoppingBag, Box, Tag, Grid, Layers, ChevronLeft, Filter as FilterIcon, HeartPulse
 } from 'lucide-react';
 
 import { useProducts } from '../hooks/useProducts';
@@ -37,10 +37,12 @@ const getCategoryIcon = (category) => {
     const iconMap = {
         'package': Package, 'box': Box, 'coffee': Coffee, 'food': Coffee,
         'beverage': Coffee, 'utensils': Utensils, 'restaurant': Utensils,
+        'hotel': Utensils, 'kitchen suppli': Utensils,
         'droplet': Droplet, 'cleaning': Droplet, 'briefcase': Briefcase,
         'office': Briefcase, 'shirt': Shirt, 'apparel': Shirt,
         'home': HomeIcon, 'store': Store, 'shopping': ShoppingBag,
         'bag': ShoppingBag, 'tag': Tag, 'grid': Grid, 'layers': Layers,
+        'health': HeartPulse, 'medical': HeartPulse, 'pharma': HeartPulse,
     };
     for (const [key, icon] of Object.entries(iconMap)) {
         if (iconName.includes(key) || categoryName.includes(key)) return icon;
@@ -575,7 +577,7 @@ export default function Home() {
                                         }`}
                                 >
                                     <CategoryIcon className={`w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0 ${isActive ? 'text-white' : 'text-emerald-600'}`} />
-                                    <span>{category.name}</span>
+                                    <span>{category.short_name || category.name}</span>
                                 </button>
                             );
                         })}

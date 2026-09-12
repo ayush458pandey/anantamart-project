@@ -62,7 +62,7 @@ export default function SubcategoryGrid({
                     </div>
 
                     {/* Compact Name Label */}
-                    <span className="mt-2 text-[10px] sm:text-xs font-medium text-gray-600 text-center truncate w-full px-1 group-hover:text-emerald-700">
+                    <span className="mt-2 text-[10px] sm:text-xs font-medium text-gray-600 text-center line-clamp-2 w-full px-1 group-hover:text-emerald-700">
                         {subcategory.name}
                     </span>
                 </div>
