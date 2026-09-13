@@ -82,6 +82,7 @@ export default function Home() {
     const [filterOptions, setFilterOptions] = useState(null);
     const [selectedBrands, setSelectedBrands] = useState([]);
     const [selectedFilterSubcategories, setSelectedFilterSubcategories] = useState([]);
+    const [selectedTags, setSelectedTags] = useState([]);
     const [loadingFilters, setLoadingFilters] = useState(false);
     const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
@@ -173,6 +174,7 @@ export default function Home() {
         setSelectedSubcategory(null);
         setSelectedBrands([]);
         setSelectedFilterSubcategories([]);
+        setSelectedTags([]);
         setFilterOptions(null);
         setMobileFiltersOpen(false);
         const fetchSubcategories = async () => {
@@ -285,10 +287,16 @@ export default function Home() {
         setShowSubcategoryView(false);
     };
 
+    const handleTagFilterChange = (tags) => {
+        setSelectedTags(tags);
+        setShowSubcategoryView(false);
+    };
+
     const clearAllFilters = () => {
         setSelectedBrands([]);
         setSelectedSubcategory(null);
         setSelectedFilterSubcategories([]);
+        setSelectedTags([]);
         setShowSubcategoryView(false);
     };
 
@@ -296,6 +304,7 @@ export default function Home() {
         setSearchQuery('');
         setSelectedBrands([]);
         setSelectedFilterSubcategories([]);
+        setSelectedTags([]);
         if (subcategoryId) {
             intentionalNavRef.current = { subcategoryId: subcategoryId, navigating: true };
         }
@@ -326,9 +335,36 @@ export default function Home() {
             const matchesBrand = selectedBrands.length === 0 ||
                 selectedBrands.some(brand => productBrandNames.includes(String(brand).toLowerCase()));
 
-            return matchesSearch && matchesCategory && matchesSubcategory && matchesBrand;
+            // Tag logic: OR within group, AND across groups
+            let matchesTags = true;
+            if (selectedTags.length > 0 && filterOptions?.tag_groups) {
+                // 1. Group selected tags by their TagGroup
+                const selectedGroups = {};
+                for (const tagId of selectedTags) {
+                    // Find which group this tag belongs to
+                    const group = filterOptions.tag_groups.find(g => g.tags.some(t => t.id === tagId));
+                    if (group) {
+                        if (!selectedGroups[group.id]) selectedGroups[group.id] = [];
+                        selectedGroups[group.id].push(tagId);
+                    }
+                }
+                
+                // 2. Check each group
+                const productTagIds = (product.tag_list || []).map(t => t.id);
+                for (const groupId in selectedGroups) {
+                    const groupSelectedTagIds = selectedGroups[groupId];
+                    // Product must have AT LEAST ONE tag from this group (OR logic within group)
+                    const hasTagFromGroup = groupSelectedTagIds.some(tagId => productTagIds.includes(tagId));
+                    if (!hasTagFromGroup) {
+                        matchesTags = false;
+                        break; // Failed AND condition across groups
+                    }
+                }
+            }
+
+            return matchesSearch && matchesCategory && matchesSubcategory && matchesBrand && matchesTags;
         });
-    }, [products, searchQuery, selectedCategory, activeFilterSubcategories, selectedBrands]);
+    }, [products, searchQuery, selectedCategory, activeFilterSubcategories, selectedBrands, selectedTags, filterOptions]);
 
     const productsByCategory = useMemo(() => {
         const groups = new Map();
@@ -644,9 +680,9 @@ export default function Home() {
                     >
                         <FilterIcon className="w-4 h-4" />
                         <span>Filters</span>
-                        {(selectedBrands.length + activeFilterSubcategories.length) > 0 && (
+                        {(selectedBrands.length + activeFilterSubcategories.length + selectedTags.length) > 0 && (
                             <span className="bg-white text-emerald-700 rounded-full px-1.5 py-0.5 text-[10px] leading-none">
-                                {selectedBrands.length + activeFilterSubcategories.length}
+                                {selectedBrands.length + activeFilterSubcategories.length + selectedTags.length}
                             </span>
                         )}
                     </button>
@@ -659,8 +695,10 @@ export default function Home() {
                     filterOptions={filterOptions}
                     selectedBrands={selectedBrands}
                     selectedSubcategories={activeFilterSubcategories}
+                    selectedTags={selectedTags}
                     onBrandChange={handleBrandFilterChange}
                     onSubcategoryChange={handleSubcategoryFilterChange}
+                    onTagChange={handleTagFilterChange}
                     onClearAll={clearAllFilters}
                     isLoading={loadingFilters}
                     isMobile
@@ -679,8 +717,10 @@ export default function Home() {
                                 filterOptions={filterOptions}
                                 selectedBrands={selectedBrands}
                                 selectedSubcategories={activeFilterSubcategories}
+                                selectedTags={selectedTags}
                                 onBrandChange={handleBrandFilterChange}
                                 onSubcategoryChange={handleSubcategoryFilterChange}
+                                onTagChange={handleTagFilterChange}
                                 onClearAll={clearAllFilters}
                                 isLoading={loadingFilters}
                             />

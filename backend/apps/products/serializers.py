@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Product, Category, PriceTier, ProductImage, Subcategory, Brand
+from .models import Product, Category, PriceTier, ProductImage, Subcategory, Brand, TagGroup, ProductTag
 
 def optimize_cloudinary_url(url):
     """Automatically compress and optimize Cloudinary images"""
@@ -81,6 +81,16 @@ class ProductImageSerializer(OptimizedImageMixin, serializers.ModelSerializer):
                 return request.build_absolute_uri(obj.image.url)
         return None
 
+# Tag serializers (defined before ProductSerializer)
+class ProductTagInlineSerializer(serializers.ModelSerializer):
+    """Lightweight tag serializer for embedding in product responses"""
+    group_name = serializers.CharField(source='group.name', read_only=True)
+    group_slug = serializers.CharField(source='group.slug', read_only=True)
+
+    class Meta:
+        model = ProductTag
+        fields = ['id', 'name', 'slug', 'group_name', 'group_slug']
+
 class ProductSerializer(OptimizedImageMixin, serializers.ModelSerializer):
     category_name = serializers.CharField(source='category.name', read_only=True)
     subcategory_name = serializers.CharField(source='subcategory.name', read_only=True, allow_null=True)
@@ -98,6 +108,7 @@ class ProductSerializer(OptimizedImageMixin, serializers.ModelSerializer):
     gst_rate = serializers.DecimalField(source='tax_rate', max_digits=5, decimal_places=2, read_only=True)
     
     tiers = PriceTierSerializer(many=True, read_only=True)
+    tag_list = ProductTagInlineSerializer(source='tags', many=True, read_only=True)
 
     class Meta:
         model = Product
@@ -110,7 +121,7 @@ class ProductSerializer(OptimizedImageMixin, serializers.ModelSerializer):
             'image', 'image_url', 'images', 'mrp', 'base_price', 
             'tax_rate', 'gst_rate', 'hsn_code',  # ✅ tax_rate for writes, gst_rate for reads
             'stock', 'stock_status',
-            'moq', 'case_size', 'is_active', 'created_at', 'tiers'
+            'moq', 'case_size', 'is_active', 'created_at', 'tiers', 'tag_list'
         ]
     
     def get_brand_name(self, obj):

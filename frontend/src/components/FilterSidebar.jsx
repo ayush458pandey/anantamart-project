@@ -11,8 +11,10 @@ export default function FilterSidebar({
     filterOptions,
     selectedBrands,
     selectedSubcategories,
+    selectedTags = [], // Array of selected tag IDs
     onBrandChange,
     onSubcategoryChange,
+    onTagChange,
     onClearAll,
     isLoading,
     isMobile = false,
@@ -21,7 +23,8 @@ export default function FilterSidebar({
 }) {
     const [expandedSections, setExpandedSections] = useState({
         brands: true,
-        subcategories: true
+        subcategories: true,
+        // Tag groups will be added dynamically as they expand
     });
 
     const toggleSection = (section) => {
@@ -47,7 +50,15 @@ export default function FilterSidebar({
         }
     };
 
-    const hasActiveFilters = selectedBrands.length > 0 || selectedSubcategories.length > 0;
+    const handleTagToggle = (tagId) => {
+        if (selectedTags.includes(tagId)) {
+            onTagChange(selectedTags.filter(t => t !== tagId));
+        } else {
+            onTagChange([...selectedTags, tagId]);
+        }
+    };
+
+    const hasActiveFilters = selectedBrands.length > 0 || selectedSubcategories.length > 0 || selectedTags.length > 0;
 
     // Don't render if no category is selected
     if (!categoryId || categoryId === 'all') {
@@ -65,7 +76,7 @@ export default function FilterSidebar({
                     <Filter className="w-5 h-5" />
                     {hasActiveFilters && (
                         <span className="bg-white text-emerald-600 text-xs font-bold px-2 py-0.5 rounded-full">
-                            {selectedBrands.length + selectedSubcategories.length}
+                            {selectedBrands.length + selectedSubcategories.length + selectedTags.length}
                         </span>
                     )}
                 </button>
@@ -82,8 +93,10 @@ export default function FilterSidebar({
                         filterOptions={filterOptions}
                         selectedBrands={selectedBrands}
                         selectedSubcategories={selectedSubcategories}
+                        selectedTags={selectedTags}
                         handleBrandToggle={handleBrandToggle}
                         handleSubcategoryToggle={handleSubcategoryToggle}
+                        handleTagToggle={handleTagToggle}
                         expandedSections={expandedSections}
                         toggleSection={toggleSection}
                         hasActiveFilters={hasActiveFilters}
@@ -105,8 +118,10 @@ export default function FilterSidebar({
                     filterOptions={filterOptions}
                     selectedBrands={selectedBrands}
                     selectedSubcategories={selectedSubcategories}
+                    selectedTags={selectedTags}
                     handleBrandToggle={handleBrandToggle}
                     handleSubcategoryToggle={handleSubcategoryToggle}
+                    handleTagToggle={handleTagToggle}
                     expandedSections={expandedSections}
                     toggleSection={toggleSection}
                     hasActiveFilters={hasActiveFilters}
@@ -124,8 +139,10 @@ function FilterContent({
     filterOptions,
     selectedBrands,
     selectedSubcategories,
+    selectedTags = [],
     handleBrandToggle,
     handleSubcategoryToggle,
+    handleTagToggle,
     expandedSections,
     toggleSection,
     hasActiveFilters,
@@ -154,7 +171,7 @@ function FilterContent({
                 <div className="p-4 bg-emerald-50 border-b border-emerald-100">
                     <div className="flex items-center justify-between mb-2">
                         <span className="text-sm font-semibold text-emerald-800">
-                            Active Filters ({selectedBrands.length + selectedSubcategories.length})
+                            Active Filters ({selectedBrands.length + selectedSubcategories.length + selectedTags.length})
                         </span>
                         <button
                             onClick={onClearAll}
@@ -191,6 +208,36 @@ function FilterContent({
                                 <span className="text-gray-700">{sub.name}</span>
                                 <button
                                     onClick={() => handleSubcategoryToggle(subId)}
+                                    className="text-gray-500 hover:text-red-600"
+                                >
+                                    <X className="w-3 h-3" />
+                                </button>
+                            </div>
+                        ) : null;
+                    })}
+
+                    {/* Selected Tags */}
+                    {selectedTags.map(tagId => {
+                        // Find tag name across all groups
+                        let tagObj = null;
+                        if (filterOptions?.tag_groups) {
+                            for (const group of filterOptions.tag_groups) {
+                                const found = group.tags?.find(t => t.id === tagId);
+                                if (found) {
+                                    tagObj = { ...found, groupName: group.name };
+                                    break;
+                                }
+                            }
+                        }
+                        
+                        return tagObj ? (
+                            <div
+                                key={tagId}
+                                className="inline-flex items-center gap-1 bg-white border border-emerald-200 rounded-full px-2 py-1 mr-2 mb-2 text-xs"
+                            >
+                                <span className="text-gray-700">{tagObj.name}</span>
+                                <button
+                                    onClick={() => handleTagToggle(tagId)}
                                     className="text-gray-500 hover:text-red-600"
                                 >
                                     <X className="w-3 h-3" />
@@ -292,9 +339,51 @@ function FilterContent({
                             </div>
                         )}
 
+                        {/* Tag Groups Filters */}
+                        {filterOptions?.tag_groups?.map(group => (
+                            <div key={group.id} className="pb-4">
+                                <button
+                                    onClick={() => toggleSection(`tag_group_${group.id}`)}
+                                    className="w-full flex items-center justify-between mb-3 text-left"
+                                >
+                                    <h4 className="font-bold text-gray-800">{group.name}</h4>
+                                    {expandedSections[`tag_group_${group.id}`] !== false ? (
+                                        <ChevronUp className="w-4 h-4 text-gray-500" />
+                                    ) : (
+                                        <ChevronDown className="w-4 h-4 text-gray-500" />
+                                    )}
+                                </button>
+
+                                {expandedSections[`tag_group_${group.id}`] !== false && (
+                                    <div className="space-y-2 max-h-60 overflow-y-auto">
+                                        {group.tags?.map(tag => (
+                                            <label
+                                                key={tag.id}
+                                                className="flex items-center gap-2 cursor-pointer hover:bg-gray-50 p-2 rounded transition-colors"
+                                            >
+                                                <input
+                                                    type="checkbox"
+                                                    checked={selectedTags.includes(tag.id)}
+                                                    onChange={() => handleTagToggle(tag.id)}
+                                                    className="w-4 h-4 text-emerald-600 border-gray-300 rounded focus:ring-emerald-500"
+                                                />
+                                                <span className="flex-1 text-sm text-gray-700">
+                                                    {tag.name}
+                                                </span>
+                                                <span className="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">
+                                                    {tag.count}
+                                                </span>
+                                            </label>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        ))}
+
                         {/* No Filters Available */}
                         {(!filterOptions?.brands || filterOptions.brands.length === 0) &&
-                            (!filterOptions?.subcategories || filterOptions.subcategories.length === 0) && (
+                            (!filterOptions?.subcategories || filterOptions.subcategories.length === 0) &&
+                            (!filterOptions?.tag_groups || filterOptions.tag_groups.length === 0) && (
                                 <div className="text-center py-8 text-gray-500">
                                     <Filter className="w-12 h-12 mx-auto mb-2 text-gray-300" />
                                     <p className="text-sm">No filters available</p>
