@@ -94,6 +94,10 @@ class Product(models.Model):
     # ------------------------------------
 
     base_price = models.DecimalField(max_digits=10, decimal_places=2)
+    purchase_price = models.DecimalField(
+        max_digits=10, decimal_places=2, null=True, blank=True,
+        help_text="Cost/wholesale price paid to supplier (internal only, not shown to customers)"
+    )
     
     tax_rate = models.DecimalField(
         max_digits=5, 

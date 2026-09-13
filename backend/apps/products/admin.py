@@ -49,7 +49,7 @@ class PriceTierInline(admin.TabularInline):
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
     # 🟢 Added 'hsn_code' to the list view
-    list_display = ['name', 'sku', 'brand_ref', 'category', 'subcategory', 'base_price', 'tax_rate', 'hsn_code', 'stock', 'stock_status', 'is_active']
+    list_display = ['name', 'sku', 'brand_ref', 'category', 'subcategory', 'base_price', 'purchase_price', 'tax_rate', 'hsn_code', 'stock', 'stock_status', 'is_active']
     list_select_related = ['category', 'subcategory', 'subcategory__category', 'brand_ref']
     
     list_filter = ['category', 'subcategory', 'brand_ref', 'is_active', 'stock_status', 'tax_rate', 'dietary_preference']
@@ -84,7 +84,7 @@ class ProductAdmin(admin.ModelAdmin):
         }),
         ('Pricing', {
             # 🟢 ADDED hsn_code HERE (It will appear right below tax_rate)
-            'fields': ('mrp', 'base_price', 'tax_rate', 'hsn_code')
+            'fields': ('mrp', 'base_price', 'purchase_price', 'tax_rate', 'hsn_code')
         }),
         ('Stock', {
             'fields': ('stock', 'stock_status', 'moq', 'case_size')
