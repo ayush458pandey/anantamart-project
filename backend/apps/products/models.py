@@ -126,6 +126,7 @@ class Product(models.Model):
     is_active = models.BooleanField(default=True)
     has_variants = models.BooleanField(default=False, help_text="Does this product have variants?")
     variant_display_type = models.CharField(max_length=50, default='dropdown', blank=True, help_text="How to display variants")
+    tags = models.ManyToManyField('ProductTag', blank=True, related_name='products', help_text="Filterable attribute tags")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
@@ -177,3 +178,52 @@ class PriceTier(models.Model):
         if self.max_quantity:
             return f"{self.min_quantity}-{self.max_quantity} units: ₹{self.price}"
         return f"{self.min_quantity}+ units: ₹{self.price}"
+
+
+class TagGroup(models.Model):
+    """A filter dimension: 'Use Case', 'Material', 'Size', etc."""
+    name = models.CharField(max_length=100, help_text="Display name, e.g. 'Use Case'")
+    slug = models.SlugField(max_length=100, unique=True, blank=True)
+    categories = models.ManyToManyField(
+        Category, blank=True, related_name='tag_groups',
+        help_text="Which categories this filter group applies to. Leave empty for all."
+    )
+    display_order = models.PositiveIntegerField(default=0, help_text="Order in filter sidebar")
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['display_order', 'name']
+        verbose_name = 'Tag Group'
+        verbose_name_plural = 'Tag Groups'
+
+    def __str__(self):
+        return self.name
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.name)
+        super().save(*args, **kwargs)
+
+
+class ProductTag(models.Model):
+    """A specific tag value: 'Kitchen', 'Stainless Steel', 'Large', etc."""
+    group = models.ForeignKey(TagGroup, on_delete=models.CASCADE, related_name='tags')
+    name = models.CharField(max_length=100, help_text="Display name, e.g. 'Kitchen'")
+    slug = models.SlugField(max_length=100, blank=True)
+    display_order = models.PositiveIntegerField(default=0)
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        unique_together = ['group', 'slug']
+        ordering = ['display_order', 'name']
+        verbose_name = 'Product Tag'
+        verbose_name_plural = 'Product Tags'
+
+    def __str__(self):
+        return f"{self.group.name}: {self.name}"
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.name)
+        super().save(*args, **kwargs)

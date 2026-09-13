@@ -1,4 +1,5 @@
 import React from 'react';
+import { getOptimizedImageUrl } from '../utils/imageUtils';
 
 const BrandGrid = ({ brands, onBrandClick, isLoading }) => {
     // Loading Skeleton (Horizontal)
@@ -29,10 +30,14 @@ const BrandGrid = ({ brands, onBrandClick, isLoading }) => {
                     {/* COMPACT BOX */}
                     <div className="w-20 h-20 sm:w-24 sm:h-24 bg-white border border-gray-200 rounded-xl flex items-center justify-center p-3 shadow-sm transition-all duration-200 group-hover:shadow-md group-hover:border-emerald-500 group-hover:-translate-y-1">
                         <img
-                            src={brand.logo || "/api/placeholder/100/100"}
+                            src={getOptimizedImageUrl(brand.logo_url || brand.logo || "/api/placeholder/100/100", { width: 160 })}
                             alt={brand.name}
+                            width="160"
+                            height="160"
                             className="w-full h-full object-contain filter group-hover:brightness-105"
                             loading="lazy"
+                            fetchPriority="low"
+                            decoding="async"
                         />
                     </div>
 

@@ -7,8 +7,8 @@ export const productService = {
     return response.data;
   },
 
-  // Get products with brand and subcategory filtering
-  getProducts: async (categoryId, brands = [], subcategories = []) => {
+  // Get products with brand, subcategory, and tag filtering
+  getProducts: async (categoryId, brands = [], subcategories = [], tags = []) => {
     const params = {};
     if (categoryId && categoryId !== 'all') {
       params.category = categoryId;
@@ -18,6 +18,9 @@ export const productService = {
     }
     if (subcategories.length > 0) {
       params.subcategories = subcategories.join(',');
+    }
+    if (tags.length > 0) {
+      params.tags = tags.join(',');
     }
     const response = await axiosInstance.get('/products/', { params });
     return response.data;

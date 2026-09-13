@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Category, Product, PriceTier, ProductImage, Subcategory, Brand
+from .models import Category, Product, PriceTier, ProductImage, Subcategory, Brand, TagGroup, ProductTag
 
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
@@ -73,7 +73,7 @@ class ProductAdmin(admin.ModelAdmin):
     
     fieldsets = (
         ('Basic Information', {
-            'fields': ('name', 'sku', 'category', 'subcategory', 'description', 'is_active')
+            'fields': ('name', 'sku', 'category', 'subcategory', 'description', 'tags', 'is_active')
         }),
         ('Product Details', {
             'fields': ('brand_ref', 'product_type', 'available_colors', 'key_features', 'ingredients', 
@@ -104,6 +104,7 @@ class ProductAdmin(admin.ModelAdmin):
     )
     
     inlines = [ProductImageInline, PriceTierInline]
+    filter_horizontal = ['tags']
 
 @admin.register(ProductImage)
 class ProductImageAdmin(admin.ModelAdmin):
@@ -130,3 +131,29 @@ class PriceTierAdmin(admin.ModelAdmin):
     list_select_related = ['product']
     list_filter = ['product__category']
     search_fields = ['product__name']
+
+
+class ProductTagInline(admin.TabularInline):
+    model = ProductTag
+    extra = 1
+    prepopulated_fields = {'slug': ('name',)}
+
+
+@admin.register(TagGroup)
+class TagGroupAdmin(admin.ModelAdmin):
+    list_display = ['name', 'slug', 'display_order', 'is_active']
+    list_editable = ['display_order', 'is_active']
+    prepopulated_fields = {'slug': ('name',)}
+    filter_horizontal = ['categories']
+    inlines = [ProductTagInline]
+    search_fields = ['name']
+
+
+@admin.register(ProductTag)
+class ProductTagAdmin(admin.ModelAdmin):
+    list_display = ['name', 'group', 'slug', 'display_order', 'is_active']
+    list_select_related = ['group']
+    list_filter = ['group', 'is_active']
+    list_editable = ['display_order', 'is_active']
+    prepopulated_fields = {'slug': ('name',)}
+    search_fields = ['name', 'group__name']

@@ -1,5 +1,6 @@
 import React from 'react';
 import { Package } from 'lucide-react';
+import { getOptimizedImageUrl } from '../utils/imageUtils';
 
 /**
  * SubcategoryGrid Component (Compact Version)
@@ -46,10 +47,13 @@ export default function SubcategoryGrid({
                     <div className={`w-20 h-20 sm:w-24 sm:h-24 bg-white border border-gray-200 rounded-xl flex items-center justify-center shadow-sm transition-all duration-200 group-hover:shadow-md group-hover:border-emerald-500 group-hover:-translate-y-1 overflow-hidden ${subcategory.image_url ? '' : 'p-2'}`}>
                         {subcategory.image_url ? (
                             <img
-                                src={subcategory.image_url}
+                                src={getOptimizedImageUrl(subcategory.image_url, { width: 192 })}
                                 alt={subcategory.name}
+                                width="192"
+                                height="192"
                                 className="w-full h-full object-contain p-1"
                                 loading="lazy"
+                                decoding="async"
                             />
                         ) : (
                             // Fallback Icon
@@ -58,7 +62,7 @@ export default function SubcategoryGrid({
                     </div>
 
                     {/* Compact Name Label */}
-                    <span className="mt-2 text-[10px] sm:text-xs font-medium text-gray-600 text-center truncate w-full px-1 group-hover:text-emerald-700">
+                    <span className="mt-2 text-[10px] sm:text-xs font-medium text-gray-600 text-center line-clamp-2 w-full px-1 group-hover:text-emerald-700">
                         {subcategory.name}
                     </span>
                 </div>

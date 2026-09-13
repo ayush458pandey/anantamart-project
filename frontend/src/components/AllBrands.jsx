@@ -68,7 +68,7 @@ const AllBrands = ({ brands, onBrandClick, onBack }) => {
                             >
                                 <div className="w-20 h-20 sm:w-24 sm:h-24 bg-white border border-gray-200 rounded-xl flex items-center justify-center p-3 shadow-sm group-hover:shadow-md group-hover:border-emerald-500 transition-all">
                                     <img
-                                        src={brand.logo || "/api/placeholder/100/100"}
+                                        src={brand.logo_url || brand.logo || "/api/placeholder/100/100"}
                                         alt={brand.name}
                                         className="w-full h-full object-contain filter group-hover:brightness-105"
                                     />

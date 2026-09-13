@@ -6,14 +6,14 @@ from django_filters.rest_framework import DjangoFilterBackend
 from django.db.models import Count, Q
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
-from .models import Product, Category, Subcategory, Brand
+from .models import Product, Category, Subcategory, Brand, TagGroup, ProductTag
 from .serializers import ProductSerializer, CategorySerializer, SubcategorySerializer, BrandSerializer
 
 
 class ProductViewSet(viewsets.ModelViewSet):
     queryset = Product.objects.filter(is_active=True).select_related(
         'category', 'subcategory', 'brand_ref'
-    ).prefetch_related('tiers', 'images')
+    ).prefetch_related('tiers', 'images', 'tags__group')
     serializer_class = ProductSerializer
     permission_classes = [AllowAny]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
@@ -53,6 +53,23 @@ class ProductViewSet(viewsets.ModelViewSet):
             subcategory_list = [int(s.strip()) for s in subcategories.split(',') if s.strip().isdigit()]
             if subcategory_list:
                 queryset = queryset.filter(subcategory_id__in=subcategory_list)
+        
+        # Filter by tags (OR within group, AND across groups)
+        tags_param = self.request.query_params.get('tags', '')
+        if tags_param:
+            tag_ids = [int(t.strip()) for t in tags_param.split(',') if t.strip().isdigit()]
+            if tag_ids:
+                # Group tag IDs by their TagGroup
+                tag_objects = ProductTag.objects.filter(id__in=tag_ids).select_related('group')
+                groups = {}
+                for tag in tag_objects:
+                    groups.setdefault(tag.group_id, []).append(tag.id)
+                
+                # AND across groups: each group must have at least one match
+                for group_id, group_tag_ids in groups.items():
+                    queryset = queryset.filter(tags__id__in=group_tag_ids)
+                
+                queryset = queryset.distinct()
         
         return queryset
     
@@ -123,8 +140,41 @@ class ProductViewSet(viewsets.ModelViewSet):
                     'count': s.count
                 }
                 for s in subcategories
-            ]
+            ],
+            'tag_groups': self._get_tag_groups_for_category(category_id, products)
         })
+    
+    def _get_tag_groups_for_category(self, category_id, products_qs):
+        """Get tag groups applicable to this category, with tag counts."""
+        # Get tag groups that apply to this category (or to all categories if none specified)
+        tag_groups = TagGroup.objects.filter(
+            is_active=True
+        ).filter(
+            Q(categories__id=category_id) | Q(categories__isnull=True)
+        ).distinct().prefetch_related('tags')
+        
+        result = []
+        for group in tag_groups:
+            tags_with_counts = []
+            for tag in group.tags.filter(is_active=True):
+                count = products_qs.filter(tags=tag).count()
+                if count > 0:
+                    tags_with_counts.append({
+                        'id': tag.id,
+                        'name': tag.name,
+                        'slug': tag.slug,
+                        'count': count
+                    })
+            
+            if tags_with_counts:  # Only include groups that have matching products
+                result.append({
+                    'id': group.id,
+                    'name': group.name,
+                    'slug': group.slug,
+                    'tags': tags_with_counts
+                })
+        
+        return result
 
 
 class CategoryViewSet(viewsets.ReadOnlyModelViewSet):

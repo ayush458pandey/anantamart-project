@@ -1,26 +1,33 @@
-import React, { useState, useEffect } from 'react';
+import React, { lazy, Suspense, useState, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import {
     Search, Package,
     Coffee, Utensils, Droplet, Briefcase, Shirt, Home as HomeIcon, Store,
-    ShoppingBag, Box, Tag, Grid, Layers, ChevronLeft, Filter as FilterIcon
+    ShoppingBag, Box, Tag, Grid, Layers, ChevronLeft, Filter as FilterIcon, HeartPulse
 } from 'lucide-react';
 
 import { useProducts } from '../hooks/useProducts';
 import { useCart } from '../context/CartContext';
 
 import ProductCard from '../components/ProductCard';
-import ProductDetail from '../components/ProductDetail';
-import AllBrands from '../components/AllBrands';
 
 import SubcategoryGrid from '../components/SubcategoryGrid';
 import BrandGrid from '../components/BrandGrid';
-import BrandPage from '../components/BrandPage';
 import FilterSidebar from '../components/FilterSidebar';
 import { productService } from '../api/services/productService';
 import CategoryDirectory from '../components/CategoryDirectory';
 
 import '../index.css';
+
+const ProductDetail = lazy(() => import('../components/ProductDetail'));
+const AllBrands = lazy(() => import('../components/AllBrands'));
+const BrandPage = lazy(() => import('../components/BrandPage'));
+
+const ViewFallback = () => (
+    <div className="min-h-[45vh] flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600"></div>
+    </div>
+);
 
 // --- HELPER FUNCTIONS ---
 const getCategoryIcon = (category) => {
@@ -30,10 +37,12 @@ const getCategoryIcon = (category) => {
     const iconMap = {
         'package': Package, 'box': Box, 'coffee': Coffee, 'food': Coffee,
         'beverage': Coffee, 'utensils': Utensils, 'restaurant': Utensils,
+        'hotel': Utensils, 'kitchen suppli': Utensils,
         'droplet': Droplet, 'cleaning': Droplet, 'briefcase': Briefcase,
         'office': Briefcase, 'shirt': Shirt, 'apparel': Shirt,
         'home': HomeIcon, 'store': Store, 'shopping': ShoppingBag,
         'bag': ShoppingBag, 'tag': Tag, 'grid': Grid, 'layers': Layers,
+        'health': HeartPulse, 'medical': HeartPulse, 'pharma': HeartPulse,
     };
     for (const [key, icon] of Object.entries(iconMap)) {
         if (iconName.includes(key) || categoryName.includes(key)) return icon;
@@ -68,21 +77,23 @@ export default function Home() {
     const [brands, setBrands] = useState([]);
     const [selectedBrand, setSelectedBrand] = useState(null);
     const [loadingBrands, setLoadingBrands] = useState(false);
+    const [showBrandRail, setShowBrandRail] = useState(false);
     const [showAllBrands, setShowAllBrands] = useState(false);
     const [filterOptions, setFilterOptions] = useState(null);
     const [selectedBrands, setSelectedBrands] = useState([]);
     const [selectedFilterSubcategories, setSelectedFilterSubcategories] = useState([]);
+    const [selectedTags, setSelectedTags] = useState([]);
     const [loadingFilters, setLoadingFilters] = useState(false);
     const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
     // Ref to track intentional navigation
     const intentionalNavRef = React.useRef({ subcategoryId: null, navigating: false });
 
-    const { products, categories, loading, error } = useProducts();
+    const { products, categories, loading, loadingMore, error } = useProducts();
     const { cart, addToCart, removeFromCart, updateQuantity } = useCart();
-    const activeFilterSubcategories = selectedSubcategory
-        ? [selectedSubcategory]
-        : selectedFilterSubcategories;
+    const activeFilterSubcategories = useMemo(() => (
+        selectedSubcategory ? [selectedSubcategory] : selectedFilterSubcategories
+    ), [selectedSubcategory, selectedFilterSubcategories]);
 
     // --- Browser back button / swipe support ---
     // Push a history entry when entering a deeper view
@@ -163,6 +174,7 @@ export default function Home() {
         setSelectedSubcategory(null);
         setSelectedBrands([]);
         setSelectedFilterSubcategories([]);
+        setSelectedTags([]);
         setFilterOptions(null);
         setMobileFiltersOpen(false);
         const fetchSubcategories = async () => {
@@ -214,21 +226,48 @@ export default function Home() {
         fetchFilterOptions();
     }, [selectedCategory, selectedSubcategory, selectedFilterSubcategories]);
 
-    // Fetch brands for catalog view
+    // Fetch brands after the first catalog paint so brand logos do not compete with LCP.
     useEffect(() => {
+        let cancelled = false;
+        let timeoutId;
+        let idleId;
+
         const fetchBrands = async () => {
             setLoadingBrands(true);
             try {
                 const data = await productService.getBrands();
-                setBrands(data);
+                if (!cancelled) {
+                    setBrands(data);
+                    setShowBrandRail((data?.length || 0) > 0);
+                }
             } catch (err) {
                 console.error('Failed to fetch brands:', err);
-                setBrands([]);
+                if (!cancelled) {
+                    setBrands([]);
+                    setShowBrandRail(false);
+                }
             } finally {
-                setLoadingBrands(false);
+                if (!cancelled) {
+                    setLoadingBrands(false);
+                }
             }
         };
-        fetchBrands();
+
+        const scheduleFetch = () => {
+            timeoutId = window.setTimeout(fetchBrands, 800);
+        };
+
+        if ('requestIdleCallback' in window) {
+            idleId = window.requestIdleCallback(scheduleFetch, { timeout: 2000 });
+        } else {
+            scheduleFetch();
+        }
+
+        return () => {
+            cancelled = true;
+            window.clearTimeout(timeoutId);
+            if (idleId) window.cancelIdleCallback(idleId);
+        };
     }, []);
 
     const handleBackToSubcategories = () => {
@@ -248,10 +287,16 @@ export default function Home() {
         setShowSubcategoryView(false);
     };
 
+    const handleTagFilterChange = (tags) => {
+        setSelectedTags(tags);
+        setShowSubcategoryView(false);
+    };
+
     const clearAllFilters = () => {
         setSelectedBrands([]);
         setSelectedSubcategory(null);
         setSelectedFilterSubcategories([]);
+        setSelectedTags([]);
         setShowSubcategoryView(false);
     };
 
@@ -259,6 +304,7 @@ export default function Home() {
         setSearchQuery('');
         setSelectedBrands([]);
         setSelectedFilterSubcategories([]);
+        setSelectedTags([]);
         if (subcategoryId) {
             intentionalNavRef.current = { subcategoryId: subcategoryId, navigating: true };
         }
@@ -270,44 +316,106 @@ export default function Home() {
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
-    const filteredProducts = products.filter(product => {
-        const query = searchQuery.toLowerCase().trim();
-        const productBrandNames = getProductBrandNames(product);
-        const matchesSearch = !query || (
-            (product.name || '').toLowerCase().includes(query) ||
-            (product.sku || '').toLowerCase().includes(query) ||
-            productBrandNames.some(brand => brand.includes(query)) ||
-            (product.description || '').toLowerCase().includes(query) ||
-            (product.category_name || '').toLowerCase().includes(query) ||
-            (product.subcategory_name || '').toLowerCase().includes(query) ||
-            (product.key_features || '').toLowerCase().includes(query)
-        );
-        const matchesCategory = selectedCategory === 'all' || String(getProductCategoryId(product)) === String(selectedCategory);
-        const matchesSubcategory = activeFilterSubcategories.length === 0 ||
-            activeFilterSubcategories.some(subcategoryId => String(getProductSubcategoryId(product)) === String(subcategoryId));
-        const matchesBrand = selectedBrands.length === 0 ||
-            selectedBrands.some(brand => productBrandNames.includes(String(brand).toLowerCase()));
+    const filteredProducts = useMemo(() => {
+        return products.filter(product => {
+            const query = searchQuery.toLowerCase().trim();
+            const productBrandNames = getProductBrandNames(product);
+            const matchesSearch = !query || (
+                (product.name || '').toLowerCase().includes(query) ||
+                (product.sku || '').toLowerCase().includes(query) ||
+                productBrandNames.some(brand => brand.includes(query)) ||
+                (product.description || '').toLowerCase().includes(query) ||
+                (product.category_name || '').toLowerCase().includes(query) ||
+                (product.subcategory_name || '').toLowerCase().includes(query) ||
+                (product.key_features || '').toLowerCase().includes(query)
+            );
+            const matchesCategory = selectedCategory === 'all' || String(getProductCategoryId(product)) === String(selectedCategory);
+            const matchesSubcategory = activeFilterSubcategories.length === 0 ||
+                activeFilterSubcategories.some(subcategoryId => String(getProductSubcategoryId(product)) === String(subcategoryId));
+            const matchesBrand = selectedBrands.length === 0 ||
+                selectedBrands.some(brand => productBrandNames.includes(String(brand).toLowerCase()));
 
-        return matchesSearch && matchesCategory && matchesSubcategory && matchesBrand;
-    });
+            // Tag logic: OR within group, AND across groups
+            let matchesTags = true;
+            if (selectedTags.length > 0 && filterOptions?.tag_groups) {
+                // 1. Group selected tags by their TagGroup
+                const selectedGroups = {};
+                for (const tagId of selectedTags) {
+                    // Find which group this tag belongs to
+                    const group = filterOptions.tag_groups.find(g => g.tags.some(t => t.id === tagId));
+                    if (group) {
+                        if (!selectedGroups[group.id]) selectedGroups[group.id] = [];
+                        selectedGroups[group.id].push(tagId);
+                    }
+                }
+                
+                // 2. Check each group
+                const productTagIds = (product.tag_list || []).map(t => t.id);
+                for (const groupId in selectedGroups) {
+                    const groupSelectedTagIds = selectedGroups[groupId];
+                    // Product must have AT LEAST ONE tag from this group (OR logic within group)
+                    const hasTagFromGroup = groupSelectedTagIds.some(tagId => productTagIds.includes(tagId));
+                    if (!hasTagFromGroup) {
+                        matchesTags = false;
+                        break; // Failed AND condition across groups
+                    }
+                }
+            }
 
-    const visibleBrands = brands.filter(brand => {
-        if (selectedCategory === 'all') return true;
-        const hasProduct = products.some(p => {
-            const productCatId = String(p.category || p.category_id || (p.category_obj?.id) || '');
-            const currentCatId = String(selectedCategory);
-            if (productCatId !== currentCatId) return false;
-            const targetBrandId = String(brand.id);
-            const targetBrandName = brand.name.toLowerCase();
-            if (p.brand && String(p.brand) === targetBrandId) return true;
-            if (p.brand_id && String(p.brand_id) === targetBrandId) return true;
-            if (typeof p.brand === 'object' && p.brand !== null && String(p.brand.id) === targetBrandId) return true;
-            if (typeof p.brand === 'string' && p.brand.toLowerCase() === targetBrandName) return true;
-            if (p.brand_name && p.brand_name.toLowerCase() === targetBrandName) return true;
-            return false;
+            return matchesSearch && matchesCategory && matchesSubcategory && matchesBrand && matchesTags;
         });
-        return hasProduct;
-    });
+    }, [products, searchQuery, selectedCategory, activeFilterSubcategories, selectedBrands, selectedTags, filterOptions]);
+
+    const productsByCategory = useMemo(() => {
+        const groups = new Map();
+
+        products.forEach((product) => {
+            const categoryId = String(getProductCategoryId(product) || '');
+            if (!categoryId) return;
+
+            if (!groups.has(categoryId)) {
+                groups.set(categoryId, []);
+            }
+            groups.get(categoryId).push(product);
+        });
+
+        return groups;
+    }, [products]);
+
+    const brandKeysByCategory = useMemo(() => {
+        const groups = new Map();
+
+        products.forEach((product) => {
+            const categoryId = String(getProductCategoryId(product) || '');
+            if (!categoryId) return;
+
+            if (!groups.has(categoryId)) {
+                groups.set(categoryId, new Set());
+            }
+
+            const keys = groups.get(categoryId);
+            if (product.brand_id) keys.add(`id:${product.brand_id}`);
+            if (typeof product.brand === 'object' && product.brand?.id) keys.add(`id:${product.brand.id}`);
+            if (typeof product.brand === 'number') keys.add(`id:${product.brand}`);
+            getProductBrandNames(product).forEach(name => keys.add(`name:${name}`));
+        });
+
+        return groups;
+    }, [products]);
+
+    const visibleBrands = useMemo(() => {
+        const currentCategoryBrandKeys = selectedCategory === 'all'
+            ? null
+            : brandKeysByCategory.get(String(selectedCategory));
+
+        return brands.filter(brand => {
+            if (selectedCategory === 'all') return true;
+            if (!currentCategoryBrandKeys) return false;
+
+            return currentCategoryBrandKeys.has(`id:${brand.id}`) ||
+                currentCategoryBrandKeys.has(`name:${brand.name.toLowerCase()}`);
+        });
+    }, [brands, selectedCategory, brandKeysByCategory]);
 
     const currentCategoryName = categories.find(c => c.id === selectedCategory)?.name || 'All Products';
     const activeSubcategory = subcategories.find(s => s.id === selectedSubcategory);
@@ -391,28 +499,33 @@ export default function Home() {
     if (selectedBrand) {
         return (
             <>
-                <BrandPage
-                    brand={selectedBrand}
-                    onBack={() => setSelectedBrand(null)}
-                    onProductClick={(product) => selectProduct(product)}
-                    onAddToCart={addToCart}
-                    updateQuantity={updateQuantity}
-                />
-                {selectedProduct && (
-                    <ProductDetail
-                        product={selectedProduct}
-                        onClose={() => setSelectedProduct(null)}
+                <Suspense fallback={<ViewFallback />}>
+                    <BrandPage
+                        brand={selectedBrand}
+                        allProducts={products}
+                        onBack={() => setSelectedBrand(null)}
+                        onProductClick={(product) => selectProduct(product)}
                         onAddToCart={addToCart}
-                        onBrandClick={(brandName, brandId) => {
-                            setSelectedProduct(null);
-                            const brand = brands.find(b => String(b.id) === String(brandId) || b.name === brandName);
-                            if (brand) {
-                                selectBrand(brand);
-                                setShowSubcategoryView(false);
-                                window.scrollTo({ top: 0, behavior: 'smooth' });
-                            }
-                        }}
+                        updateQuantity={updateQuantity}
                     />
+                </Suspense>
+                {selectedProduct && (
+                    <Suspense fallback={null}>
+                        <ProductDetail
+                            product={selectedProduct}
+                            onClose={() => setSelectedProduct(null)}
+                            onAddToCart={addToCart}
+                            onBrandClick={(brandName, brandId) => {
+                                setSelectedProduct(null);
+                                const brand = brands.find(b => String(b.id) === String(brandId) || b.name === brandName);
+                                if (brand) {
+                                    selectBrand(brand);
+                                    setShowSubcategoryView(false);
+                                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                                }
+                            }}
+                        />
+                    </Suspense>
                 )}
             </>
         );
@@ -421,11 +534,13 @@ export default function Home() {
     // If showing all brands view
     if (showAllBrands) {
         return (
-            <AllBrands
-                brands={brands}
-                onBrandClick={(brand) => { selectBrand(brand); setShowAllBrands(false); }}
-                onBack={() => setShowAllBrands(false)}
-            />
+            <Suspense fallback={<ViewFallback />}>
+                <AllBrands
+                    brands={brands}
+                    onBrandClick={(brand) => { selectBrand(brand); setShowAllBrands(false); }}
+                    onBack={() => setShowAllBrands(false)}
+                />
+            </Suspense>
         );
     }
 
@@ -498,7 +613,7 @@ export default function Home() {
                                         }`}
                                 >
                                     <CategoryIcon className={`w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0 ${isActive ? 'text-white' : 'text-emerald-600'}`} />
-                                    <span>{category.name}</span>
+                                    <span>{category.short_name || category.name}</span>
                                 </button>
                             );
                         })}
@@ -508,7 +623,7 @@ export default function Home() {
             )}
 
             {/* Brand Horizontal Scroll */}
-            {!selectedSubcategory && visibleBrands.length > 0 && (
+            {!selectedSubcategory && showBrandRail && visibleBrands.length > 0 && (
                 <div className="mb-8">
                     <div className="flex items-center justify-between mb-3 px-1">
                         <h3 className="text-base sm:text-lg font-bold text-gray-800">
@@ -565,9 +680,9 @@ export default function Home() {
                     >
                         <FilterIcon className="w-4 h-4" />
                         <span>Filters</span>
-                        {(selectedBrands.length + activeFilterSubcategories.length) > 0 && (
+                        {(selectedBrands.length + activeFilterSubcategories.length + selectedTags.length) > 0 && (
                             <span className="bg-white text-emerald-700 rounded-full px-1.5 py-0.5 text-[10px] leading-none">
-                                {selectedBrands.length + activeFilterSubcategories.length}
+                                {selectedBrands.length + activeFilterSubcategories.length + selectedTags.length}
                             </span>
                         )}
                     </button>
@@ -580,8 +695,10 @@ export default function Home() {
                     filterOptions={filterOptions}
                     selectedBrands={selectedBrands}
                     selectedSubcategories={activeFilterSubcategories}
+                    selectedTags={selectedTags}
                     onBrandChange={handleBrandFilterChange}
                     onSubcategoryChange={handleSubcategoryFilterChange}
+                    onTagChange={handleTagFilterChange}
                     onClearAll={clearAllFilters}
                     isLoading={loadingFilters}
                     isMobile
@@ -600,8 +717,10 @@ export default function Home() {
                                 filterOptions={filterOptions}
                                 selectedBrands={selectedBrands}
                                 selectedSubcategories={activeFilterSubcategories}
+                                selectedTags={selectedTags}
                                 onBrandChange={handleBrandFilterChange}
                                 onSubcategoryChange={handleSubcategoryFilterChange}
+                                onTagChange={handleTagFilterChange}
                                 onClearAll={clearAllFilters}
                                 isLoading={loadingFilters}
                             />
@@ -657,12 +776,9 @@ export default function Home() {
                             <div className="space-y-10 border-t border-gray-100 pt-8">
                                 {categories.map((category) => {
                                     const CategoryIcon = getCategoryIcon(category.name);
-                                    const categoryProducts = products.filter(p =>
-                                        String(p.category) === String(category.id) ||
-                                        String(p.category?.id) === String(category.id)
-                                    );
+                                    const categoryProducts = productsByCategory.get(String(category.id)) || [];
 
-                                    if (categoryProducts.length === 0) return null;
+                                    if (categoryProducts.length === 0 && !loadingMore) return null;
 
                                     return (
                                         <div key={category.id} className="border-b border-gray-100 pb-6 last:border-0">
@@ -682,7 +798,20 @@ export default function Home() {
                                                 </button>
                                             </div>
                                             <div className="flex overflow-x-auto gap-3 sm:gap-4 pb-4 -mx-3 px-3 scrollbar-hide snap-x">
-                                                {categoryProducts.slice(0, 8).map((product) => (
+                                                {categoryProducts.length === 0 && loadingMore && [1, 2, 3, 4].map((item) => (
+                                                    <div key={item} className="flex-shrink-0 w-[160px] sm:w-[200px] snap-start">
+                                                        <div className="h-[278px] sm:h-[326px] rounded-lg sm:rounded-xl bg-white shadow-sm overflow-hidden animate-pulse">
+                                                            <div className="h-[120px] sm:h-[150px] bg-gray-100"></div>
+                                                            <div className="p-3 space-y-2">
+                                                                <div className="h-6 w-20 rounded bg-gray-100"></div>
+                                                                <div className="h-4 w-full rounded bg-gray-100"></div>
+                                                                <div className="h-4 w-3/4 rounded bg-gray-100"></div>
+                                                                <div className="h-3 w-24 rounded bg-gray-100"></div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                                {categoryProducts.slice(0, 8).map((product, index) => (
                                                     <div key={product.id} className="flex-shrink-0 w-[160px] sm:w-[200px] snap-start">
                                                         <ProductCard
                                                             product={product}
@@ -692,6 +821,7 @@ export default function Home() {
                                                             onAddToCart={addToCart}
                                                             onViewDetails={() => setSelectedProduct(product)}
                                                             onNavigateToCategory={navigateToCategory}
+                                                            priority={false}
                                                         />
                                                     </div>
                                                 ))}
@@ -736,7 +866,7 @@ export default function Home() {
 
                                 <div className="flex-1 min-w-0">
                                     <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-2.5 sm:gap-3 md:gap-4 pb-4">
-                                        {filteredProducts.map((product) => (
+                                        {filteredProducts.map((product, index) => (
                                             <ProductCard
                                                 key={product.id}
                                                 product={product}
@@ -746,6 +876,7 @@ export default function Home() {
                                                 onAddToCart={addToCart}
                                                 onViewDetails={() => selectProduct(product)}
                                                 onNavigateToCategory={navigateToCategory}
+                                                priority={index < 4}
                                             />
                                         ))}
                                     </div>
@@ -765,20 +896,22 @@ export default function Home() {
 
             {/* Product Detail Modal */}
             {selectedProduct && (
-                <ProductDetail
-                    product={selectedProduct}
-                    onClose={() => setSelectedProduct(null)}
-                    onAddToCart={addToCart}
-                    onBrandClick={(brandName, brandId) => {
-                        setSelectedProduct(null);
-                        const brand = brands.find(b => String(b.id) === String(brandId) || b.name === brandName);
-                        if (brand) {
-                            selectBrand(brand);
-                            setShowSubcategoryView(false);
-                            window.scrollTo({ top: 0, behavior: 'smooth' });
-                        }
-                    }}
-                />
+                <Suspense fallback={null}>
+                    <ProductDetail
+                        product={selectedProduct}
+                        onClose={() => setSelectedProduct(null)}
+                        onAddToCart={addToCart}
+                        onBrandClick={(brandName, brandId) => {
+                            setSelectedProduct(null);
+                            const brand = brands.find(b => String(b.id) === String(brandId) || b.name === brandName);
+                            if (brand) {
+                                selectBrand(brand);
+                                setShowSubcategoryView(false);
+                                window.scrollTo({ top: 0, behavior: 'smooth' });
+                            }
+                        }}
+                    />
+                </Suspense>
             )}
         </>
     );

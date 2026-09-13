@@ -2,14 +2,17 @@ import React from 'react';
 import {
     Scissors, Armchair, Sparkles, Coffee,
     Utensils, Droplet, Briefcase, Shirt,
-    Home, Grid, Package
+    Home, Grid, Package, HeartPulse
 } from 'lucide-react';
+import { getImageSrcSet, getOptimizedImageUrl } from '../utils/imageUtils';
 
 const getCategoryIcon = (categoryName) => {
     const name = categoryName?.toLowerCase() || '';
     if (name.includes('scissor') || name.includes('cut')) return Scissors;
     if (name.includes('furniture') || name.includes('chair')) return Armchair;
     if (name.includes('cosmetic') || name.includes('beauty')) return Sparkles;
+    if (name.includes('health') || name.includes('medical') || name.includes('pharma')) return HeartPulse;
+    if (name.includes('hotel') || name.includes('kitchen suppli')) return Utensils;
     if (name.includes('food') || name.includes('beverage')) return Coffee;
     if (name.includes('utensil') || name.includes('restaurant')) return Utensils;
     if (name.includes('clean')) return Droplet;
@@ -29,7 +32,7 @@ const CategoryDirectory = ({ categories, onSelectCategory }) => {
             </div>
 
             <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 gap-3 sm:gap-4">
-                {categories.map((category) => {
+                {categories.map((category, index) => {
                     const Icon = getCategoryIcon(category.name);
 
                     return (
@@ -42,16 +45,28 @@ const CategoryDirectory = ({ categories, onSelectCategory }) => {
                             <div className={`w-20 h-20 sm:w-24 sm:h-24 bg-white border border-gray-200 rounded-xl flex items-center justify-center shadow-sm transition-all duration-200 group-hover:shadow-md group-hover:border-emerald-500 group-hover:-translate-y-1 overflow-hidden ${category.image ? '' : 'p-3'}`}>
                                 {category.image ? (
                                     <img
-                                        src={category.image}
+                                        src={getOptimizedImageUrl(category.image, { width: 192 })}
+                                        srcSet={getImageSrcSet(category.image, [96, 160, 192])}
+                                        sizes="(min-width: 640px) 96px, 80px"
                                         alt={category.name}
+                                        width="192"
+                                        height="192"
                                         className="w-full h-full object-cover"
+                                        loading={index < 4 ? "eager" : "lazy"}
+                                        fetchPriority={index < 4 ? "high" : "auto"}
+                                        decoding={index < 4 ? "sync" : "async"}
                                     />
                                 ) : (
                                     <Icon className="w-8 h-8 sm:w-10 sm:h-10 text-emerald-600 group-hover:scale-110 transition-transform" />
                                 )}
                             </div>
 
-                            <span className="mt-2 text-[10px] sm:text-xs font-medium text-gray-600 text-center truncate w-full px-1 group-hover:text-emerald-700">
+                            {/* Mobile: show short_name (falls back to name) */}
+                            <span className="mt-2 text-[10px] font-medium text-gray-600 text-center w-full px-1 group-hover:text-emerald-700 line-clamp-2 sm:hidden">
+                                {category.short_name || category.name}
+                            </span>
+                            {/* Desktop: always show full name */}
+                            <span className="mt-2 text-xs font-medium text-gray-600 text-center w-full px-1 group-hover:text-emerald-700 line-clamp-2 hidden sm:block">
                                 {category.name}
                             </span>
                         </div>

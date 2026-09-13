@@ -12,26 +12,35 @@ export const CartProvider = ({ children }) => {
   const [error, setError] = useState(null);
   const location = useLocation();
 
-  // Refetch cart when navigating between pages
-  useEffect(() => {
-    fetchCart();
-  }, [location.pathname]);
-
   // --- Actions ---
 
   const fetchCart = useCallback(async () => {
+    if (!localStorage.getItem('access_token')) {
+      setCart({ items: [], total_items: 0, total_price: 0 });
+      return;
+    }
+
     try {
       setLoading(true);
       setError(null);
       const data = await cartService.getCart();
       setCart(data || { items: [], total_items: 0, total_price: 0 });
-    } catch (err) {
+    } catch {
       // Don't set global error for 404s (empty cart), just reset state
       setCart({ items: [], total_items: 0, total_price: 0 });
     } finally {
       setLoading(false);
     }
   }, []);
+
+  // Refetch cart when navigating between pages for signed-in users only.
+  useEffect(() => {
+    if (localStorage.getItem('access_token')) {
+      fetchCart();
+    } else {
+      setCart({ items: [], total_items: 0, total_price: 0 });
+    }
+  }, [fetchCart, location.pathname]);
 
   const addToCart = async (productId, quantity = 1, variant = null) => {
     try {
@@ -52,7 +61,7 @@ export const CartProvider = ({ children }) => {
       setLoading(true);
       const data = await cartService.removeFromCart(productId);
       setCart(data);
-    } catch (err) {
+    } catch {
       setError('Failed to remove item');
     } finally {
       setLoading(false);
@@ -64,7 +73,7 @@ export const CartProvider = ({ children }) => {
       setLoading(true);
       const data = await cartService.updateCartItem(itemId, quantity);
       setCart(data);
-    } catch (err) {
+    } catch {
       setError('Failed to update quantity');
     } finally {
       setLoading(false);
@@ -76,7 +85,7 @@ export const CartProvider = ({ children }) => {
       setLoading(true);
       const data = await cartService.clearCart();
       setCart(data);
-    } catch (err) {
+    } catch {
       setError('Failed to clear cart');
     } finally {
       setLoading(false);
