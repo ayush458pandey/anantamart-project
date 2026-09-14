@@ -24,7 +24,7 @@ export default function Layout() {
             <header className="sticky top-0 bg-white shadow-md z-40">
                 <div className="max-w-7xl mx-auto px-3 sm:px-4 py-2 sm:py-4">
                     <div className="flex items-center justify-between sm:justify-start gap-2 sm:gap-4 sm:mb-0">
-                        <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0 cursor-pointer" onClick={() => navigate('/')}>
+                        <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0 cursor-pointer" onClick={() => window.location.href = '/'}>
                             <Package className="w-6 h-6 sm:w-8 sm:h-8 text-emerald-600" />
                             <div className="hidden sm:block">
                                 <h1 className="text-xl sm:text-2xl font-bold text-emerald-600">Anantamart</h1>
