@@ -895,10 +895,8 @@ export default function Home() {
                                         tags={filterOptions?.tag_groups?.flatMap(group => group.tags) || []}
                                         selectedTags={selectedTags}
                                         onSelectTag={(tag) => {
-                                            const newTags = selectedTags.includes(tag.id) || selectedTags.includes(String(tag.id))
-                                                ? selectedTags.filter(id => String(id) !== String(tag.id))
-                                                : [...selectedTags, tag.id];
-                                            setSelectedTags(newTags);
+                                            const isSelected = selectedTags.includes(tag.id) || selectedTags.includes(String(tag.id));
+                                            setSelectedTags(isSelected ? [] : [tag.id]);
                                         }}
                                     />
                                 </div>
