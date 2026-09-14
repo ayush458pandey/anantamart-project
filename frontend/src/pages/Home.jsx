@@ -16,6 +16,7 @@ import BrandGrid from '../components/BrandGrid';
 import FilterSidebar from '../components/FilterSidebar';
 import { productService } from '../api/services/productService';
 import CategoryDirectory from '../components/CategoryDirectory';
+import TagDirectory from '../components/TagDirectory';
 
 import '../index.css';
 
@@ -579,46 +580,80 @@ export default function Home() {
                         />
                     </div>
 
-                    {/* Category Tabs - Hidden when viewing products to make room for left sidebar */}
-                    <div className={`flex gap-2 overflow-x-auto pb-1 scrollbar-hide ${isProductView ? 'hidden sm:flex' : ''}`}>
-                        <button
-                            onClick={() => {
-                                setSelectedCategory('all');
-                                setSelectedBrand(null);
-                                setSelectedSubcategory(null);
-                                setShowSubcategoryView(true);
-                            }}
-                            className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 rounded-lg font-medium text-xs sm:text-sm whitespace-nowrap transition-all touch-manipulation ${selectedCategory === 'all'
-                                ? 'bg-emerald-600 text-white shadow-md'
-                                : 'bg-gray-200 text-gray-700 active:bg-gray-300'
-                                }`}
-                        >
-                            <Package className={`w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0 ${selectedCategory === 'all' ? 'text-white' : 'text-emerald-600'}`} />
-                            <span>All Products</span>
-                        </button>
-
-                        {categories && categories.map((category) => {
-                            const CategoryIcon = getCategoryIcon(category);
-                            const isActive = selectedCategory === category.id;
-                            return (
+                    {/* Category/Subcategory Tabs */}
+                    <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+                        {isProductView && subcategories && subcategories.length > 0 ? (
+                            <>
                                 <button
-                                    key={category.id}
-                                    onClick={() => {
-                                        setSelectedCategory(category.id);
-                                        setSelectedBrand(null);
-                                        setSelectedSubcategory(null);
-                                        setShowSubcategoryView(true);
-                                    }}
-                                    className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 rounded-lg font-medium text-xs sm:text-sm whitespace-nowrap transition-all touch-manipulation ${isActive
+                                    onClick={() => handleSubcategoryFilterChange([])}
+                                    className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 rounded-lg font-medium text-xs sm:text-sm whitespace-nowrap transition-all touch-manipulation ${activeFilterSubcategories.length === 0
                                         ? 'bg-emerald-600 text-white shadow-md'
                                         : 'bg-gray-200 text-gray-700 active:bg-gray-300'
                                         }`}
                                 >
-                                    <CategoryIcon className={`w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0 ${isActive ? 'text-white' : 'text-emerald-600'}`} />
-                                    <span>{category.short_name || category.name}</span>
+                                    <span>All</span>
                                 </button>
-                            );
-                        })}
+                                {subcategories.map((subcat) => {
+                                    const isActive = activeFilterSubcategories.includes(subcat.id) || activeFilterSubcategories.includes(String(subcat.id));
+                                    return (
+                                        <button
+                                            key={subcat.id}
+                                            onClick={() => handleSubcategoryFilterChange([subcat.id])}
+                                            className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 rounded-lg font-medium text-xs sm:text-sm whitespace-nowrap transition-all touch-manipulation ${isActive
+                                                ? 'bg-emerald-600 text-white shadow-md'
+                                                : 'bg-gray-200 text-gray-700 active:bg-gray-300'
+                                                }`}
+                                        >
+                                            {subcat.image && (
+                                                <img src={getOptimizedImageUrl(subcat.image, { width: 40 })} className="w-4 h-4 sm:w-5 sm:h-5 rounded-full object-cover flex-shrink-0 bg-white" alt="" />
+                                            )}
+                                            <span>{subcat.name}</span>
+                                        </button>
+                                    );
+                                })}
+                            </>
+                        ) : (
+                            <>
+                                <button
+                                    onClick={() => {
+                                        setSelectedCategory('all');
+                                        setSelectedBrand(null);
+                                        setSelectedSubcategory(null);
+                                        setShowSubcategoryView(true);
+                                    }}
+                                    className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 rounded-lg font-medium text-xs sm:text-sm whitespace-nowrap transition-all touch-manipulation ${selectedCategory === 'all'
+                                        ? 'bg-emerald-600 text-white shadow-md'
+                                        : 'bg-gray-200 text-gray-700 active:bg-gray-300'
+                                        }`}
+                                >
+                                    <Package className={`w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0 ${selectedCategory === 'all' ? 'text-white' : 'text-emerald-600'}`} />
+                                    <span>All Products</span>
+                                </button>
+
+                                {categories && categories.map((category) => {
+                                    const CategoryIcon = getCategoryIcon(category);
+                                    const isActive = selectedCategory === category.id;
+                                    return (
+                                        <button
+                                            key={category.id}
+                                            onClick={() => {
+                                                setSelectedCategory(category.id);
+                                                setSelectedBrand(null);
+                                                setSelectedSubcategory(null);
+                                                setShowSubcategoryView(true);
+                                            }}
+                                            className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 rounded-lg font-medium text-xs sm:text-sm whitespace-nowrap transition-all touch-manipulation ${isActive
+                                                ? 'bg-emerald-600 text-white shadow-md'
+                                                : 'bg-gray-200 text-gray-700 active:bg-gray-300'
+                                                }`}
+                                        >
+                                            <CategoryIcon className={`w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0 ${isActive ? 'text-white' : 'text-emerald-600'}`} />
+                                            <span>{category.short_name || category.name}</span>
+                                        </button>
+                                    );
+                                })}
+                            </>
+                        )}
                     </div>
                 </div>,
                 document.getElementById('header-extension')
@@ -855,16 +890,14 @@ export default function Home() {
                             {/* Mobile Left Sidebar (Only visible in product view) */}
                             {isProductView && (
                                 <div className="w-[80px] flex-shrink-0 bg-[#f3f4f6] overflow-y-auto hide-scrollbar sm:hidden h-full border-r border-gray-200">
-                                    <CategoryDirectory 
-                                        categories={categories} 
-                                        layout="vertical"
-                                        selectedCategory={selectedCategory}
-                                        onSelectCategory={(id) => {
-                                            setSelectedCategory(id);
-                                            setSelectedBrand(null);
-                                            setSelectedSubcategory(null);
-                                            setShowSubcategoryView(true);
-                                            window.scrollTo({ top: 0, behavior: 'smooth' });
+                                    <TagDirectory 
+                                        tags={filterOptions?.tag_groups?.flatMap(group => group.tags) || []}
+                                        selectedTags={selectedTags}
+                                        onSelectTag={(tag) => {
+                                            const newTags = selectedTags.includes(tag.id) || selectedTags.includes(String(tag.id))
+                                                ? selectedTags.filter(id => String(id) !== String(tag.id))
+                                                : [...selectedTags, tag.id];
+                                            setSelectedTags(newTags);
                                         }}
                                     />
                                 </div>
