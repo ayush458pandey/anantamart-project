@@ -22,7 +22,53 @@ const getCategoryIcon = (categoryName) => {
     return Package;
 };
 
-const CategoryDirectory = ({ categories, onSelectCategory }) => {
+const CategoryDirectory = ({ categories, onSelectCategory, layout = 'grid', selectedCategory = null }) => {
+    if (layout === 'vertical') {
+        return (
+            <div className="flex flex-col py-2 w-full bg-[#f3f4f6]">
+                {categories.map((category, index) => {
+                    const isActive = selectedCategory === category.id;
+                    const Icon = getCategoryIcon(category.name);
+                    
+                    return (
+                        <div
+                            key={category.id}
+                            onClick={() => onSelectCategory(category.id)}
+                            className={`relative flex flex-col items-center py-3 cursor-pointer ${isActive ? 'bg-white' : ''}`}
+                        >
+                            {/* Active Indicator Bar */}
+                            {isActive && (
+                                <div className="absolute right-0 top-0 bottom-0 w-1 bg-green-600 rounded-l" />
+                            )}
+                            
+                            {/* Circular Image Container */}
+                            <div className={`w-14 h-14 rounded-full flex items-center justify-center overflow-hidden mb-1 ${isActive ? 'bg-green-100 ring-2 ring-green-100 ring-offset-1' : 'bg-white shadow-sm'}`}>
+                                {category.image ? (
+                                    <img
+                                        src={getOptimizedImageUrl(category.image, { width: 112 })}
+                                        srcSet={getImageSrcSet(category.image, [56, 112])}
+                                        sizes="56px"
+                                        alt={category.name}
+                                        className="w-full h-full object-cover"
+                                        loading={index < 8 ? "eager" : "lazy"}
+                                        fetchPriority={index < 8 ? "high" : "auto"}
+                                    />
+                                ) : (
+                                    <Icon className={`w-6 h-6 ${isActive ? 'text-green-600' : 'text-gray-500'}`} />
+                                )}
+                            </div>
+                            
+                            {/* Label */}
+                            <span className={`text-[10px] text-center leading-tight px-1 font-medium ${isActive ? 'text-gray-900' : 'text-gray-500'}`}>
+                                {category.short_name || category.name}
+                            </span>
+                        </div>
+                    );
+                })}
+            </div>
+        );
+    }
+
     return (
         <div className="pb-4">
             <div className="flex items-center justify-between mb-4 px-1">
