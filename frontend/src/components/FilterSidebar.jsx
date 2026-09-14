@@ -19,7 +19,8 @@ export default function FilterSidebar({
     isLoading,
     isMobile = false,
     isOpen = true,
-    onToggle
+    onToggle,
+    hideFab = false
 }) {
     const [expandedSections, setExpandedSections] = useState({
         brands: true,
@@ -68,6 +69,7 @@ export default function FilterSidebar({
     // Mobile: Collapsible overlay
     if (isMobile) {
         if (!isOpen) {
+            if (hideFab) return null;
             return (
                 <button
                     onClick={onToggle}

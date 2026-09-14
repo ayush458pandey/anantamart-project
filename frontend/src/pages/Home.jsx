@@ -710,7 +710,7 @@ export default function Home() {
                     )}
                 </div>
 
-                {selectedCategory !== 'all' && (
+                {selectedCategory !== 'all' && !isProductView && (
                     <button
                         onClick={() => setMobileFiltersOpen(true)}
                         className="lg:hidden inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-3 py-2 text-xs font-semibold text-white shadow-sm active:bg-emerald-700"
@@ -741,6 +741,7 @@ export default function Home() {
                     isMobile
                     isOpen={mobileFiltersOpen}
                     onToggle={() => setMobileFiltersOpen(open => !open)}
+                    hideFab={isProductView}
                 />
             </div>
 
