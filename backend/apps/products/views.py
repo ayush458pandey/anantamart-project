@@ -51,19 +51,20 @@ class ProductViewSet(viewsets.ModelViewSet):
             if subcategory_list:
                 queryset = queryset.filter(subcategory_id__in=subcategory_list)
         
-        # Filter by tags (OR within group, AND across groups)
+        # Filter by tags (OR within group, AND across groups; ungrouped tags use OR)
         tags_param = self.request.query_params.get('tags', '')
         if tags_param:
             tag_ids = [int(t.strip()) for t in tags_param.split(',') if t.strip().isdigit()]
             if tag_ids:
-                # Group tag IDs by their TagGroup
+                # Group tag IDs by their TagGroup (None for ungrouped)
                 tag_objects = ProductTag.objects.filter(id__in=tag_ids).select_related('group')
                 groups = {}
                 for tag in tag_objects:
-                    groups.setdefault(tag.group_id, []).append(tag.id)
+                    group_key = tag.group_id  # None for ungrouped
+                    groups.setdefault(group_key, []).append(tag.id)
                 
                 # AND across groups: each group must have at least one match
-                for group_id, group_tag_ids in groups.items():
+                for group_key, group_tag_ids in groups.items():
                     queryset = queryset.filter(tags__id__in=group_tag_ids)
                 
                 queryset = queryset.distinct()
@@ -96,14 +97,14 @@ class ProductViewSet(viewsets.ModelViewSet):
         # Base queryset for products in this category
         products = Product.objects.filter(category_id=category_id, is_active=True)
         
-        # If subcategories are selected, filter brands based on those subcategories
+        # Parse subcategory IDs
+        subcategory_list = []
         if subcategory_ids:
             subcategory_list = [int(sid.strip()) for sid in subcategory_ids.split(',') if sid.strip()]
-            if subcategory_list:
-                # Get brands only from selected subcategories
-                products_for_brands = products.filter(subcategory_id__in=subcategory_list)
-            else:
-                products_for_brands = products
+        
+        # If subcategories are selected, filter brands based on those subcategories
+        if subcategory_list:
+            products_for_brands = products.filter(subcategory_id__in=subcategory_list)
         else:
             products_for_brands = products
         
@@ -133,37 +134,78 @@ class ProductViewSet(viewsets.ModelViewSet):
                 }
                 for s in subcategories
             ],
-            'tag_groups': self._get_tag_groups_for_category(category_id, products)
+            'tag_groups': self._get_tag_groups_for_category(category_id, subcategory_list, products)
         })
     
-    def _get_tag_groups_for_category(self, category_id, products_qs):
-        """Get tag groups applicable to this category, with tag counts."""
-        # Get tag groups that apply to this category (or to all categories if none specified)
-        tag_groups = TagGroup.objects.filter(
+    def _get_tag_groups_for_category(self, category_id, subcategory_list, products_qs):
+        """Get tag groups applicable to this category, with tag counts.
+        
+        Tags are scoped by subcategory: if a tag has subcategories assigned,
+        it only shows when browsing one of those subcategories.
+        Tags without subcategories assigned show for any subcategory in the category.
+        """
+        # Get all active tags that belong to groups linked to this category,
+        # OR ungrouped tags linked to subcategories in this category
+        category_subcategory_ids = list(
+            Subcategory.objects.filter(category_id=category_id, is_active=True).values_list('id', flat=True)
+        )
+        
+        # All tags that could appear for this category:
+        # 1. Tags in groups linked to this category
+        # 2. Tags linked to subcategories of this category (regardless of group)
+        tags = ProductTag.objects.filter(
             is_active=True
         ).filter(
-            Q(categories__id=category_id) | Q(categories__isnull=True)
-        ).distinct().prefetch_related('tags')
+            Q(group__categories__id=category_id) |
+            Q(group__categories__isnull=True, group__isnull=False) |
+            Q(subcategories__id__in=category_subcategory_ids)
+        ).distinct().select_related('group').prefetch_related('subcategories')
+        
+        # If specific subcategories are selected, further filter tags
+        if subcategory_list:
+            tags = tags.filter(
+                Q(subcategories__id__in=subcategory_list) |
+                Q(subcategories__isnull=True)  # Tags with no subcategory = show everywhere
+            ).distinct()
+        
+        # Group tags by their TagGroup (None key for ungrouped)
+        grouped = {}
+        for tag in tags:
+            count = products_qs.filter(tags=tag).count()
+            if count > 0:
+                group_key = tag.group_id
+                if group_key not in grouped:
+                    grouped[group_key] = {
+                        'group': tag.group,
+                        'tags': []
+                    }
+                grouped[group_key]['tags'].append({
+                    'id': tag.id,
+                    'name': tag.name,
+                    'slug': tag.slug,
+                    'count': count
+                })
         
         result = []
-        for group in tag_groups:
-            tags_with_counts = []
-            for tag in group.tags.filter(is_active=True):
-                count = products_qs.filter(tags=tag).count()
-                if count > 0:
-                    tags_with_counts.append({
-                        'id': tag.id,
-                        'name': tag.name,
-                        'slug': tag.slug,
-                        'count': count
-                    })
-            
-            if tags_with_counts:  # Only include groups that have matching products
+        # First add grouped tags (sorted by group display_order)
+        for group_key, data in sorted(
+            grouped.items(),
+            key=lambda x: (x[0] is None, x[1]['group'].display_order if x[1]['group'] else 999)
+        ):
+            if data['group']:
                 result.append({
-                    'id': group.id,
-                    'name': group.name,
-                    'slug': group.slug,
-                    'tags': tags_with_counts
+                    'id': data['group'].id,
+                    'name': data['group'].name,
+                    'slug': data['group'].slug,
+                    'tags': data['tags']
+                })
+            else:
+                # Ungrouped tags get a virtual group
+                result.append({
+                    'id': None,
+                    'name': 'Tags',
+                    'slug': 'tags',
+                    'tags': data['tags']
                 })
         
         return result

@@ -203,20 +203,27 @@ class TagGroup(models.Model):
 
 class ProductTag(models.Model):
     """A specific tag value: 'Kitchen', 'Stainless Steel', 'Large', etc."""
-    group = models.ForeignKey(TagGroup, on_delete=models.CASCADE, related_name='tags')
+    group = models.ForeignKey(
+        TagGroup, on_delete=models.SET_NULL, related_name='tags',
+        null=True, blank=True, help_text="Optional grouping for sidebar display"
+    )
+    subcategories = models.ManyToManyField(
+        Subcategory, blank=True, related_name='tag_options',
+        help_text="Which subcategories this tag applies to. Leave empty for all in the category."
+    )
     name = models.CharField(max_length=100, help_text="Display name, e.g. 'Kitchen'")
-    slug = models.SlugField(max_length=100, blank=True)
+    slug = models.SlugField(max_length=100, unique=True, blank=True)
     display_order = models.PositiveIntegerField(default=0)
     is_active = models.BooleanField(default=True)
 
     class Meta:
-        unique_together = ['group', 'slug']
         ordering = ['display_order', 'name']
         verbose_name = 'Product Tag'
         verbose_name_plural = 'Product Tags'
 
     def __str__(self):
-        return f"{self.group.name}: {self.name}"
+        prefix = self.group.name if self.group else 'Ungrouped'
+        return f"{prefix}: {self.name}"
 
     def save(self, *args, **kwargs):
         if not self.slug:

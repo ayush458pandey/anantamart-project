@@ -137,6 +137,7 @@ class ProductTagInline(admin.TabularInline):
     model = ProductTag
     extra = 1
     prepopulated_fields = {'slug': ('name',)}
+    fields = ['name', 'slug', 'display_order', 'is_active']
 
 
 @admin.register(TagGroup)
@@ -156,4 +157,5 @@ class ProductTagAdmin(admin.ModelAdmin):
     list_filter = ['group', 'is_active']
     list_editable = ['display_order', 'is_active']
     prepopulated_fields = {'slug': ('name',)}
-    search_fields = ['name', 'group__name']
+    search_fields = ['name', 'group__name']
+    filter_horizontal = ['subcategories']

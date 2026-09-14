@@ -84,12 +84,22 @@ class ProductImageSerializer(OptimizedImageMixin, serializers.ModelSerializer):
 # Tag serializers (defined before ProductSerializer)
 class ProductTagInlineSerializer(serializers.ModelSerializer):
     """Lightweight tag serializer for embedding in product responses"""
-    group_name = serializers.CharField(source='group.name', read_only=True)
-    group_slug = serializers.CharField(source='group.slug', read_only=True)
+    group_name = serializers.SerializerMethodField()
+    group_slug = serializers.SerializerMethodField()
+    subcategory_ids = serializers.SerializerMethodField()
 
     class Meta:
         model = ProductTag
-        fields = ['id', 'name', 'slug', 'group_name', 'group_slug']
+        fields = ['id', 'name', 'slug', 'group_name', 'group_slug', 'subcategory_ids']
+
+    def get_group_name(self, obj):
+        return obj.group.name if obj.group else None
+
+    def get_group_slug(self, obj):
+        return obj.group.slug if obj.group else None
+
+    def get_subcategory_ids(self, obj):
+        return list(obj.subcategories.values_list('id', flat=True))
 
 class ProductSerializer(OptimizedImageMixin, serializers.ModelSerializer):
     category_name = serializers.CharField(source='category.name', read_only=True)
