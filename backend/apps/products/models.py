@@ -4,7 +4,7 @@ from decimal import Decimal
 
 class Category(models.Model):
     name = models.CharField(max_length=100)
-    short_name = models.CharField(max_length=50, blank=True, help_text="Short display name for mobile (e.g. 'Hotel & Kitchen'). Falls back to full name if blank.")
+    short_name = models.CharField(max_length=50, blank=True, default='', help_text="Short display name for mobile (e.g. 'Hotel & Kitchen'). Falls back to full name if blank.")
     description = models.TextField(blank=True)
     # Changed from CharField to ImageField
     image = models.ImageField(upload_to='categories/', null=True, blank=True, help_text="Category Image")
