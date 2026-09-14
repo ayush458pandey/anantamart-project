@@ -905,6 +905,10 @@ export default function Home() {
                 </>
             )}
 
+            </div>
+            </div>
+            </div>
+
             {/* Product Detail Modal */}
             {selectedProduct && (
                 <Suspense fallback={null}>
@@ -924,7 +928,6 @@ export default function Home() {
                     />
                 </Suspense>
             )}
-        </div>
         </div>
     );
 }
