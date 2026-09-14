@@ -187,10 +187,15 @@ class ProductViewSet(viewsets.ModelViewSet):
                         'group': tag.group,
                         'tags': []
                     }
+                tag_image_url = None
+                if tag.image:
+                    tag_image_url = self.request.build_absolute_uri(tag.image.url) if hasattr(self, 'request') and self.request else tag.image.url
+
                 grouped[group_key]['tags'].append({
                     'id': tag.id,
                     'name': tag.name,
                     'slug': tag.slug,
+                    'image': tag_image_url,
                     'count': count
                 })
         

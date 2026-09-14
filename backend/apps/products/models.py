@@ -217,6 +217,7 @@ class ProductTag(models.Model):
         help_text="Which subcategories this tag applies to. Leave empty for all in the category."
     )
     name = models.CharField(max_length=100, help_text="Display name, e.g. 'Kitchen'")
+    image = models.ImageField(upload_to='tags/', null=True, blank=True, help_text="Optional icon/image for the tag")
     slug = models.SlugField(max_length=100, unique=True, blank=True)
     display_order = models.PositiveIntegerField(default=0)
     is_active = models.BooleanField(default=True)
