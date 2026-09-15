@@ -107,13 +107,9 @@ const CategoryDirectory = ({ categories, onSelectCategory, layout = 'grid', sele
                                 )}
                             </div>
 
-                            {/* Mobile: show short_name (falls back to name) */}
-                            <span className="mt-2 text-[10px] font-medium text-gray-600 text-center w-full px-1 group-hover:text-emerald-700 line-clamp-2 sm:hidden">
+                            {/* Category Name */}
+                            <span className="mt-2 text-[10px] sm:text-xs font-medium text-gray-600 text-center w-full px-1 group-hover:text-emerald-700 line-clamp-2">
                                 {category.short_name || category.name}
-                            </span>
-                            {/* Desktop: always show full name */}
-                            <span className="mt-2 text-xs font-medium text-gray-600 text-center w-full px-1 group-hover:text-emerald-700 line-clamp-2 hidden sm:block">
-                                {category.name}
                             </span>
                         </div>
                     );
