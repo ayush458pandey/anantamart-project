@@ -81,6 +81,8 @@ export default function Home() {
     const [showBrandRail, setShowBrandRail] = useState(false);
     const [showAllBrands, setShowAllBrands] = useState(false);
     const [filterOptions, setFilterOptions] = useState(null);
+    const [businessTags, setBusinessTags] = useState([]);
+    const [loadingBusinessTags, setLoadingBusinessTags] = useState(false);
     const [selectedBrands, setSelectedBrands] = useState([]);
     const [selectedFilterSubcategories, setSelectedFilterSubcategories] = useState([]);
     const [selectedTags, setSelectedTags] = useState([]);
@@ -226,6 +228,27 @@ export default function Home() {
 
         fetchFilterOptions();
     }, [selectedCategory, selectedSubcategory, selectedFilterSubcategories]);
+
+    // Fetch Business Tags for the homepage
+    useEffect(() => {
+        const fetchBusinessTags = async () => {
+            setLoadingBusinessTags(true);
+            try {
+                const data = await productService.getTagGroupBySlug('business-type');
+                if (data && data.tags) {
+                    setBusinessTags(data.tags);
+                }
+            } catch (err) {
+                console.error('Failed to fetch business tags:', err);
+                // Graceful degradation: do not show the section
+                setBusinessTags([]);
+            } finally {
+                setLoadingBusinessTags(false);
+            }
+        };
+
+        fetchBusinessTags();
+    }, []);
 
     // Fetch brands after the first catalog paint so brand logos do not compete with LCP.
     useEffect(() => {
@@ -803,6 +826,51 @@ export default function Home() {
                     {/* SCENARIO A: HOMEPAGE */}
                     {selectedCategory === 'all' && !searchQuery ? (
                         <div className="space-y-8 pb-10">
+                            
+                            {/* Shop by Business Section */}
+                            {!loadingBusinessTags && businessTags && businessTags.length > 0 && (
+                                <div className="pb-4 border-b border-gray-100">
+                                    <div className="flex items-center justify-between mb-4 px-1">
+                                        <h3 className="text-base sm:text-lg font-bold text-gray-800">
+                                            Shop by Business
+                                        </h3>
+                                    </div>
+                                    <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 gap-3 sm:gap-4">
+                                        {businessTags.map((tag) => (
+                                            <div
+                                                key={tag.id}
+                                                onClick={() => {
+                                                    // When a business is clicked, we filter globally by this tag
+                                                    setSelectedTags([tag.id]);
+                                                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                                                }}
+                                                className="group flex flex-col items-center cursor-pointer"
+                                            >
+                                                {/* SQUARE CONTAINER */}
+                                                <div className={`w-20 h-20 sm:w-24 sm:h-24 bg-white border border-gray-200 rounded-xl flex items-center justify-center shadow-sm transition-all duration-200 group-hover:shadow-md group-hover:border-emerald-500 group-hover:-translate-y-1 overflow-hidden ${tag.image ? '' : 'p-3'}`}>
+                                                    {tag.image ? (
+                                                        <img
+                                                            src={tag.image_url || tag.image}
+                                                            alt={tag.name}
+                                                            className="w-full h-full object-cover"
+                                                            loading="lazy"
+                                                        />
+                                                    ) : (
+                                                        <Tag className="w-8 h-8 text-emerald-600 group-hover:scale-110 transition-transform duration-200" />
+                                                    )}
+                                                </div>
+                                                {/* TEXT LABEL */}
+                                                <div className="mt-2 w-full px-1 text-center">
+                                                    <span className="text-xs sm:text-sm font-semibold text-gray-800 line-clamp-2 leading-tight group-hover:text-emerald-700 transition-colors">
+                                                        {tag.name}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
                             <CategoryDirectory
                                 categories={categories}
                                 onSelectCategory={(id) => {

@@ -7,7 +7,8 @@ from django.db.models import Count, Q
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
 from .models import Product, Category, Subcategory, Brand, TagGroup, ProductTag
-from .serializers import ProductSerializer, CategorySerializer, SubcategorySerializer, BrandSerializer
+from .models import Product, Category, Subcategory, Brand, TagGroup, ProductTag
+from .serializers import ProductSerializer, CategorySerializer, SubcategorySerializer, BrandSerializer, TagGroupSerializer
 
 
 class ProductViewSet(viewsets.ModelViewSet):
@@ -308,3 +309,19 @@ class BrandViewSet(viewsets.ReadOnlyModelViewSet):
         
         serializer = ProductSerializer(products, many=True, context={'request': request})
         return Response(serializer.data)
+
+class TagGroupViewSet(viewsets.ReadOnlyModelViewSet):
+    """ViewSet for viewing tag groups and their tags"""
+    queryset = TagGroup.objects.filter(is_active=True).prefetch_related('tags')
+    serializer_class = TagGroupSerializer
+    permission_classes = [AllowAny]
+    lookup_field = 'slug'
+
+    @method_decorator(cache_page(300))
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context['request'] = self.request
+        return context

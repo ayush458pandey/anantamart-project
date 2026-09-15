@@ -74,6 +74,12 @@ export const productService = {
     return response.data;
   },
 
+  // Get tag group by slug
+  getTagGroupBySlug: async (slug) => {
+    const response = await axiosInstance.get(`/tag-groups/${slug}/`);
+    return response.data;
+  },
+
   // Get products by brand
   getProductsByBrand: async (brandSlug, categoryId = null) => {
     const params = categoryId ? { category: categoryId } : {};

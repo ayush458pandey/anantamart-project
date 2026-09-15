@@ -101,6 +101,27 @@ class ProductTagInlineSerializer(serializers.ModelSerializer):
     def get_subcategory_ids(self, obj):
         return list(obj.subcategories.values_list('id', flat=True))
 
+class ProductTagSerializer(OptimizedImageMixin, serializers.ModelSerializer):
+    image_url = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = ProductTag
+        fields = ['id', 'name', 'slug', 'image', 'image_url', 'display_order']
+        
+    def get_image_url(self, obj):
+        if obj.image:
+            request = self.context.get('request')
+            if request:
+                return request.build_absolute_uri(obj.image.url)
+        return None
+
+class TagGroupSerializer(serializers.ModelSerializer):
+    tags = ProductTagSerializer(many=True, read_only=True)
+    
+    class Meta:
+        model = TagGroup
+        fields = ['id', 'name', 'slug', 'display_order', 'tags']
+
 class ProductSerializer(OptimizedImageMixin, serializers.ModelSerializer):
     category_name = serializers.CharField(source='category.name', read_only=True)
     subcategory_name = serializers.CharField(source='subcategory.name', read_only=True, allow_null=True)
