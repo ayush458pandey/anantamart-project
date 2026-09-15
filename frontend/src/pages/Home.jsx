@@ -361,28 +361,34 @@ export default function Home() {
 
             // Tag logic: OR within group, AND across groups
             let matchesTags = true;
-            if (selectedTags.length > 0 && filterOptions?.tag_groups) {
-                // 1. Group selected tags by their TagGroup
-                const selectedGroups = {};
-                for (const tagId of selectedTags) {
-                    // Find which group this tag belongs to
-                    const group = filterOptions.tag_groups.find(g => g.tags.some(t => t.id === tagId));
-                    if (group) {
-                        if (!selectedGroups[group.id]) selectedGroups[group.id] = [];
-                        selectedGroups[group.id].push(tagId);
+            if (selectedTags.length > 0) {
+                if (filterOptions?.tag_groups) {
+                    // 1. Group selected tags by their TagGroup
+                    const selectedGroups = {};
+                    for (const tagId of selectedTags) {
+                        // Find which group this tag belongs to
+                        const group = filterOptions.tag_groups.find(g => g.tags.some(t => t.id === tagId));
+                        if (group) {
+                            if (!selectedGroups[group.id]) selectedGroups[group.id] = [];
+                            selectedGroups[group.id].push(tagId);
+                        }
                     }
-                }
-                
-                // 2. Check each group
-                const productTagIds = (product.tag_list || []).map(t => t.id);
-                for (const groupId in selectedGroups) {
-                    const groupSelectedTagIds = selectedGroups[groupId];
-                    // Product must have AT LEAST ONE tag from this group (OR logic within group)
-                    const hasTagFromGroup = groupSelectedTagIds.some(tagId => productTagIds.includes(tagId));
-                    if (!hasTagFromGroup) {
-                        matchesTags = false;
-                        break; // Failed AND condition across groups
+                    
+                    // 2. Check each group
+                    const productTagIds = (product.tag_list || []).map(t => t.id);
+                    for (const groupId in selectedGroups) {
+                        const groupSelectedTagIds = selectedGroups[groupId];
+                        // Product must have AT LEAST ONE tag from this group (OR logic within group)
+                        const hasTagFromGroup = groupSelectedTagIds.some(tagId => productTagIds.includes(tagId));
+                        if (!hasTagFromGroup) {
+                            matchesTags = false;
+                            break; // Failed AND condition across groups
+                        }
                     }
+                } else {
+                    // Global fallback: when no category is selected, just check if product has ALL selected tags
+                    const productTagIds = (product.tag_list || []).map(t => t.id);
+                    matchesTags = selectedTags.every(tagId => productTagIds.includes(tagId));
                 }
             }
 
@@ -821,10 +827,10 @@ export default function Home() {
             )}
 
             {/* MAIN PRODUCT DISPLAY */}
-            {(!showSubcategoryView || selectedCategory === 'all' || searchQuery) && (
+            {(!showSubcategoryView || selectedCategory === 'all' || searchQuery || selectedTags.length > 0) && (
                 <>
                     {/* SCENARIO A: HOMEPAGE */}
-                    {selectedCategory === 'all' && !searchQuery ? (
+                    {selectedCategory === 'all' && !searchQuery && selectedTags.length === 0 ? (
                         <div className="space-y-8 pb-10">
                             
                             {/* Shop by Business Section */}
@@ -1018,6 +1024,17 @@ export default function Home() {
                                 </div>
 
                                 <div className="flex-1 min-w-0">
+                                    {selectedTags.length > 0 && selectedCategory === 'all' && (
+                                        <div className="flex items-center gap-2 mb-4 px-2 sm:px-0">
+                                            <span className="text-sm font-medium text-gray-700">Viewing filtered products</span>
+                                            <button 
+                                                onClick={() => setSelectedTags([])}
+                                                className="text-xs bg-emerald-100 text-emerald-700 px-3 py-1.5 rounded-full hover:bg-emerald-200 transition-colors"
+                                            >
+                                                Clear Filter ✕
+                                            </button>
+                                        </div>
+                                    )}
                                     <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-2.5 sm:gap-3 md:gap-4 pb-4">
                                         {filteredProducts.map((product, index) => (
                                             <ProductCard
