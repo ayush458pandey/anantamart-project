@@ -17,6 +17,7 @@ import FilterSidebar from '../components/FilterSidebar';
 import { productService } from '../api/services/productService';
 import CategoryDirectory from '../components/CategoryDirectory';
 import TagDirectory from '../components/TagDirectory';
+import { getOptimizedImageUrl } from '../utils/imageUtils';
 
 import '../index.css';
 
