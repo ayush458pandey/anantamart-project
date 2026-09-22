@@ -3,7 +3,7 @@ from collections import OrderedDict
 from django.contrib import admin
 from django.contrib import messages
 from django.shortcuts import render
-from django.utils.html import format_html
+from django.utils.html import format_html, format_html_join
 from .models import Category, Product, PriceTier, ProductImage, Subcategory, Brand, TagGroup, ProductTag
 
 @admin.register(Category)
@@ -64,6 +64,9 @@ class ProductAdmin(admin.ModelAdmin):
     list_display = ['name', 'sku', 'brand_ref', 'category', 'subcategory', 'get_tags', 'base_price', 'purchase_price', 'tax_rate', 'hsn_code', 'stock', 'stock_status', 'is_active']
     list_select_related = ['category', 'subcategory', 'subcategory__category', 'brand_ref']
     
+    def get_queryset(self, request):
+        return super().get_queryset(request).prefetch_related('tags')
+    
     list_filter = ['category', 'subcategory', 'brand_ref', 'tags', 'is_active', 'stock_status', 'tax_rate', 'dietary_preference']
     
     # 🟢 Added 'hsn_code' to search (so you can search by it)
@@ -78,14 +81,14 @@ class ProductAdmin(admin.ModelAdmin):
     def get_tags(self, obj):
         tags = obj.tags.all()
         if not tags:
-            return format_html('<span style="color:#999;">—</span>')
-        tag_html = ' '.join(
-            f'<span style="display:inline-block;background:#e3f2fd;color:#1565c0;'
-            f'padding:1px 7px;border-radius:10px;font-size:0.8em;margin:1px;">'
-            f'{tag.name}</span>'
-            for tag in tags
+            return format_html('<span style="color:#999;">\u2014</span>')
+        return format_html_join(
+            ' ',
+            '<span style="display:inline-block;background:#e3f2fd;color:#1565c0;'
+            'padding:1px 7px;border-radius:10px;font-size:0.8em;margin:1px;">'
+            '{}</span>',
+            ((tag.name,) for tag in tags)
         )
-        return format_html(tag_html)
     get_tags.short_description = 'Tags'
     
     def image_size_display(self, obj):
