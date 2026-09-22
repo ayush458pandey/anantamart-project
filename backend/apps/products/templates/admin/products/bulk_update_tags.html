@@ -1,0 +1,170 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block title %}Bulk {{ mode }} Tags{% endblock %}
+
+{% block content %}
+<style>
+    .bulk-update-container {
+        max-width: 700px;
+        margin: 20px auto;
+        padding: 25px;
+        background: #fff;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+    }
+    .bulk-update-container h2 {
+        margin-top: 0;
+        color: #333;
+        border-bottom: 2px solid #417690;
+        padding-bottom: 10px;
+    }
+    .bulk-update-container .product-list {
+        background: #f8f9fa;
+        border: 1px solid #e9ecef;
+        border-radius: 6px;
+        padding: 12px 16px;
+        margin: 15px 0;
+        max-height: 200px;
+        overflow-y: auto;
+    }
+    .bulk-update-container .product-list li {
+        padding: 3px 0;
+        color: #555;
+        font-size: 0.9em;
+    }
+    .bulk-update-container .tag-current {
+        display: inline-block;
+        background: #e3f2fd;
+        color: #1565c0;
+        padding: 2px 8px;
+        border-radius: 10px;
+        font-size: 0.8em;
+        margin: 1px 2px;
+    }
+    .bulk-update-container .form-row {
+        margin: 15px 0;
+    }
+    .bulk-update-container label {
+        display: block;
+        font-weight: bold;
+        margin-bottom: 8px;
+        color: #333;
+    }
+    .bulk-update-container .tag-grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        max-height: 300px;
+        overflow-y: auto;
+        padding: 10px;
+        background: #fafafa;
+        border: 1px solid #e0e0e0;
+        border-radius: 6px;
+    }
+    .bulk-update-container .tag-grid label {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        background: #f0f0f0;
+        padding: 6px 12px;
+        border-radius: 20px;
+        cursor: pointer;
+        font-weight: normal;
+        font-size: 0.9em;
+        transition: background 0.2s;
+        user-select: none;
+    }
+    .bulk-update-container .tag-grid label:hover {
+        background: #e0e0e0;
+    }
+    .bulk-update-container .tag-grid input[type="checkbox"]:checked + span {
+        font-weight: bold;
+        color: #417690;
+    }
+    .bulk-update-container .tag-group-header {
+        width: 100%;
+        font-weight: bold;
+        color: #417690;
+        margin-top: 8px;
+        padding-bottom: 4px;
+        border-bottom: 1px solid #ddd;
+        font-size: 0.95em;
+    }
+    .bulk-update-container .submit-row {
+        margin-top: 20px;
+        display: flex;
+        gap: 10px;
+    }
+    .bulk-update-container .submit-row input[type="submit"] {
+        background: {% if mode == "Remove" %}#c0392b{% else %}#417690{% endif %};
+        color: white;
+        border: none;
+        padding: 10px 24px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: bold;
+    }
+    .bulk-update-container .submit-row input[type="submit"]:hover {
+        background: {% if mode == "Remove" %}#922b21{% else %}#205067{% endif %};
+    }
+    .bulk-update-container .submit-row a {
+        padding: 10px 24px;
+        border-radius: 4px;
+        text-decoration: none;
+        color: #666;
+        border: 1px solid #ccc;
+        font-size: 14px;
+    }
+</style>
+
+<div class="bulk-update-container">
+    <h2>{% if mode == "Remove" %}🗑️{% else %}🏷️{% endif %} Bulk {{ mode }} Tags</h2>
+    <p>You are about to <strong>{{ mode|lower }}</strong> tags {% if mode == "Remove" %}from{% else %}to{% endif %} <strong>{{ products|length }}</strong> product{{ products|length|pluralize }}.</p>
+
+    <div class="product-list">
+        <strong>Selected Products:</strong>
+        <ul>
+            {% for product in products %}
+            <li>
+                {{ product.name }} <span style="color: #999;">({{ product.sku }})</span>
+                {% if product.tags.exists %}
+                    — {% for tag in product.tags.all %}<span class="tag-current">{{ tag.name }}</span>{% endfor %}
+                {% else %}
+                    — <em style="color: #999;">no tags</em>
+                {% endif %}
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <form method="post">
+        {% csrf_token %}
+        {% for product in products %}
+        <input type="hidden" name="_selected_action" value="{{ product.pk }}" />
+        {% endfor %}
+        <input type="hidden" name="action" value="{% if mode == 'Remove' %}bulk_remove_tags{% else %}bulk_add_tags{% endif %}" />
+
+        <div class="form-row">
+            <label>Select tags to {{ mode|lower }}:</label>
+            <div class="tag-grid">
+                {% for group_name, group_tags in tags_by_group.items %}
+                <div class="tag-group-header">{{ group_name }}</div>
+                {% for tag in group_tags %}
+                <label>
+                    <input type="checkbox" name="tags" value="{{ tag.id }}" />
+                    <span>{{ tag.name }}</span>
+                </label>
+                {% endfor %}
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="submit-row">
+            <input type="submit" name="apply" value="{{ mode }} Tags" />
+            <a href="{% url 'admin:products_product_changelist' %}">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

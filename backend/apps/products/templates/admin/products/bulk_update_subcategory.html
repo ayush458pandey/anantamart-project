@@ -1,0 +1,154 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block title %}Bulk Update Subcategory{% endblock %}
+
+{% block content %}
+<style>
+    .bulk-update-container {
+        max-width: 700px;
+        margin: 20px auto;
+        padding: 25px;
+        background: #fff;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+    }
+    .bulk-update-container h2 {
+        margin-top: 0;
+        color: #333;
+        border-bottom: 2px solid #417690;
+        padding-bottom: 10px;
+    }
+    .bulk-update-container .product-list {
+        background: #f8f9fa;
+        border: 1px solid #e9ecef;
+        border-radius: 6px;
+        padding: 12px 16px;
+        margin: 15px 0;
+        max-height: 200px;
+        overflow-y: auto;
+    }
+    .bulk-update-container .product-list li {
+        padding: 3px 0;
+        color: #555;
+        font-size: 0.9em;
+    }
+    .bulk-update-container .form-row {
+        margin: 15px 0;
+    }
+    .bulk-update-container label {
+        display: block;
+        font-weight: bold;
+        margin-bottom: 5px;
+        color: #333;
+    }
+    .bulk-update-container select {
+        width: 100%;
+        padding: 8px 12px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        font-size: 14px;
+    }
+    .bulk-update-container .submit-row {
+        margin-top: 20px;
+        display: flex;
+        gap: 10px;
+    }
+    .bulk-update-container .submit-row input[type="submit"] {
+        background: #417690;
+        color: white;
+        border: none;
+        padding: 10px 24px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: bold;
+    }
+    .bulk-update-container .submit-row input[type="submit"]:hover {
+        background: #205067;
+    }
+    .bulk-update-container .submit-row a {
+        padding: 10px 24px;
+        border-radius: 4px;
+        text-decoration: none;
+        color: #666;
+        border: 1px solid #ccc;
+        font-size: 14px;
+    }
+    .bulk-update-container .count-badge {
+        display: inline-block;
+        background: #417690;
+        color: white;
+        padding: 2px 10px;
+        border-radius: 12px;
+        font-size: 0.85em;
+        margin-left: 5px;
+    }
+</style>
+
+<div class="bulk-update-container">
+    <h2>🔄 Bulk Update Subcategory</h2>
+    <p>You are about to reassign <strong>{{ products|length }}</strong> product{{ products|length|pluralize }} to a new category and subcategory.</p>
+
+    <div class="product-list">
+        <strong>Selected Products:</strong>
+        <ul>
+            {% for product in products %}
+            <li>{{ product.name }} <span style="color: #999;">({{ product.sku }})</span> — currently in <em>{{ product.category.name }}{% if product.subcategory %} → {{ product.subcategory.name }}{% endif %}</em></li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <form method="post">
+        {% csrf_token %}
+        {% for product in products %}
+        <input type="hidden" name="_selected_action" value="{{ product.pk }}" />
+        {% endfor %}
+        <input type="hidden" name="action" value="bulk_update_subcategory" />
+
+        <div class="form-row">
+            <label for="id_category">New Category:</label>
+            <select name="category" id="id_category" onchange="filterSubcategories(this.value)">
+                <option value="">— Keep current category —</option>
+                {% for cat in categories %}
+                <option value="{{ cat.id }}">{{ cat.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="form-row">
+            <label for="id_subcategory">New Subcategory:</label>
+            <select name="subcategory" id="id_subcategory">
+                <option value="">— Keep current subcategory —</option>
+                {% for subcat in subcategories %}
+                <option value="{{ subcat.id }}" data-category="{{ subcat.category_id }}">{{ subcat.category.name }} → {{ subcat.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="submit-row">
+            <input type="submit" name="apply" value="Apply Changes" />
+            <a href="{% url 'admin:products_product_changelist' %}">Cancel</a>
+        </div>
+    </form>
+</div>
+
+<script>
+    // Filter subcategory dropdown based on selected category
+    function filterSubcategories(categoryId) {
+        const subcatSelect = document.getElementById('id_subcategory');
+        const options = subcatSelect.querySelectorAll('option[data-category]');
+
+        options.forEach(function(option) {
+            if (!categoryId || option.getAttribute('data-category') === categoryId) {
+                option.style.display = '';
+            } else {
+                option.style.display = 'none';
+            }
+        });
+
+        // Reset selection
+        subcatSelect.value = '';
+    }
+</script>
+{% endblock %}

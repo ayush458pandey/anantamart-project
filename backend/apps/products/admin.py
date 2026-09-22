@@ -1,4 +1,9 @@
+from collections import OrderedDict
+
 from django.contrib import admin
+from django.contrib import messages
+from django.shortcuts import render
+from django.utils.html import format_html
 from .models import Category, Product, PriceTier, ProductImage, Subcategory, Brand, TagGroup, ProductTag
 
 @admin.register(Category)
@@ -9,12 +14,19 @@ class CategoryAdmin(admin.ModelAdmin):
 
 @admin.register(Subcategory)
 class SubcategoryAdmin(admin.ModelAdmin):
-    list_display = ['name', 'category', 'is_active', 'created_at']
+    list_display = ['name', 'category', 'product_count', 'is_active', 'created_at']
     list_select_related = ['category']
     list_filter = ['category', 'is_active']
     search_fields = ['name', 'description', 'category__name']
     list_editable = ['is_active']
     fields = ['name', 'category', 'description', 'image', 'icon_name', 'is_active']
+
+    def product_count(self, obj):
+        count = obj.products.count()
+        if count > 0:
+            return format_html('<a href="../product/?subcategory__id__exact={}">{} products</a>', obj.pk, count)
+        return '0 products'
+    product_count.short_description = 'Products'
 
 @admin.register(Brand)
 class BrandAdmin(admin.ModelAdmin):
@@ -48,11 +60,11 @@ class PriceTierInline(admin.TabularInline):
 
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
-    # 🟢 Added 'hsn_code' to the list view
-    list_display = ['name', 'sku', 'brand_ref', 'category', 'subcategory', 'base_price', 'purchase_price', 'tax_rate', 'hsn_code', 'stock', 'stock_status', 'is_active']
+    # 🟢 Added 'hsn_code' and 'get_tags' to the list view
+    list_display = ['name', 'sku', 'brand_ref', 'category', 'subcategory', 'get_tags', 'base_price', 'purchase_price', 'tax_rate', 'hsn_code', 'stock', 'stock_status', 'is_active']
     list_select_related = ['category', 'subcategory', 'subcategory__category', 'brand_ref']
     
-    list_filter = ['category', 'subcategory', 'brand_ref', 'is_active', 'stock_status', 'tax_rate', 'dietary_preference']
+    list_filter = ['category', 'subcategory', 'brand_ref', 'tags', 'is_active', 'stock_status', 'tax_rate', 'dietary_preference']
     
     # 🟢 Added 'hsn_code' to search (so you can search by it)
     search_fields = ['name', 'sku', 'hsn_code', 'brand', 'brand_ref__name', 'description']
@@ -60,6 +72,21 @@ class ProductAdmin(admin.ModelAdmin):
     list_editable = ['stock', 'is_active', 'base_price', 'tax_rate']
     
     readonly_fields = ['created_at', 'updated_at', 'image_size_display']
+    
+    actions = ['bulk_update_subcategory', 'bulk_add_tags', 'bulk_remove_tags']
+    
+    def get_tags(self, obj):
+        tags = obj.tags.all()
+        if not tags:
+            return format_html('<span style="color:#999;">—</span>')
+        tag_html = ' '.join(
+            f'<span style="display:inline-block;background:#e3f2fd;color:#1565c0;'
+            f'padding:1px 7px;border-radius:10px;font-size:0.8em;margin:1px;">'
+            f'{tag.name}</span>'
+            for tag in tags
+        )
+        return format_html(tag_html)
+    get_tags.short_description = 'Tags'
     
     def image_size_display(self, obj):
         if obj.image:
@@ -70,6 +97,131 @@ class ProductAdmin(admin.ModelAdmin):
                 return "Unknown size"
         return "No image"
     image_size_display.short_description = 'Main Image Size'
+    
+    # --- BULK ACTION: Assign Subcategory ---
+    @admin.action(description="🔄 Assign subcategory to selected products")
+    def bulk_update_subcategory(self, request, queryset):
+        if 'apply' in request.POST:
+            category_id = request.POST.get('category')
+            subcategory_id = request.POST.get('subcategory')
+            
+            updated_fields = []
+            
+            if category_id:
+                try:
+                    new_category = Category.objects.get(pk=category_id)
+                    queryset.update(category=new_category)
+                    updated_fields.append(f"category → {new_category.name}")
+                except Category.DoesNotExist:
+                    self.message_user(request, "Selected category not found.", messages.ERROR)
+                    return
+            
+            if subcategory_id:
+                try:
+                    new_subcategory = Subcategory.objects.get(pk=subcategory_id)
+                    queryset.update(subcategory=new_subcategory)
+                    # Also update category to match the subcategory's parent
+                    if not category_id:
+                        queryset.update(category=new_subcategory.category)
+                        updated_fields.append(f"category → {new_subcategory.category.name}")
+                    updated_fields.append(f"subcategory → {new_subcategory.name}")
+                except Subcategory.DoesNotExist:
+                    self.message_user(request, "Selected subcategory not found.", messages.ERROR)
+                    return
+            
+            if updated_fields:
+                count = queryset.count()
+                changes = ', '.join(updated_fields)
+                self.message_user(
+                    request,
+                    f"✅ Successfully updated {count} product(s): {changes}",
+                    messages.SUCCESS
+                )
+            else:
+                self.message_user(request, "No changes were made — nothing was selected.", messages.WARNING)
+            return
+        
+        products = queryset.select_related('category', 'subcategory')
+        categories = Category.objects.filter(is_active=True).order_by('name')
+        subcategories = Subcategory.objects.filter(is_active=True).select_related('category').order_by('category__name', 'name')
+        
+        return render(request, 'admin/products/bulk_update_subcategory.html', {
+            'products': products,
+            'categories': categories,
+            'subcategories': subcategories,
+            'title': 'Bulk Update Subcategory',
+        })
+    
+    # --- BULK ACTION: Add Tags ---
+    @admin.action(description="🏷️ Add tags to selected products")
+    def bulk_add_tags(self, request, queryset):
+        if 'apply' in request.POST:
+            tag_ids = request.POST.getlist('tags')
+            if tag_ids:
+                tags = ProductTag.objects.filter(pk__in=tag_ids)
+                count = 0
+                for product in queryset:
+                    product.tags.add(*tags)
+                    count += 1
+                tag_names = ', '.join(t.name for t in tags)
+                self.message_user(
+                    request,
+                    f"✅ Added tags [{tag_names}] to {count} product(s).",
+                    messages.SUCCESS
+                )
+            else:
+                self.message_user(request, "No tags were selected.", messages.WARNING)
+            return
+        
+        products = queryset.prefetch_related('tags')
+        tags_by_group = self._get_tags_by_group()
+        
+        return render(request, 'admin/products/bulk_update_tags.html', {
+            'products': products,
+            'tags_by_group': tags_by_group,
+            'mode': 'Add',
+            'title': 'Bulk Add Tags',
+        })
+    
+    # --- BULK ACTION: Remove Tags ---
+    @admin.action(description="🗑️ Remove tags from selected products")
+    def bulk_remove_tags(self, request, queryset):
+        if 'apply' in request.POST:
+            tag_ids = request.POST.getlist('tags')
+            if tag_ids:
+                tags = ProductTag.objects.filter(pk__in=tag_ids)
+                count = 0
+                for product in queryset:
+                    product.tags.remove(*tags)
+                    count += 1
+                tag_names = ', '.join(t.name for t in tags)
+                self.message_user(
+                    request,
+                    f"✅ Removed tags [{tag_names}] from {count} product(s).",
+                    messages.SUCCESS
+                )
+            else:
+                self.message_user(request, "No tags were selected.", messages.WARNING)
+            return
+        
+        products = queryset.prefetch_related('tags')
+        tags_by_group = self._get_tags_by_group()
+        
+        return render(request, 'admin/products/bulk_update_tags.html', {
+            'products': products,
+            'tags_by_group': tags_by_group,
+            'mode': 'Remove',
+            'title': 'Bulk Remove Tags',
+        })
+    
+    def _get_tags_by_group(self):
+        """Helper: returns an OrderedDict of group_name -> [tags] for template rendering."""
+        all_tags = ProductTag.objects.filter(is_active=True).select_related('group').order_by('group__display_order', 'group__name', 'display_order', 'name')
+        tags_by_group = OrderedDict()
+        for tag in all_tags:
+            group_name = tag.group.name if tag.group else 'Ungrouped'
+            tags_by_group.setdefault(group_name, []).append(tag)
+        return tags_by_group
     
     fieldsets = (
         ('Basic Information', {
@@ -152,10 +304,17 @@ class TagGroupAdmin(admin.ModelAdmin):
 
 @admin.register(ProductTag)
 class ProductTagAdmin(admin.ModelAdmin):
-    list_display = ['name', 'group', 'slug', 'display_order', 'is_active']
+    list_display = ['name', 'group', 'slug', 'product_count', 'display_order', 'is_active']
     list_select_related = ['group']
     list_filter = ['group', 'is_active']
     list_editable = ['display_order', 'is_active']
     prepopulated_fields = {'slug': ('name',)}
     search_fields = ['name', 'group__name']
-    filter_horizontal = ['subcategories']
+    filter_horizontal = ['subcategories']
+
+    def product_count(self, obj):
+        count = obj.products.count()
+        if count > 0:
+            return format_html('<a href="../product/?tags__id__exact={}">{} products</a>', obj.pk, count)
+        return '0 products'
+    product_count.short_description = 'Products'
