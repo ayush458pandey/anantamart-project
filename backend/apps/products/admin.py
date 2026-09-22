@@ -14,19 +14,12 @@ class CategoryAdmin(admin.ModelAdmin):
 
 @admin.register(Subcategory)
 class SubcategoryAdmin(admin.ModelAdmin):
-    list_display = ['name', 'category', 'product_count', 'is_active', 'created_at']
+    list_display = ['name', 'category', 'is_active', 'created_at']
     list_select_related = ['category']
     list_filter = ['category', 'is_active']
     search_fields = ['name', 'description', 'category__name']
     list_editable = ['is_active']
     fields = ['name', 'category', 'description', 'image', 'icon_name', 'is_active']
-
-    def product_count(self, obj):
-        count = obj.products.count()
-        if count > 0:
-            return format_html('<a href="../product/?subcategory__id__exact={}">{} products</a>', obj.pk, count)
-        return '0 products'
-    product_count.short_description = 'Products'
 
 @admin.register(Brand)
 class BrandAdmin(admin.ModelAdmin):
@@ -60,14 +53,11 @@ class PriceTierInline(admin.TabularInline):
 
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
-    # 🟢 Added 'hsn_code' and 'get_tags' to the list view
-    list_display = ['name', 'sku', 'brand_ref', 'category', 'subcategory', 'get_tags', 'base_price', 'purchase_price', 'tax_rate', 'hsn_code', 'stock', 'stock_status', 'is_active']
+    # 🟢 Added 'hsn_code' to the list view
+    list_display = ['name', 'sku', 'brand_ref', 'category', 'subcategory', 'base_price', 'purchase_price', 'tax_rate', 'hsn_code', 'stock', 'stock_status', 'is_active']
     list_select_related = ['category', 'subcategory', 'subcategory__category', 'brand_ref']
     
-    def get_queryset(self, request):
-        return super().get_queryset(request).prefetch_related('tags')
-    
-    list_filter = ['category', 'subcategory', 'brand_ref', 'tags', 'is_active', 'stock_status', 'tax_rate', 'dietary_preference']
+    list_filter = ['category', 'subcategory', 'brand_ref', 'is_active', 'stock_status', 'tax_rate', 'dietary_preference']
     
     # 🟢 Added 'hsn_code' to search (so you can search by it)
     search_fields = ['name', 'sku', 'hsn_code', 'brand', 'brand_ref__name', 'description']
@@ -77,19 +67,6 @@ class ProductAdmin(admin.ModelAdmin):
     readonly_fields = ['created_at', 'updated_at', 'image_size_display']
     
     actions = ['bulk_update_subcategory', 'bulk_add_tags', 'bulk_remove_tags']
-    
-    def get_tags(self, obj):
-        tags = obj.tags.all()
-        if not tags:
-            return format_html('<span style="color:#999;">\u2014</span>')
-        return format_html_join(
-            ' ',
-            '<span style="display:inline-block;background:#e3f2fd;color:#1565c0;'
-            'padding:1px 7px;border-radius:10px;font-size:0.8em;margin:1px;">'
-            '{}</span>',
-            ((tag.name,) for tag in tags)
-        )
-    get_tags.short_description = 'Tags'
     
     def image_size_display(self, obj):
         if obj.image:
@@ -307,17 +284,10 @@ class TagGroupAdmin(admin.ModelAdmin):
 
 @admin.register(ProductTag)
 class ProductTagAdmin(admin.ModelAdmin):
-    list_display = ['name', 'group', 'slug', 'product_count', 'display_order', 'is_active']
+    list_display = ['name', 'group', 'slug', 'display_order', 'is_active']
     list_select_related = ['group']
     list_filter = ['group', 'is_active']
     list_editable = ['display_order', 'is_active']
     prepopulated_fields = {'slug': ('name',)}
     search_fields = ['name', 'group__name']
-    filter_horizontal = ['subcategories']
-
-    def product_count(self, obj):
-        count = obj.products.count()
-        if count > 0:
-            return format_html('<a href="../product/?tags__id__exact={}">{} products</a>', obj.pk, count)
-        return '0 products'
-    product_count.short_description = 'Products'
+    filter_horizontal = ['subcategories']
