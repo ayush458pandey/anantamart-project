@@ -83,7 +83,6 @@ class ProductViewSet(viewsets.ModelViewSet):
     
 
     
-    @method_decorator(cache_page(300))
     @action(detail=False, methods=['get'])
     def filter_options(self, request):
         """
