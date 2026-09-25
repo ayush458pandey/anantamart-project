@@ -180,24 +180,24 @@ class ProductViewSet(viewsets.ModelViewSet):
         grouped = {}
         for tag in tags:
             count = products_qs.filter(tags=tag).count()
-            if count > 0:
-                group_key = tag.group_id
-                if group_key not in grouped:
-                    grouped[group_key] = {
-                        'group': tag.group,
-                        'tags': []
-                    }
-                tag_image_url = None
-                if tag.image:
-                    tag_image_url = self.request.build_absolute_uri(tag.image.url) if hasattr(self, 'request') and self.request else tag.image.url
+            
+            group_key = tag.group_id
+            if group_key not in grouped:
+                grouped[group_key] = {
+                    'group': tag.group,
+                    'tags': []
+                }
+            tag_image_url = None
+            if tag.image:
+                tag_image_url = self.request.build_absolute_uri(tag.image.url) if hasattr(self, 'request') and self.request else tag.image.url
 
-                grouped[group_key]['tags'].append({
-                    'id': tag.id,
-                    'name': tag.name,
-                    'slug': tag.slug,
-                    'image': tag_image_url,
-                    'count': count
-                })
+            grouped[group_key]['tags'].append({
+                'id': tag.id,
+                'name': tag.name,
+                'slug': tag.slug,
+                'image': tag_image_url,
+                'count': count
+            })
         
         result = []
         # First add grouped tags (sorted by group display_order)
