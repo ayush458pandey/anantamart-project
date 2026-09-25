@@ -148,9 +148,9 @@ class ProductViewSet(viewsets.ModelViewSet):
     def _get_tag_groups_for_category(self, category_id, subcategory_list, products_qs):
         """Get tag groups applicable to this category, with tag counts.
         
-        Tags are scoped by subcategory: if a tag has subcategories assigned,
-        it only shows when browsing one of those subcategories.
-        Tags without subcategories assigned show for any subcategory in the category.
+        Tags are scoped by subcategory: if a subcategory is selected,
+        ONLY tags explicitly assigned to that subcategory will be shown.
+        Category-wide tags (Group tags) will only show when viewing the parent category.
         """
         # Get all active tags that belong to groups linked to this category,
         # OR ungrouped tags linked to subcategories in this category
@@ -169,11 +169,10 @@ class ProductViewSet(viewsets.ModelViewSet):
             Q(subcategories__id__in=category_subcategory_ids)
         ).distinct().select_related('group').prefetch_related('subcategories')
         
-        # If specific subcategories are selected, further filter tags
+        # If specific subcategories are selected, ONLY show tags explicitly assigned to them
         if subcategory_list:
             tags = tags.filter(
-                Q(subcategories__id__in=subcategory_list) |
-                Q(subcategories__isnull=True)  # Tags with no subcategory = show everywhere
+                subcategories__id__in=subcategory_list
             ).distinct()
         
         # Group tags by their TagGroup (None key for ungrouped)
