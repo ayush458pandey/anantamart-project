@@ -843,7 +843,7 @@ export default function Home() {
                                         </h3>
                                     </div>
                                     <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 gap-3 sm:gap-4">
-                                        {businessTags.map((tag) => (
+                                        {businessTags.map((tag, index) => (
                                             <div
                                                 key={tag.id}
                                                 onClick={() => {
@@ -860,7 +860,8 @@ export default function Home() {
                                                             src={tag.image_url || tag.image}
                                                             alt={tag.name}
                                                             className="w-full h-full object-cover"
-                                                            loading="lazy"
+                                                            loading={index < 4 ? "eager" : "lazy"}
+                                                            fetchpriority={index < 4 ? "high" : "auto"}
                                                         />
                                                     ) : (
                                                         <Tag className="w-8 h-8 text-emerald-600 group-hover:scale-110 transition-transform duration-200" />
@@ -887,7 +888,7 @@ export default function Home() {
                             />
 
                             <div className="space-y-10 border-t border-gray-100 pt-8">
-                                {categories.map((category) => {
+                                {categories.map((category, catIndex) => {
                                     const CategoryIcon = getCategoryIcon(category.name);
                                     const categoryProducts = productsByCategory.get(String(category.id)) || [];
 
@@ -934,7 +935,7 @@ export default function Home() {
                                                             onAddToCart={addToCart}
                                                             onViewDetails={() => setSelectedProduct(product)}
                                                             onNavigateToCategory={navigateToCategory}
-                                                            priority={false}
+                                                            priority={catIndex === 0 && index < 3}
                                                         />
                                                     </div>
                                                 ))}

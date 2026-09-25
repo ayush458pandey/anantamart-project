@@ -10,24 +10,21 @@ import { ComparisonProvider } from './context/ComparisonContext';
 import { ToastProvider } from './context/ToastContext';
 import { Analytics } from '@vercel/analytics/react';
 import { SpeedInsights } from '@vercel/speed-insights/react';
-import { GoogleOAuthProvider } from '@react-oauth/google';
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <GoogleOAuthProvider clientId="646623686463-crek4p60hrug0s098qv50i45u6edcpet.apps.googleusercontent.com">
-      <BrowserRouter>
-        <AuthProvider>
-          <CartProvider>
-            <ComparisonProvider>
-              <ToastProvider>
-                <App />
-                <Analytics />
-                <SpeedInsights />
-              </ToastProvider>
-            </ComparisonProvider>
-          </CartProvider>
-        </AuthProvider>
-      </BrowserRouter>
-    </GoogleOAuthProvider>
+    <BrowserRouter>
+      <AuthProvider>
+        <CartProvider>
+          <ComparisonProvider>
+            <ToastProvider>
+              <App />
+              <Analytics />
+              <SpeedInsights />
+            </ToastProvider>
+          </ComparisonProvider>
+        </CartProvider>
+      </AuthProvider>
+    </BrowserRouter>
   </StrictMode>,
 )

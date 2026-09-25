@@ -3,7 +3,7 @@ import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { Package, Eye, EyeOff, Mail, Lock, User, ArrowLeft } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import axiosInstance from '../api/axios';
-import { GoogleLogin } from '@react-oauth/google';
+import { GoogleLogin, GoogleOAuthProvider } from '@react-oauth/google';
 
 export default function Login() {
     const [activeTab, setActiveTab] = useState('signin');
@@ -134,6 +134,7 @@ export default function Login() {
     };
 
     return (
+        <GoogleOAuthProvider clientId="646623686463-crek4p60hrug0s098qv50i45u6edcpet.apps.googleusercontent.com">
         <div className="min-h-screen bg-gradient-to-br from-emerald-50 to-emerald-100 flex flex-col items-center justify-center px-4 py-8">
             {/* Logo */}
             <div className="flex items-center gap-2 mb-6 cursor-pointer" onClick={() => navigate('/')}>
@@ -404,5 +405,6 @@ export default function Login() {
                 Back to Store
             </button>
         </div>
+        </GoogleOAuthProvider>
     );
 }
