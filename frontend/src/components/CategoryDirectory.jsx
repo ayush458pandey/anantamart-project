@@ -52,6 +52,7 @@ const CategoryDirectory = ({ categories, onSelectCategory, layout = 'grid', sele
                                         className="w-full h-full object-cover"
                                         loading={index < 8 ? "eager" : "lazy"}
                                         fetchPriority={index < 8 ? "high" : "auto"}
+                                        decoding={index < 8 ? "sync" : "async"}
                                     />
                                 ) : (
                                     <Icon className={`w-6 h-6 ${isActive ? 'text-green-600' : 'text-gray-500'}`} />
@@ -98,9 +99,9 @@ const CategoryDirectory = ({ categories, onSelectCategory, layout = 'grid', sele
                                         width="192"
                                         height="192"
                                         className="w-full h-full object-cover"
-                                        loading={index < 4 ? "eager" : "lazy"}
-                                        fetchPriority={index < 4 ? "high" : "auto"}
-                                        decoding={index < 4 ? "sync" : "async"}
+                                        loading={index < 8 ? "eager" : "lazy"}
+                                        fetchPriority={index < 8 ? "high" : "auto"}
+                                        decoding={index < 8 ? "sync" : "async"}
                                     />
                                 ) : (
                                     <Icon className="w-8 h-8 sm:w-10 sm:h-10 text-emerald-600 group-hover:scale-110 transition-transform" />

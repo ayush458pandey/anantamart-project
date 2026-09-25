@@ -110,8 +110,8 @@ export default function ProductCard({ product, cart, onAddToCart, removeFromCart
                 {product.image ? (
                     <img
                         src={productImage}
-                        srcSet={getImageSrcSet(product.image, [240, 360, 520])}
-                        sizes="(min-width: 1024px) 200px, (min-width: 640px) 200px, 160px"
+                        srcSet={getImageSrcSet(product.image, [160, 240, 320, 480])}
+                        sizes="(min-width: 1024px) 180px, (min-width: 640px) 160px, 140px"
                         alt={product.name}
                         width="520"
                         height="390"

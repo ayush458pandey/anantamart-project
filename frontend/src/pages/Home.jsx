@@ -860,8 +860,8 @@ export default function Home() {
                                                             src={tag.image_url || tag.image}
                                                             alt={tag.name}
                                                             className="w-full h-full object-cover"
-                                                            loading={index < 4 ? "eager" : "lazy"}
-                                                            fetchpriority={index < 4 ? "high" : "auto"}
+                                                            loading={index < 8 ? "eager" : "lazy"}
+                                                            fetchpriority={index < 8 ? "high" : "auto"}
                                                         />
                                                     ) : (
                                                         <Tag className="w-8 h-8 text-emerald-600 group-hover:scale-110 transition-transform duration-200" />
