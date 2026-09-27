@@ -48,7 +48,7 @@ six==1.17.0
 redis==5.2.1
 django-redis==5.4.0
 celery==5.4.0
-django-celery-beat==2.7.0
+django-celery-beat==2.8.0
 
 # --- API Documentation ---
 drf-spectacular==0.28.0
