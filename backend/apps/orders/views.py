@@ -109,7 +109,7 @@ def validate_stock(request):
         
         if not is_valid:
             names = ', '.join([
-                f"{i['name']} (available: {i['available']}, requested: {i['requested']})
+                f"{i['name']} (available: {i['available']}, requested: {i['requested']})"
                 for i in out_of_stock
             ])
             return Response(
