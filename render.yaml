@@ -1,0 +1,109 @@
+# =============================================================================
+# ANANTAMART - Render Infrastructure as Code (render.yaml)
+# =============================================================================
+# Deploy with: render blueprint launch
+# Or: render blueprint apply
+# =============================================================================
+
+services:
+  # ---------------------------------------------------------------------------
+  # Backend Web Service
+  # ---------------------------------------------------------------------------
+  - type: web
+    name: anantamart-api
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    region: singapore
+    plan: starter
+    branch: main
+    healthCheckPath: /health/
+    autoDeploy: true
+    envVars:
+      - key: DJANGO_SETTINGS_MODULE
+        value: config.settings.production
+      - key: DEBUG
+        value: "False"
+      - key: SECRET_KEY
+        generateValue: true
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
+      - key: RAZORPAY_KEY_ID
+        sync: false
+      - key: RAZORPAY_KEY_SECRET
+        sync: false
+      - key: EMAIL_HOST
+        value: smtp.gmail.com
+      - key: EMAIL_PORT
+        value: "587"
+      - key: EMAIL_USE_TLS
+        value: "True"
+      - key: EMAIL_HOST_USER
+        sync: false
+      - key: EMAIL_HOST_PASSWORD
+        sync: false
+      - key: DEFAULT_FROM_EMAIL
+        value: Anantamart <noreply@ananta-mart.in>
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
+      - key: ADMIN_EMAILS
+        sync: false
+      - key: FRONTEND_URL
+        value: https://ananta-mart.in
+      - key: DJANGO_SUPERUSER_USERNAME
+        value: admin
+      - key: DJANGO_SUPERUSER_EMAIL
+        sync: false
+      - key: DJANGO_SUPERUSER_PASSWORD
+        generateValue: true
+    # Database and Redis will be linked below
+
+  # ---------------------------------------------------------------------------
+  # PostgreSQL Database (Aiven via Render)
+  # ---------------------------------------------------------------------------
+  - type: pserv
+    name: anantamart-db
+    plan: starter
+    region: singapore
+    postgresMajorVersion: "16"
+    ipAllowList: []
+
+  # ---------------------------------------------------------------------------
+  # Redis Instance
+  # ---------------------------------------------------------------------------
+  - type: redis
+    name: anantamart-redis
+    plan: starter
+    region: singapore
+    ipAllowList: []
+    maxmemoryPolicy: allkeys-lru
+
+# -----------------------------------------------------------------------------
+# Environment Variable Groups (for linking)
+# -----------------------------------------------------------------------------
+envVarGroups:
+  - name: database
+    service: anantamart-db
+    envVars:
+      - key: DATABASE_URL
+        fromService: anantamart-db
+        fromField: connectionString
+
+  - name: redis
+    service: anantamart-redis
+    envVars:
+      - key: REDIS_URL
+        fromService: anantamart-redis
+        fromField: connectionString
+
+# -----------------------------------------------------------------------------
+# Link Environment Groups to Web Service
+# -----------------------------------------------------------------------------
+# Note: In render.yaml, you link via the service's envVars section
+# The above envVarGroups are referenced automatically when services are created

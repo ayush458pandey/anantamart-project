@@ -1,0 +1,32 @@
+# =============================================================================
+# ANANTAMART - Full Stack Deploy (Manual Trigger)
+# =============================================================================
+# Triggers: Manual workflow_dispatch only
+# =============================================================================
+
+name: Full Stack Deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Deployment environment'
+        required: true
+        default: 'production'
+        type: choice
+        options:
+          - production
+          - staging
+
+jobs:
+  backend:
+    name: Deploy Backend
+    uses: ./.github/workflows/backend-deploy.yml
+    secrets: inherit
+    with:
+      branch: deployment-setup
+
+  frontend:
+    name: Deploy Frontend
+    uses: ./.github/workflows/frontend-deploy.yml
+    secrets: inherit
