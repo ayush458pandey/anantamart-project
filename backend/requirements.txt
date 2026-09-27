@@ -24,7 +24,9 @@ sqlparse==0.5.5
 tzdata==2025.3
 urllib3==2.6.2
 whitenoise==6.11.0
-django-smart-selects
-google-auth
-redis
-django-redis
+django-smart-selects==1.7.2
+google-auth==2.58.1
+redis==5.2.1
+django-redis==5.4.0
+celery==5.4.0
+django-celery-beat==2.7.0
