@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'django_filters',
     'corsheaders',
     'smart_selects' ,
+    'django_celery_beat',
     
     # Local apps
     'apps.products',
@@ -271,4 +272,17 @@ else:
     }
 
 # List of admin emails to receive order notifications
-ADMIN_EMAILS = [os.environ.get('ADMIN_EMAIL', 'ayush458pandey@gmail.com')]
+ADMIN_EMAILS = [os.environ.get('ADMIN_EMAIL', 'ayush458pandey@gmail.com')]
+
+# --- CELERY CONFIGURATION ---
+CELERY_BROKER_URL = REDIS_URL or 'memory://'
+CELERY_RESULT_BACKEND = REDIS_URL or 'cache+memory://'
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TIMEZONE = TIME_ZONE
+CELERY_TASK_TRACK_STARTED = True
+CELERY_TASK_TIME_LIMIT = 30 * 60  # 30 minutes hard limit
+CELERY_TASK_SOFT_TIME_LIMIT = 25 * 60  # 25 minutes soft limit
+CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
+CELERY_TASK_ALWAYS_EAGER = os.environ.get('CELERY_TASK_ALWAYS_EAGER', 'False') == 'True'

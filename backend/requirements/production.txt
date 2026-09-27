@@ -1,0 +1,14 @@
+# =============================================================================
+# ANANTAMART - Production Requirements
+# =============================================================================
+-r base.txt
+
+# --- WSGI Server ---
+gunicorn==23.0.0
+
+# --- Static Files ---
+whitenoise==6.11.0
+
+# --- Production Monitoring (Optional) ---
+# sentry-sdk==2.19.2
+# python-json-logger==3.2.1

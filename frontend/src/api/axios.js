@@ -2,8 +2,10 @@ import axios from 'axios';
 
 // ---------------------------------------------------------------------------
 // API Base URL — Single source of truth
+// Uses VITE_API_URL env var with production fallback
 // ---------------------------------------------------------------------------
-const API_BASE_URL = 'https://api.ananta-mart.in/api';
+const API_BASE_URL =
+  import.meta.env.VITE_API_URL || 'https://api.ananta-mart.in/api';
 
 const axiosInstance = axios.create({
   baseURL: API_BASE_URL,

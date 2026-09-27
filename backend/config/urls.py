@@ -10,8 +10,12 @@ from rest_framework_simplejwt.views import (
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('chaining/', include('smart_selects.urls')),
-    
-    # --- Auth & User ---
+
+    # --- Versioned API (recommended) ---
+    path('api/v1/', include('config.api_urls')),
+
+    # --- Legacy unversioned API (kept for backward compatibility) ---
+    # TODO: Deprecate once frontend migrates to /api/v1/
     path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('api/user/', include('apps.users.urls')), 

@@ -81,7 +81,7 @@ EXPOSE 8000
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-    CMD python -c "import requests; requests.get('http://localhost:8000/health/', timeout=5)" || exit 1
+    CMD python -c "import requests; requests.get('http://localhost:8000/api/health/', timeout=5)" || exit 1
 
 # Entrypoint script handles migrations, static files, and server start
 ENTRYPOINT ["/app/docker-entrypoint.sh"]

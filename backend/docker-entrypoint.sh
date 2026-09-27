@@ -199,14 +199,22 @@ main() {
         validate_settings
     fi
     
-    # Run migrations
-    run_migrations
-    
-    # Collect static files
-    collect_static
-    
-    # Create superuser if credentials provided
-    create_superuser
+    # Only the web process should run migrations/collectstatic/superuser.
+    # Worker and beat processes just need to start.
+    case "$1" in
+        gunicorn|python\ manage.py\ runserver)
+            run_migrations
+            collect_static
+            create_superuser
+            ;;
+        celery)
+            log "Celery process detected - skipping migrations/collectstatic"
+            ;;
+        *)
+            log "Unknown command '$1' - running migrations by default"
+            run_migrations
+            ;;
+    esac
     
     # Execute the main command
     log "Starting application: $*"

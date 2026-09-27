@@ -3,6 +3,7 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework import status
 from django.shortcuts import get_object_or_404
+from django.db import transaction
 from .models import Cart, CartItem
 from .serializers import CartSerializer
 from apps.products.models import Product
@@ -12,28 +13,32 @@ def get_cart(request):
     if request.user.is_authenticated:
         cart, created = Cart.objects.get_or_create(user=request.user)
         
-        # Merge anonymous cart if it exists
+        # Merge anonymous cart if it exists (atomic to prevent race conditions)
         if request.session.session_key:
-            session_cart = Cart.objects.filter(
-                session_key=request.session.session_key, 
-                user__isnull=True
-            ).first()
-            
-            if session_cart and session_cart.items.exists():
-                for item in session_cart.items.all():
-                    cart_item, item_created = CartItem.objects.get_or_create(
-                        cart=cart,
-                        product=item.product,
-                        variant=item.variant,
-                        defaults={'quantity': item.quantity}
-                    )
-                    if not item_created:
-                        cart_item.quantity += item.quantity
-                        cart_item.save()
+            with transaction.atomic():
+                # Lock the user's cart row to serialize concurrent merges
+                cart = Cart.objects.select_for_update().get(pk=cart.pk)
                 
-                # Delete the session cart items and the cart itself after merging
-                session_cart.items.all().delete()
-                session_cart.delete()
+                session_cart = Cart.objects.filter(
+                    session_key=request.session.session_key, 
+                    user__isnull=True
+                ).first()
+                
+                if session_cart and session_cart.items.exists():
+                    for item in session_cart.items.all():
+                        cart_item, item_created = CartItem.objects.get_or_create(
+                            cart=cart,
+                            product=item.product,
+                            variant=item.variant,
+                            defaults={'quantity': item.quantity}
+                        )
+                        if not item_created:
+                            cart_item.quantity += item.quantity
+                            cart_item.save()
+                    
+                    # Delete the session cart items and the cart itself after merging
+                    session_cart.items.all().delete()
+                    session_cart.delete()
                 
         return cart
     else:

@@ -16,8 +16,8 @@ services:
     dockerContext: ./backend
     region: singapore
     plan: starter
-    branch: main
-    healthCheckPath: /health/
+    branch: deployment-setup
+    healthCheckPath: /api/health/
     autoDeploy: true
     envVars:
       - key: DJANGO_SETTINGS_MODULE
@@ -26,6 +26,15 @@ services:
         value: "False"
       - key: SECRET_KEY
         generateValue: true
+      - key: DATABASE_URL
+        fromDatabase:
+          name: anantamart-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: anantamart-redis
+          property: connectionString
       - key: CLOUDINARY_CLOUD_NAME
         sync: false
       - key: CLOUDINARY_API_KEY
@@ -62,10 +71,87 @@ services:
         sync: false
       - key: DJANGO_SUPERUSER_PASSWORD
         generateValue: true
-    # Database and Redis will be linked below
 
   # ---------------------------------------------------------------------------
-  # PostgreSQL Database (Aiven via Render)
+  # Celery Worker (background tasks: emails, etc.)
+  # ---------------------------------------------------------------------------
+  - type: worker
+    name: anantamart-worker
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    region: singapore
+    plan: starter
+    branch: deployment-setup
+    autoDeploy: true
+    dockerCommand: celery -A config worker -l info --concurrency=2
+    envVars:
+      - key: DJANGO_SETTINGS_MODULE
+        value: config.settings.production
+      - key: DEBUG
+        value: "False"
+      - key: SECRET_KEY
+        fromService:
+          type: web
+          name: anantamart-api
+          envVarKey: SECRET_KEY
+      - key: DATABASE_URL
+        fromDatabase:
+          name: anantamart-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: anantamart-redis
+          property: connectionString
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
+      - key: EMAIL_HOST_USER
+        sync: false
+      - key: EMAIL_HOST_PASSWORD
+        sync: false
+      - key: ADMIN_EMAILS
+        sync: false
+
+  # ---------------------------------------------------------------------------
+  # Celery Beat (periodic tasks scheduler)
+  # ---------------------------------------------------------------------------
+  - type: worker
+    name: anantamart-beat
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    region: singapore
+    plan: starter
+    branch: deployment-setup
+    autoDeploy: true
+    dockerCommand: celery -A config beat -l info --scheduler django_celery_beat.schedulers:DatabaseScheduler
+    envVars:
+      - key: DJANGO_SETTINGS_MODULE
+        value: config.settings.production
+      - key: DEBUG
+        value: "False"
+      - key: SECRET_KEY
+        fromService:
+          type: web
+          name: anantamart-api
+          envVarKey: SECRET_KEY
+      - key: DATABASE_URL
+        fromDatabase:
+          name: anantamart-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: anantamart-redis
+          property: connectionString
+
+  # ---------------------------------------------------------------------------
+  # PostgreSQL Database
   # ---------------------------------------------------------------------------
   - type: pserv
     name: anantamart-db

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   X, CreditCard, Smartphone, Building2, Wallet,
   CheckCircle, MapPin, Truck, Package, AlertCircle, Plus, Loader, FileText, QrCode
@@ -108,6 +108,11 @@ export default function AdvancedCheckout({ cart, onClose, onPlaceOrder }) {
   const [stockWarning, setStockWarning] = useState(null); // {items: [...], addressObj}
   const [utrNumber, setUtrNumber] = useState('');
 
+  // Stable idempotency key for this checkout session (prevents duplicate orders on retry)
+  const idempotencyKeyRef = useRef(
+    `${Date.now()}-${Math.random().toString(36).slice(2, 11)}`
+  );
+
   // UPI QR config
   const UPI_ID = import.meta.env.VITE_UPI_ID || '125008896654@cnrb';
   const UPI_NAME = 'Ananta Mart';
@@ -209,8 +214,8 @@ export default function AdvancedCheckout({ cart, onClose, onPlaceOrder }) {
         allow_backorder: allowBackorder
       };
 
-      // 1. Create the Order
-      const createdOrder = await orderService.createOrder(orderPayload);
+      // 1. Create the Order (with stable idempotency key to prevent duplicates on retry)
+      const createdOrder = await orderService.createOrder(orderPayload, idempotencyKeyRef.current);
 
       // 2. 🟢 CLEAR THE CART (This was missing)
       // We wait for this to finish so the UI updates correctly
@@ -268,28 +273,20 @@ export default function AdvancedCheckout({ cart, onClose, onPlaceOrder }) {
     }
 
     try {
-      // 🆕 STEP 0: Validate stock BEFORE initiating any payment
-      const token = localStorage.getItem('access_token');
+      // STEP 0: Validate stock BEFORE initiating any payment
       const stockCheckItems = cart.items.map(item => ({
         product_id: item.product.id,
         quantity: item.quantity
       }));
 
-      const stockResponse = await fetch('https://api.ananta-mart.in/api/orders/validate-stock/', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ items: stockCheckItems })
-      });
-
-      if (!stockResponse.ok) {
-        const stockData = await stockResponse.json();
+      try {
+        await orderService.validateStock(stockCheckItems);
+      } catch (stockErr) {
+        const stockData = stockErr.response?.data || {};
         // Show stock warning dialog with option to proceed via advance payment
         setStockWarning({
           items: stockData.out_of_stock || [],
-          message: stockData.error,
+          message: stockData.error || 'Some items are out of stock',
           addressObj: addressObj
         });
         setIsProcessing(false);

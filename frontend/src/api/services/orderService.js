@@ -3,15 +3,26 @@ import axiosInstance from '../axios';
 export const orderService = {
   // 🟢 FIX: Changed '/orders/create/' back to '/orders/'
   // This is the standard Django REST Framework endpoint for creating items.
-  createOrder: async (orderData) => {
+  // Supports idempotency via Idempotency-Key header to prevent duplicate orders.
+  createOrder: async (orderData, idempotencyKey = null) => {
     try {
-      const response = await axiosInstance.post('/orders/', orderData);
+      const config = {};
+      if (idempotencyKey) {
+        config.headers = { 'Idempotency-Key': idempotencyKey };
+      }
+      const response = await axiosInstance.post('/orders/', orderData, config);
       return response.data;
     } catch (error) {
       // Log the full backend error to help debug if it fails again
       console.error("Create Order Error:", error.response?.data || error.message);
       throw error;
     }
+  },
+
+  // Validate stock before payment
+  validateStock: async (items) => {
+    const response = await axiosInstance.post('/orders/validate-stock/', { items });
+    return response.data;
   },
 
   // Get order history

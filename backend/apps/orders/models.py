@@ -29,6 +29,10 @@ class Order(models.Model):
     
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='orders')
     order_number = models.CharField(max_length=50, unique=True)
+    idempotency_key = models.CharField(
+        max_length=64, null=True, blank=True, unique=True, db_index=True,
+        help_text="Client-generated key to prevent duplicate orders on retry"
+    )
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
     
     # Pricing
@@ -63,6 +67,12 @@ class Order(models.Model):
     
     class Meta:
         ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['user', '-created_at']),
+            models.Index(fields=['status']),
+            models.Index(fields=['payment_status']),
+            models.Index(fields=['order_number']),
+        ]
     
     def __str__(self):
         return f"Order {self.order_number}"
