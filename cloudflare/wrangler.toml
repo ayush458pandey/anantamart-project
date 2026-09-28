@@ -3,7 +3,7 @@
 
 name = "anantamart-hybrid"
 main = "src/index.js"
-compatibility_date = "2024-01-01"
+compatibility_date = "2024-04-03"
 compatibility_flags = ["nodejs_compat"]
 
 # Environment variables (set in Cloudflare dashboard)
@@ -17,8 +17,8 @@ FRONTEND_URL = "https://ananta-mart.in"
 # KV Namespace for edge caching (create with: wrangler kv:namespace create "EDGE_CACHE")
 [[kv_namespaces]]
 binding = "EDGE_CACHE"
-id = "your-kv-namespace-id-here"
-preview_id = "your-preview-kv-namespace-id-here"
+id = "f40c3a778ab647199a9bf7a4a80caf69"
+
 
 # R2 Bucket for static assets backup (create with: wrangler r2 bucket create anantamart-static)
 [[r2_buckets]]
@@ -26,28 +26,17 @@ binding = "STATIC_BUCKET"
 bucket_name = "anantamart-static"
 preview_bucket_name = "anantamart-static-preview"
 
-# Durable Object for rate limiting (optional)
+# Durable Object for rate limiting
 [[durable_objects.bindings]]
 name = "RATE_LIMITER"
 class_name = "RateLimiter"
+
+# Durable Object migration configuration
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["RateLimiter"]
 
 # Triggers
 [triggers]
 crons = ["0 * * * *"]  # Hourly cache warming
 
-# Build configuration
-[build]
-command = "npm run build"
-watch_dir = "src"
-
-# Pages configuration
-[pages]
-build = "npm run build"
-
-[pages.routes]
-include = ["/*"]
-exclude = ["/api/*", "/static/*"]
-
-# Analytics
-[analytics]
-enabled = true

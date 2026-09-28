@@ -1,7 +1,7 @@
 // Security middleware for Cloudflare Worker
 // Handles rate limiting, DDoS protection, and security headers
 
-export async function createSecurityMiddleware(durableObjectNamespace) {
+export function createSecurityMiddleware(durableObjectNamespace) {
   return async function securityMiddleware(request, next) {
     const ip = request.headers.get('CF-Connecting-IP') || 'unknown';
     const userAgent = request.headers.get('User-Agent') || '';
@@ -34,14 +34,15 @@ export async function createSecurityMiddleware(durableObjectNamespace) {
     }
     
     // Add security headers
-    const response = await next();
+    const response = await next(request);
     response.headers.set('X-Content-Type-Options', 'nosniff');
     response.headers.set('X-Frame-Options', 'DENY');
     response.headers.set('X-XSS-Protection', '1; mode=block');
     response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
-    response.headers.set('Content-Security-Policy', "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline';");
-    
-    // Add rate limit headers
+    response.headers.set(
+  'Content-Security-Policy',
+  "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' https://res.cloudinary.com data: blob:;"
+);
     response.headers.set('X-RateLimit-Limit', '100');
     response.headers.set('X-RateLimit-Remaining', remaining.toString());
     response.headers.set('X-RateLimit-Reset', new Date(reset).toISOString());

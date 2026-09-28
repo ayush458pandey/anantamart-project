@@ -1,7 +1,7 @@
 // Analytics middleware for Cloudflare Worker
 // Tracks performance metrics and usage analytics
 
-export async function createAnalyticsMiddleware(startTime) {
+export function createAnalyticsMiddleware(startTime) {
   return async function analyticsMiddleware(request, next) {
     const url = new URL(request.url);
     const pathname = url.pathname;
@@ -9,7 +9,7 @@ export async function createAnalyticsMiddleware(startTime) {
     
     // Track request metrics
     const requestStart = Date.now();
-    const response = await next();
+    const response = await next(request);
     const requestDuration = Date.now() - requestStart;
     const totalDuration = Date.now() - startTime;
     

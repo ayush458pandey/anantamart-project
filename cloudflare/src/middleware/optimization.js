@@ -1,10 +1,10 @@
 // Optimization middleware for Cloudflare Worker
 // Handles Cloudinary URL optimization and image transformations
 
-export async function createOptimizationMiddleware(env) {
+export function createOptimizationMiddleware(env) {
   return async function optimizationMiddleware(request, next) {
     const url = new URL(request.url);
-    const response = await next();
+    const response = await next(request);
     
     // Optimize images via Cloudinary
     if (isImageRequest(url.pathname)) {
@@ -21,7 +21,7 @@ export async function createOptimizationMiddleware(env) {
       
       // Find and optimize Cloudinary image URLs
       html = html.replace(
-        new RegExp(env.CLOUDINARY_BASE_URL.replace(/\/g, '\\/') + '/([^"\']+)', 'g'),
+        new RegExp(env.CLOUDINARY_BASE_URL.replace(/\//g, '\\/') + '/([^"\']+)', 'g'),
         (match, imagePath) => {
           return optimizeCloudinaryUrl(imagePath, env);
         }
