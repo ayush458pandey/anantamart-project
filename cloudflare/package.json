@@ -1,0 +1,29 @@
+{
+  "name": "anantamart-cloudflare-worker",
+  "version": "1.0.0",
+  "description": "Cloudflare Worker for Anantamart Hybrid Architecture",
+  "main": "src/index.js",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "deploy:prod": "wrangler deploy --env production",
+    "cf-typegen": "wrangler types"
+  },
+  "keywords": [
+    "cloudflare",
+    "worker",
+    "cdn",
+    "cloudinary",
+    "hybrid",
+    "anantamart"
+  ],
+  "author": "Anantamart Team",
+  "license": "MIT",
+  "dependencies": {
+    "cloudinary": "latest"
+  },
+  "devDependencies": {
+    "wrangler": "latest"
+  },
+  "type": "module"
+}
