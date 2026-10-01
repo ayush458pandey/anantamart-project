@@ -838,9 +838,9 @@ export default function Home() {
                             {!loadingBusinessTags && businessTags && businessTags.length > 0 && (
                                 <div className="pb-4 border-b border-gray-100">
                                     <div className="flex items-center justify-between mb-4 px-1">
-                                        <h3 className="text-base sm:text-lg font-bold text-gray-800">
+                                        <h2 className="text-base sm:text-lg font-bold text-gray-800">
                                             Shop by Business
-                                        </h3>
+                                        </h2>
                                     </div>
                                     <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 gap-3 sm:gap-4">
                                         {businessTags.map((tag, index) => (
@@ -859,9 +859,12 @@ export default function Home() {
                                                         <img
                                                             src={tag.image_url || tag.image}
                                                             alt={tag.name}
+                                                            width="96"
+                                                            height="96"
                                                             className="w-full h-full object-cover"
                                                             loading={index < 8 ? "eager" : "lazy"}
-                                                            fetchpriority={index < 8 ? "high" : "auto"}
+                                                            fetchpriority={index < 4 ? "high" : "auto"}
+                                                            decoding={index < 8 ? "sync" : "async"}
                                                         />
                                                     ) : (
                                                         <Tag className="w-8 h-8 text-emerald-600 group-hover:scale-110 transition-transform duration-200" />

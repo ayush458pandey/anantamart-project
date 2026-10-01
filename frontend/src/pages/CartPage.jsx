@@ -1,10 +1,12 @@
-import React from 'react';
+import React, { lazy, Suspense } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
-import EstimateView from '../components/EstimateView';
-import AdvancedCheckout from '../components/AdvancedCheckout';
 import { getTaxFromInclusive } from '../utils/priceUtils';
+
+// Lazy-load heavy components (PDF libs) so they don't bloat the initial bundle
+const EstimateView = lazy(() => import('../components/EstimateView'));
+const AdvancedCheckout = lazy(() => import('../components/AdvancedCheckout'));
 
 export default function CartPage() {
     const { user } = useAuth();
@@ -28,34 +30,40 @@ export default function CartPage() {
 
     return (
         <>
-            <EstimateView
-                cart={cart}
-                removeFromCart={removeFromCart}
-                updateQuantity={updateQuantity}
-                subtotal={estimateSubtotal}
-                cgst={cgst}
-                sgst={sgst}
-                total={estimateTotal}
-                onCheckout={() => {
-                    if (user) {
-                        setShowCheckout(true);
-                    } else {
-                        // Will be handled by Navigate
-                        window.location.href = '/login';
-                    }
-                }}
-            />
-
-            {showCheckout && (
-                <AdvancedCheckout
+            <Suspense fallback={
+                <div className="min-h-[45vh] flex items-center justify-center">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600"></div>
+                </div>
+            }>
+                <EstimateView
                     cart={cart}
-                    onClose={() => setShowCheckout(false)}
-                    onPlaceOrder={(orderData) => {
-                        console.log('Order placed:', orderData);
-                        setShowCheckout(false);
+                    removeFromCart={removeFromCart}
+                    updateQuantity={updateQuantity}
+                    subtotal={estimateSubtotal}
+                    cgst={cgst}
+                    sgst={sgst}
+                    total={estimateTotal}
+                    onCheckout={() => {
+                        if (user) {
+                            setShowCheckout(true);
+                        } else {
+                            // Will be handled by Navigate
+                            window.location.href = '/login';
+                        }
                     }}
                 />
-            )}
+
+                {showCheckout && (
+                    <AdvancedCheckout
+                        cart={cart}
+                        onClose={() => setShowCheckout(false)}
+                        onPlaceOrder={(orderData) => {
+                            console.log('Order placed:', orderData);
+                            setShowCheckout(false);
+                        }}
+                    />
+                )}
+            </Suspense>
         </>
     );
 }

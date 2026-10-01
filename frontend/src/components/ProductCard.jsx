@@ -131,6 +131,8 @@ export default function ProductCard({ product, cart, onAddToCart, removeFromCart
                         e.stopPropagation();
                         handleCompareToggle();
                     }}
+                    aria-label={isInCompareList ? `Remove ${product.name} from comparison` : `Add ${product.name} to comparison`}
+                    aria-pressed={isInCompareList}
                     className={`absolute bottom-1.5 left-1.5 sm:bottom-2 sm:left-2 p-1.5 sm:p-2 rounded-full shadow-md hover:bg-gray-50 active:scale-95 transition-all z-10 touch-manipulation min-w-[36px] min-h-[36px] flex items-center justify-center ${isInCompareList
                         ? 'bg-emerald-100 border-2 border-emerald-600'
                         : 'bg-white'
@@ -147,6 +149,7 @@ export default function ProductCard({ product, cart, onAddToCart, removeFromCart
                                 e.stopPropagation();
                                 handleAdd();
                             }}
+                            aria-label={`Add ${product.name} to cart`}
                             className="bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-bold px-3 sm:px-5 py-1.5 sm:py-2 rounded-lg shadow-lg active:scale-95 transition-all text-xs sm:text-sm touch-manipulation"
                         >
                             + ADD
@@ -159,6 +162,7 @@ export default function ProductCard({ product, cart, onAddToCart, removeFromCart
                                     e.stopPropagation();
                                     handleDecrement();
                                 }}
+                                aria-label={`Decrease quantity of ${product.name}`}
                                 className="p-1.5 sm:p-2 hover:bg-gray-50 active:bg-gray-100 transition-colors touch-manipulation min-w-[36px] min-h-[36px] flex items-center justify-center"
                             >
                                 <Minus className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-600" />
@@ -191,6 +195,7 @@ export default function ProductCard({ product, cart, onAddToCart, removeFromCart
                                     e.stopPropagation();
                                     handleIncrement();
                                 }}
+                                aria-label={`Increase quantity of ${product.name}`}
                                 className="p-1.5 sm:p-2 hover:bg-gray-50 active:bg-gray-100 transition-colors touch-manipulation min-w-[36px] min-h-[36px] flex items-center justify-center"
                             >
                                 <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-600" />
@@ -206,7 +211,7 @@ export default function ProductCard({ product, cart, onAddToCart, removeFromCart
                         <span className="text-xs sm:text-sm font-bold">₹{Math.round(product.base_price)}</span>
                     </div>
                     {product.mrp && (
-                        <span className="text-gray-400 line-through text-[10px] sm:text-xs">
+                        <span className="text-gray-500 line-through text-[10px] sm:text-xs">
                             ₹{Math.round(product.mrp)}
                         </span>
                     )}

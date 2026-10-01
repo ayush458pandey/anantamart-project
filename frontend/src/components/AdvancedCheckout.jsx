@@ -1,15 +1,17 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import {
   X, CreditCard, Smartphone, Building2, Wallet,
   CheckCircle, MapPin, Truck, Package, AlertCircle, Plus, Loader, FileText, QrCode
 } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
-import InvoiceGenerator from './InvoiceGenerator';
 import AddressForm from './AddressForm';
 import { orderService } from '../api/services/orderService';
 import { addressService } from '../api/services/addressService';
 import { cartService } from '../api/services/cartService';
 import { getTaxFromInclusive } from '../utils/priceUtils';
+
+// Lazy-load InvoiceGenerator (pulls in heavy jsPDF/html2canvas libs)
+const InvoiceGenerator = lazy(() => import('./InvoiceGenerator'));
 
 const paymentMethods = [
   {
@@ -404,13 +406,15 @@ export default function AdvancedCheckout({ cart, onClose, onPlaceOrder }) {
         </div>
 
         {showInvoice && completedOrder && (
-          <InvoiceGenerator
-            orderData={completedOrder}
-            onClose={() => {
-              setShowInvoice(false);
-              onClose();
-            }}
-          />
+          <Suspense fallback={null}>
+            <InvoiceGenerator
+              orderData={completedOrder}
+              onClose={() => {
+                setShowInvoice(false);
+                onClose();
+              }}
+            />
+          </Suspense>
         )}
       </>
     );

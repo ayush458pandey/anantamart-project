@@ -2,8 +2,10 @@ export const getOptimizedImageUrl = (url, { width = 400, quality = 'auto' } = {}
   if (!url || typeof url !== 'string') return url;
   if (!url.includes('res.cloudinary.com') || !url.includes('/upload/')) return url;
 
-  const transformation = `f_auto,q_${quality === 'auto' ? 'auto:good' : quality},c_limit,w_${width}`;
-  
+  // q_auto:eco = smaller files (good for thumbnails/grids); q_auto:good = higher quality
+  const q = quality === 'auto' ? 'auto:eco' : quality;
+  const transformation = `f_auto,q_${q},c_limit,w_${width}`;
+
   // Look for a version string like /v1234567/ and replace everything between /upload/ and /v.../
   const match = url.match(/(\/upload\/)(?:.*\/)?(v\d+\/.*)$/);
   if (match) {
