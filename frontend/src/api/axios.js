@@ -40,11 +40,11 @@ axiosInstance.interceptors.request.use(
     }
     
     // Prevent browser/proxy caching for GET requests
-    // This ensures admin changes are immediately visible
+    // NOTE: Only use a query param (does NOT trigger CORS preflight).
+    // Do NOT add custom headers like Cache-Control/Pragma here — they
+    // trigger a preflight OPTIONS request that the backend CORS config
+    // does not allow, causing "Network Error".
     if (config.method === 'get') {
-      config.headers['Cache-Control'] = 'no-cache';
-      config.headers['Pragma'] = 'no-cache';
-      // Add cache-busting timestamp
       config.params = {
         ...config.params,
         _t: Date.now(),

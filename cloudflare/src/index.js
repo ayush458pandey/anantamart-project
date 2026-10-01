@@ -69,6 +69,21 @@ async function handleAPIRequests(request, env) {
   apiBase.pathname = `/api${apiPath}`;
   apiBase.search = incomingUrl.search;
 
+  // Handle CORS preflight directly (do not forward to backend)
+  if (request.method === 'OPTIONS') {
+    return new Response(null, {
+      status: 204,
+      headers: {
+        'Access-Control-Allow-Origin': env.FRONTEND_URL,
+        'Access-Control-Allow-Methods': 'GET, POST, PUT, PATCH, DELETE, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type, Authorization, Cache-Control, Pragma',
+        'Access-Control-Allow-Credentials': 'true',
+        'Access-Control-Max-Age': '86400',
+        'Vary': 'Origin'
+      }
+    });
+  }
+
   const headers = new Headers(request.headers);
   headers.set('Host', apiBase.host);
 
@@ -94,8 +109,10 @@ async function handleAPIRequests(request, env) {
   );
   newHeaders.set(
     'Access-Control-Allow-Headers',
-    'Content-Type, Authorization'
+    'Content-Type, Authorization, Cache-Control, Pragma'
   );
+  newHeaders.set('Access-Control-Allow-Credentials', 'true');
+  newHeaders.set('Vary', 'Origin');
   
   // Prevent caching of API responses
   newHeaders.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
