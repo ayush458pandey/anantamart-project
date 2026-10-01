@@ -96,6 +96,12 @@ async function handleAPIRequests(request, env) {
     'Access-Control-Allow-Headers',
     'Content-Type, Authorization'
   );
+  
+  // Prevent caching of API responses
+  newHeaders.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  newHeaders.set('Pragma', 'no-cache');
+  newHeaders.set('Expires', '0');
+  newHeaders.set('Surrogate-Control', 'no-store');
 
   return new Response(response.body, {
     status: response.status,

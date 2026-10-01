@@ -38,6 +38,19 @@ axiosInstance.interceptors.request.use(
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+    
+    // Prevent browser/proxy caching for GET requests
+    // This ensures admin changes are immediately visible
+    if (config.method === 'get') {
+      config.headers['Cache-Control'] = 'no-cache';
+      config.headers['Pragma'] = 'no-cache';
+      // Add cache-busting timestamp
+      config.params = {
+        ...config.params,
+        _t: Date.now(),
+      };
+    }
+    
     return config;
   },
   (error) => {
