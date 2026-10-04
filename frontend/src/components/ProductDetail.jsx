@@ -304,9 +304,9 @@ export default function ProductDetail({ product, onClose, onAddToCart, onBrandCl
             <div className="mt-8 border-t pt-8">
               <h3 className="text-xl font-bold text-gray-900 mb-6">Product Information</h3>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-1">
                 {product.brand_name && (
-                  <div className="flex items-start py-3 border-b border-gray-100">
+                  <div className="flex items-start py-2 border-b border-gray-100">
                     <span className="text-sm text-gray-600 w-1/2">Brand</span>
                     <span
                       className="text-sm font-semibold text-emerald-600 w-1/2 cursor-pointer hover:underline"
@@ -376,7 +376,7 @@ export default function ProductDetail({ product, onClose, onAddToCart, onBrandCl
 // Helper component for detail rows
 function DetailRow({ label, value }) {
   return (
-    <div className="flex items-start py-3 border-b border-gray-100">
+    <div className="flex items-start py-2 border-b border-gray-100">
       <span className="text-sm text-gray-600 w-1/2">{label}</span>
       <span className="text-sm font-semibold text-gray-900 w-1/2">{value}</span>
     </div>
