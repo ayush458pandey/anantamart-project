@@ -232,23 +232,35 @@ export default function Home() {
 
     // Fetch Business Tags for the homepage
     useEffect(() => {
+        let cancelled = false;
+
         const fetchBusinessTags = async () => {
             setLoadingBusinessTags(true);
             try {
                 const data = await productService.getTagGroupBySlug('business-type');
-                if (data && data.tags) {
+                if (!cancelled && data && data.tags) {
                     setBusinessTags(data.tags);
                 }
             } catch (err) {
                 console.error('Failed to fetch business tags:', err);
                 // Graceful degradation: do not show the section
-                setBusinessTags([]);
+                if (!cancelled) setBusinessTags([]);
             } finally {
-                setLoadingBusinessTags(false);
+                if (!cancelled) setLoadingBusinessTags(false);
             }
         };
 
         fetchBusinessTags();
+
+        // Refresh when the user returns to the tab (e.g. after admin edits)
+        const handleVisibility = () => {
+            if (document.visibilityState === 'visible') fetchBusinessTags();
+        };
+        document.addEventListener('visibilitychange', handleVisibility);
+        return () => {
+            cancelled = true;
+            document.removeEventListener('visibilitychange', handleVisibility);
+        };
     }, []);
 
     // Fetch brands after the first catalog paint so brand logos do not compete with LCP.

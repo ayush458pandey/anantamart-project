@@ -5,7 +5,9 @@ import axios from '../api/axios';
 let cachedProducts = null;
 let cachedCategories = null;
 let lastFetchTime = 0;
-const CACHE_TTL = 1 * 60 * 1000; // 1 minute
+// Very short TTL so admin changes appear almost instantly.
+// Combined with focus/visibility refetch, this keeps data fresh.
+const CACHE_TTL = 5 * 1000; // 5 seconds
 
 const scheduleAfterPaint = (callback) => {
   const run = () => window.setTimeout(callback, 1200);
@@ -133,6 +135,24 @@ export const useProducts = () => {
 
   useEffect(() => {
     fetchData();
+  }, [fetchData]);
+
+  // Re-fetch when the user returns to the tab (e.g. after editing in admin),
+  // so newly added/updated products appear without a manual refresh.
+  useEffect(() => {
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        fetchData(true);
+      }
+    };
+    const handleFocus = () => fetchData(true);
+
+    document.addEventListener('visibilitychange', handleVisibility);
+    window.addEventListener('focus', handleFocus);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibility);
+      window.removeEventListener('focus', handleFocus);
+    };
   }, [fetchData]);
 
   return { products, categories, loading, loadingMore, error, refetch: () => fetchData(true) };
