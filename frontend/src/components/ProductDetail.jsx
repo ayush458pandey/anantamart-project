@@ -115,12 +115,12 @@ export default function ProductDetail({ product, onClose, onAddToCart, onBrandCl
               {/* Left: Images */}
               <div>
                 {/* Main Image */}
-                <div className="bg-gray-50 rounded-xl p-8 mb-4 min-h-[400px] flex items-center justify-center">
+                <div className="bg-gray-50 rounded-xl p-4 mb-4 aspect-square flex items-center justify-center overflow-hidden">
                   {images.length > 0 ? (
                     <img
                       src={images[selectedImage]}
                       alt={product.name}
-                      className="max-w-full max-h-[400px] object-contain"
+                      className="w-full h-full object-contain"
                     />
                   ) : (
                     <Package className="w-32 h-32 text-gray-300" />
@@ -158,6 +158,22 @@ export default function ProductDetail({ product, onClose, onAddToCart, onBrandCl
                   )}
                   <span className="text-gray-400">•</span>
                   <span className="text-sm text-gray-600">{product.category_name}</span>
+                </div>
+
+                {/* Price Block */}
+                <div className="mb-6">
+                  <div className="flex items-baseline gap-3 flex-wrap">
+                    <span className="text-3xl font-bold text-gray-900">₹{parseFloat(product.base_price).toFixed(2)}</span>
+                    {product.mrp > product.base_price && (
+                      <>
+                        <span className="text-base text-gray-400 line-through">MRP ₹{parseFloat(product.mrp).toFixed(2)}</span>
+                        <span className="text-sm font-semibold text-emerald-600">{discount}% OFF</span>
+                      </>
+                    )}
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1">
+                    {product.unit ? `Net quantity - 1 ${product.unit}` : 'Inclusive of all taxes'}
+                  </p>
                 </div>
 
                 {/* --- SELECTION LOGIC --- */}
