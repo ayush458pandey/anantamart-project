@@ -1,5 +1,6 @@
 import React, { lazy, Suspense, useState, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
     Search, Package,
     Coffee, Utensils, Droplet, Briefcase, Shirt, Home as HomeIcon, Store,
@@ -21,7 +22,6 @@ import { getOptimizedImageUrl } from '../utils/imageUtils';
 
 import '../index.css';
 
-const ProductDetail = lazy(() => import('../components/ProductDetail'));
 const AllBrands = lazy(() => import('../components/AllBrands'));
 const BrandPage = lazy(() => import('../components/BrandPage'));
 
@@ -67,9 +67,10 @@ const getProductBrandNames = (product) => [
 ].filter(Boolean).map(name => String(name).toLowerCase());
 
 export default function Home() {
+    const navigate = useNavigate();
+    const [searchParams, setSearchParams] = useSearchParams();
     const [selectedCategory, setSelectedCategory] = useState('all');
     const [searchQuery, setSearchQuery] = useState('');
-    const [selectedProduct, setSelectedProduct] = useState(null);
 
     // Visual browsing state
     const [subcategories, setSubcategories] = useState([]);
@@ -104,9 +105,7 @@ export default function Home() {
     useEffect(() => {
         const handlePopState = () => {
             // When back button is pressed, figure out what to close
-            if (selectedProduct) {
-                setSelectedProduct(null);
-            } else if (selectedBrand) {
+            if (selectedBrand) {
                 setSelectedBrand(null);
             } else if (showAllBrands) {
                 setShowAllBrands(false);
@@ -120,7 +119,7 @@ export default function Home() {
 
         window.addEventListener('popstate', handlePopState);
         return () => window.removeEventListener('popstate', handlePopState);
-    }, [selectedProduct, selectedBrand, showAllBrands, selectedSubcategory, selectedCategory]);
+    }, [selectedBrand, showAllBrands, selectedSubcategory, selectedCategory]);
 
     // Push history when navigating deeper
     const pushHistory = () => {
@@ -133,8 +132,12 @@ export default function Home() {
         setSelectedBrand(brand);
     };
     const selectProduct = (product) => {
-        pushHistory();
-        setSelectedProduct(product);
+        if (product?.slug) {
+            navigate(`/product/${product.slug}`);
+        } else if (product?.id) {
+            // Fallback for products without a slug
+            navigate(`/product/${product.id}`);
+        }
     };
     const selectSubcategory = (subcat) => {
         pushHistory();
@@ -306,6 +309,22 @@ export default function Home() {
             if (idleId) window.cancelIdleCallback(idleId);
         };
     }, []);
+
+    // Open a brand view when arriving with ?brand=<id|name> (e.g. from a product page)
+    useEffect(() => {
+        const brandParam = searchParams.get('brand');
+        if (!brandParam || brands.length === 0) return;
+
+        const match = brands.find(
+            b => String(b.id) === String(brandParam) || b.name === brandParam
+        );
+        if (match) {
+            setSelectedBrand(match);
+            setShowSubcategoryView(false);
+            // Clean the query param so a refresh doesn't re-trigger it
+            setSearchParams({}, { replace: true });
+        }
+    }, [brands, searchParams, setSearchParams]);
 
     const handleBackToSubcategories = () => {
         setSelectedSubcategory(null);
@@ -552,24 +571,6 @@ export default function Home() {
                         updateQuantity={updateQuantity}
                     />
                 </Suspense>
-                {selectedProduct && (
-                    <Suspense fallback={null}>
-                        <ProductDetail
-                            product={selectedProduct}
-                            onClose={() => setSelectedProduct(null)}
-                            onAddToCart={addToCart}
-                            onBrandClick={(brandName, brandId) => {
-                                setSelectedProduct(null);
-                                const brand = brands.find(b => String(b.id) === String(brandId) || b.name === brandName);
-                                if (brand) {
-                                    selectBrand(brand);
-                                    setShowSubcategoryView(false);
-                                    window.scrollTo({ top: 0, behavior: 'smooth' });
-                                }
-                            }}
-                        />
-                    </Suspense>
-                )}
             </>
         );
     }
@@ -948,7 +949,7 @@ export default function Home() {
                                                             removeFromCart={removeFromCart}
                                                             updateQuantity={updateQuantity}
                                                             onAddToCart={addToCart}
-                                                            onViewDetails={() => setSelectedProduct(product)}
+                                                            onViewDetails={() => selectProduct(product)}
                                                             onNavigateToCategory={navigateToCategory}
                                                             priority={catIndex === 0 && index < 3}
                                                         />
@@ -1081,26 +1082,6 @@ export default function Home() {
                         </div>
                     )}
                 </>
-            )}
-
-            {/* Product Detail Modal */}
-            {selectedProduct && (
-                <Suspense fallback={null}>
-                    <ProductDetail
-                        product={selectedProduct}
-                        onClose={() => setSelectedProduct(null)}
-                        onAddToCart={addToCart}
-                        onBrandClick={(brandName, brandId) => {
-                            setSelectedProduct(null);
-                            const brand = brands.find(b => String(b.id) === String(brandId) || b.name === brandName);
-                            if (brand) {
-                                selectBrand(brand);
-                                setShowSubcategoryView(false);
-                                window.scrollTo({ top: 0, behavior: 'smooth' });
-                            }
-                        }}
-                    />
-                </Suspense>
             )}
         </>
     );

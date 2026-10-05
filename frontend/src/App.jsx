@@ -15,6 +15,7 @@ const ForgotPassword = lazy(() => import('./pages/ForgotPassword'));
 const ResetPassword = lazy(() => import('./pages/ResetPassword'));
 const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
 const CompanyPage = lazy(() => import('./pages/CompanyPage'));
+const ProductPage = lazy(() => import('./pages/ProductPage'));
 
 // Minimal loading fallback
 const PageLoader = () => (
@@ -30,6 +31,7 @@ function App() {
         {/* Pages with Layout (Navbar + Footer + BottomNav) */}
         <Route element={<Layout />}>
           <Route path="/" element={<Home />} />
+          <Route path="/product/:slug" element={<ProductPage />} />
           <Route path="/cart" element={<CartPage />} />
           <Route path="/orders" element={<OrdersPage />} />
           <Route path="/profile" element={<ProfilePage />} />

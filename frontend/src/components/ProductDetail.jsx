@@ -1,10 +1,10 @@
 import { useState } from 'react';
-import { X, Plus, Minus, ShoppingCart, Package, Truck, Shield } from 'lucide-react';
+import { X, ArrowLeft, Plus, Minus, ShoppingCart, Package, Truck, Shield } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useToast } from '../context/ToastContext';
 import { formatCaseSize } from '../utils/formatters';
 
-export default function ProductDetail({ product, onClose, onAddToCart, onBrandClick }) {
+export default function ProductDetail({ product, onClose, onAddToCart, onBrandClick, embedded = false }) {
   const { fetchCart } = useCart();
   const toast = useToast();
   const [quantity, setQuantity] = useState(product.moq || 1);
@@ -89,7 +89,8 @@ export default function ProductDetail({ product, onClose, onAddToCart, onBrandCl
       // Show toast and close modal
       toast.cart(`Added ${totalQuantity} item${totalQuantity > 1 ? 's' : ''} to cart`);
       if (onAddToCart) onAddToCart();
-      onClose();
+      // On a dedicated page, stay put; only close when shown as a modal
+      if (onClose && !embedded) onClose();
 
     } catch (error) {
       console.error("Add to cart error:", error);
@@ -98,16 +99,38 @@ export default function ProductDetail({ product, onClose, onAddToCart, onBrandCl
     }
   };
 
+  const wrapperClass = embedded
+    ? 'w-full'
+    : 'fixed inset-0 bg-black bg-opacity-50 z-50 overflow-y-auto';
+  const innerClass = embedded
+    ? ''
+    : 'min-h-screen p-4';
+  const cardClass = embedded
+    ? 'bg-white rounded-xl max-w-6xl mx-auto'
+    : 'bg-white rounded-xl max-w-6xl mx-auto my-8';
+
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 overflow-y-auto">
-      <div className="min-h-screen p-4">
-        <div className="bg-white rounded-xl max-w-6xl mx-auto my-8">
+    <div className={wrapperClass}>
+      <div className={innerClass}>
+        <div className={cardClass}>
           {/* Header */}
           <div className="sticky top-0 bg-white border-b p-4 flex items-center justify-between z-10 rounded-t-xl">
-            <h2 className="text-xl font-bold text-gray-800">Product Details</h2>
-            <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-              <X className="w-6 h-6" />
-            </button>
+            {embedded ? (
+              <button
+                onClick={onClose}
+                className="flex items-center gap-2 text-sm font-medium text-gray-700 hover:text-emerald-600 transition-colors"
+              >
+                <ArrowLeft className="w-5 h-5" />
+                Back
+              </button>
+            ) : (
+              <h2 className="text-xl font-bold text-gray-800">Product Details</h2>
+            )}
+            {!embedded && (
+              <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+                <X className="w-6 h-6" />
+              </button>
+            )}
           </div>
 
           <div className="p-6">

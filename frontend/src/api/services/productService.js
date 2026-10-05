@@ -32,6 +32,12 @@ export const productService = {
     return response.data;
   },
 
+  // Get single product by slug (SEO-friendly URL)
+  getProductBySlug: async (slug) => {
+    const response = await axiosInstance.get(`/products/by-slug/${slug}/`);
+    return response.data;
+  },
+
   // Get categories
   getCategories: async () => {
     const response = await axiosInstance.get('/categories/');

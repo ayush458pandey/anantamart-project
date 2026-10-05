@@ -81,6 +81,16 @@ class ProductViewSet(viewsets.ModelViewSet):
         context['request'] = self.request
         return context
     
+    @action(detail=False, methods=['get'], url_path=r'by-slug/(?P<slug>[^/.]+)')
+    def by_slug(self, request, slug=None):
+        """Retrieve a single product by its slug. Usage: /api/products/by-slug/<slug>/"""
+        try:
+            product = self.get_queryset().get(slug=slug)
+        except Product.DoesNotExist:
+            return Response({'error': 'Product not found'}, status=404)
+        serializer = self.get_serializer(product)
+        return Response(serializer.data)
+    
 
     
     @action(detail=False, methods=['get'])

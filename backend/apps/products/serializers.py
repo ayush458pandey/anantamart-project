@@ -145,7 +145,7 @@ class ProductSerializer(OptimizedImageMixin, serializers.ModelSerializer):
     class Meta:
         model = Product
         fields = [
-            'id', 'name', 'sku', 'category', 'category_name', 'subcategory', 'subcategory_name', 'description',
+            'id', 'name', 'slug', 'sku', 'category', 'category_name', 'subcategory', 'subcategory_name', 'description',
             'brand', 'brand_ref', 'brand_name', 'brand_logo', 'product_type', 'key_features', 'key_features_list',
             'available_colors', 'available_colors_list',
             'ingredients', 'packaging_type', 'dietary_preference',

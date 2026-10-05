@@ -70,6 +70,7 @@ class Product(models.Model):
     ]
     
     name = models.CharField(max_length=255)
+    slug = models.SlugField(max_length=280, unique=True, blank=True, db_index=True)
     sku = models.CharField(max_length=100, unique=True)
     category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name='products')
     subcategory = models.ForeignKey(Subcategory, on_delete=models.SET_NULL, related_name='products', null=True, blank=True)
@@ -135,6 +136,18 @@ class Product(models.Model):
     
     def __str__(self):
         return self.name
+    
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            base_slug = slugify(self.name)[:250] or 'product'
+            slug = base_slug
+            counter = 1
+            # Ensure uniqueness (append -2, -3, ... on collision)
+            while Product.objects.filter(slug=slug).exclude(pk=self.pk).exists():
+                counter += 1
+                slug = f"{base_slug}-{counter}"
+            self.slug = slug
+        super().save(*args, **kwargs)
     
     @property
     def discount_percentage(self):
