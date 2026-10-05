@@ -70,7 +70,7 @@ class Product(models.Model):
     ]
     
     name = models.CharField(max_length=255)
-    slug = models.SlugField(max_length=280, unique=True, blank=True, db_index=True)
+    slug = models.SlugField(max_length=280, unique=True, blank=True)
     sku = models.CharField(max_length=100, unique=True)
     category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name='products')
     subcategory = models.ForeignKey(Subcategory, on_delete=models.SET_NULL, related_name='products', null=True, blank=True)
