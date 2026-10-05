@@ -22,18 +22,26 @@ def add_slug_column_if_not_exists(apps, schema_editor):
 
 
 def backfill_product_slugs(apps, schema_editor):
-    Product = apps.get_model('products', 'Product')
-    seen = set()
-    for product in Product.objects.all().order_by('id'):
-        base_slug = slugify(product.name)[:250] or 'product'
-        slug = base_slug
-        counter = 1
-        while slug in seen or Product.objects.filter(slug=slug).exclude(pk=product.pk).exists():
-            counter += 1
-            slug = f"{base_slug}-{counter}"
-        seen.add(slug)
-        product.slug = slug
-        product.save(update_fields=['slug'])
+    # NOTE: Use raw SQL here. Inside SeparateDatabaseAndState the database
+    # operations run against the *old* model state, so the ORM cannot see the
+    # newly added 'slug' field yet.
+    with connection.cursor() as cursor:
+        cursor.execute("SELECT id, name FROM products_product ORDER BY id")
+        rows = cursor.fetchall()
+
+        seen = set()
+        for product_id, name in rows:
+            base_slug = slugify(name or '')[:250] or 'product'
+            slug = base_slug
+            counter = 1
+            while slug in seen:
+                counter += 1
+                slug = f"{base_slug}-{counter}"
+            seen.add(slug)
+            cursor.execute(
+                "UPDATE products_product SET slug = %s WHERE id = %s",
+                [slug, product_id],
+            )
 
 
 def create_unique_slug_index_if_not_exists(apps, schema_editor):
