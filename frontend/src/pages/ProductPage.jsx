@@ -1,6 +1,6 @@
 import { useState, useEffect, lazy, Suspense } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { Package, ArrowLeft } from 'lucide-react';
+import { useParams, useNavigate, Link } from 'react-router-dom';
+import { Package, ArrowLeft, ChevronRight } from 'lucide-react';
 import { productService } from '../api/services/productService';
 import { useCart } from '../context/CartContext';
 
@@ -87,22 +87,37 @@ export default function ProductPage() {
   }
 
   return (
-    <div className="py-4 sm:py-6">
-      <Suspense fallback={
-        <div className="min-h-[60vh] flex items-center justify-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600"></div>
-        </div>
-      }>
-        <ProductDetail
-          product={product}
-          embedded
-          onClose={handleBack}
-          onAddToCart={addToCart}
-          onBrandClick={(brandName, brandId) => {
-            navigate(`/?brand=${encodeURIComponent(brandId || brandName)}`);
-          }}
-        />
-      </Suspense>
+    <div className="bg-gray-50 min-h-screen">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4">
+        {/* Breadcrumb */}
+        <nav className="flex items-center flex-wrap gap-1 text-xs sm:text-sm text-gray-500 mb-4">
+          <Link to="/" className="hover:text-emerald-600 transition-colors">Home</Link>
+          {product.category_name && (
+            <>
+              <ChevronRight className="w-3.5 h-3.5 text-gray-300" />
+              <span>{product.category_name}</span>
+            </>
+          )}
+          <ChevronRight className="w-3.5 h-3.5 text-gray-300" />
+          <span className="text-gray-700 font-medium truncate max-w-[200px] sm:max-w-none">{product.name}</span>
+        </nav>
+
+        <Suspense fallback={
+          <div className="min-h-[60vh] flex items-center justify-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600"></div>
+          </div>
+        }>
+          <ProductDetail
+            product={product}
+            embedded
+            onClose={handleBack}
+            onAddToCart={addToCart}
+            onBrandClick={(brandName, brandId) => {
+              navigate(`/?brand=${encodeURIComponent(brandId || brandName)}`);
+            }}
+          />
+        </Suspense>
+      </div>
     </div>
   );
 }
