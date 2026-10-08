@@ -66,6 +66,20 @@ const getProductBrandNames = (product) => [
     product.brand_ref?.name,
 ].filter(Boolean).map(name => String(name).toLowerCase());
 
+// A product is "unbranded" when it has no linked Brand record, or its brand
+// string is the legacy placeholder "Generic".
+const isUnbrandedProduct = (product) => {
+    const hasLinkedBrand = Boolean(
+        product.brand_ref ||
+        product.brand_id ||
+        (typeof product.brand === 'object' && product.brand?.id)
+    );
+    if (hasLinkedBrand) return false;
+
+    const name = String(product.brand_name || product.brand || '').trim().toLowerCase();
+    return !name || name === 'generic';
+};
+
 export default function Home() {
     const navigate = useNavigate();
     const [searchParams, setSearchParams] = useSearchParams();
@@ -388,8 +402,14 @@ export default function Home() {
             const matchesCategory = selectedCategory === 'all' || String(getProductCategoryId(product)) === String(selectedCategory);
             const matchesSubcategory = activeFilterSubcategories.length === 0 ||
                 activeFilterSubcategories.some(subcategoryId => String(getProductSubcategoryId(product)) === String(subcategoryId));
-            const matchesBrand = selectedBrands.length === 0 ||
-                selectedBrands.some(brand => productBrandNames.includes(String(brand).toLowerCase()));
+            const brandFilterNames = selectedBrands.filter(b => b !== 'Unbranded');
+            const wantsUnbranded = selectedBrands.includes('Unbranded');
+            const matchesBrand = selectedBrands.length === 0 || (
+                // Match a named brand, unless the only selection is "Unbranded"
+                (brandFilterNames.length > 0 &&
+                    brandFilterNames.some(brand => productBrandNames.includes(String(brand).toLowerCase()))) ||
+                (wantsUnbranded && isUnbrandedProduct(product))
+            );
 
             // Tag logic: OR within group, AND across groups
             let matchesTags = true;
@@ -479,7 +499,7 @@ export default function Home() {
         if (filterOptions?.brands?.length) {
             const brandsByName = new Map(brands.map(b => [b.name.toLowerCase(), b]));
             return filterOptions.brands
-                .filter(fb => !isGeneric(fb.name))
+                .filter(fb => !fb.is_unbranded && !isGeneric(fb.name))
                 .map(fb => {
                     const match = brandsByName.get(fb.name.toLowerCase());
                     // Fall back to a synthetic entry when the filter reports a brand

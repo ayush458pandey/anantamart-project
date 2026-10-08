@@ -124,11 +124,14 @@ class ProductViewSet(viewsets.ModelViewSet):
         # Get unique brands with counts, preferring the linked Brand model.
         # The legacy Product.brand field often contains "Generic", even when
         # brand_ref points to the real brand.
-        # "Generic" means unbranded, so it is excluded from the brand filters.
+        # "Generic" / blank means unbranded, so it is counted separately and
+        # surfaced as a dedicated "Unbranded" filter instead of a brand.
         brand_counts = {}
+        unbranded_count = 0
         for product in products_for_brands.select_related('brand_ref').only('brand', 'brand_ref__name'):
             brand_name = product.brand_ref.name if product.brand_ref else product.brand
             if not brand_name or brand_name.strip().lower() == 'generic':
+                unbranded_count += 1
                 continue
             brand_counts[brand_name] = brand_counts.get(brand_name, 0) + 1
         
@@ -140,11 +143,20 @@ class ProductViewSet(viewsets.ModelViewSet):
             count=Count('products', filter=Q(products__is_active=True))
         ).order_by('name')
         
+        brands_list = [
+            {'name': name, 'count': count}
+            for name, count in sorted(brand_counts.items())
+        ]
+        # Append the "Unbranded" pseudo-filter so buyers can find items without a brand.
+        if unbranded_count:
+            brands_list.append({
+                'name': 'Unbranded',
+                'count': unbranded_count,
+                'is_unbranded': True,
+            })
+        
         return Response({
-            'brands': [
-                {'name': name, 'count': count}
-                for name, count in sorted(brand_counts.items())
-            ],
+            'brands': brands_list,
             'subcategories': [
                 {
                     'id': s.id,

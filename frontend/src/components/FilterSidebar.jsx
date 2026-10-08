@@ -189,7 +189,7 @@ function FilterContent({
                             key={brand}
                             className="inline-flex items-center gap-1 bg-white border border-emerald-200 rounded-full px-2 py-1 mr-2 mb-2 text-xs"
                         >
-                            <span className="text-gray-700">{brand}</span>
+                            <span className="text-gray-700">{brand === 'Unbranded' ? 'Unbranded (No Brand)' : brand}</span>
                             <button
                                 onClick={() => handleBrandToggle(brand)}
                                 className="text-gray-500 hover:text-red-600"
@@ -320,7 +320,9 @@ function FilterContent({
                                         {filterOptions.brands.map(brand => (
                                             <label
                                                 key={brand.name}
-                                                className="flex items-center gap-2 cursor-pointer hover:bg-gray-50 p-2 rounded transition-colors"
+                                                className={`flex items-center gap-2 cursor-pointer hover:bg-gray-50 p-2 rounded transition-colors ${
+                                                    brand.is_unbranded ? 'border-t border-gray-100 mt-1 pt-2' : ''
+                                                }`}
                                             >
                                                 <input
                                                     type="checkbox"
@@ -328,8 +330,8 @@ function FilterContent({
                                                     onChange={() => handleBrandToggle(brand.name)}
                                                     className="w-4 h-4 text-emerald-600 border-gray-300 rounded focus:ring-emerald-500"
                                                 />
-                                                <span className="flex-1 text-sm text-gray-700">
-                                                    {brand.name}
+                                                <span className={`flex-1 text-sm ${brand.is_unbranded ? 'text-gray-500 italic' : 'text-gray-700'}`}>
+                                                    {brand.is_unbranded ? 'Unbranded (No Brand)' : brand.name}
                                                 </span>
                                                 <span className="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">
                                                     {brand.count}
