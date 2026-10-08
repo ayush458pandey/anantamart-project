@@ -124,10 +124,11 @@ class ProductViewSet(viewsets.ModelViewSet):
         # Get unique brands with counts, preferring the linked Brand model.
         # The legacy Product.brand field often contains "Generic", even when
         # brand_ref points to the real brand.
+        # "Generic" means unbranded, so it is excluded from the brand filters.
         brand_counts = {}
         for product in products_for_brands.select_related('brand_ref').only('brand', 'brand_ref__name'):
             brand_name = product.brand_ref.name if product.brand_ref else product.brand
-            if not brand_name:
+            if not brand_name or brand_name.strip().lower() == 'generic':
                 continue
             brand_counts[brand_name] = brand_counts.get(brand_name, 0) + 1
         
@@ -276,7 +277,7 @@ class SubcategoryViewSet(viewsets.ReadOnlyModelViewSet):
 
 class BrandViewSet(viewsets.ReadOnlyModelViewSet):
     """ViewSet for viewing brands with logos"""
-    queryset = Brand.objects.filter(is_active=True)
+    queryset = Brand.objects.filter(is_active=True).exclude(name__iexact='Generic')
     serializer_class = BrandSerializer
     permission_classes = [AllowAny]
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]

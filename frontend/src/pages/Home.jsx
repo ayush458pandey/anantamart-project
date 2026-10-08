@@ -466,18 +466,39 @@ export default function Home() {
     }, [products]);
 
     const visibleBrands = useMemo(() => {
-        const currentCategoryBrandKeys = selectedCategory === 'all'
-            ? null
-            : brandKeysByCategory.get(String(selectedCategory));
+        const isGeneric = (name) => String(name || '').trim().toLowerCase() === 'generic';
 
-        return brands.filter(brand => {
-            if (selectedCategory === 'all') return true;
-            if (!currentCategoryBrandKeys) return false;
+        if (selectedCategory === 'all') {
+            return brands.filter(b => !isGeneric(b.name));
+        }
 
-            return currentCategoryBrandKeys.has(`id:${brand.id}`) ||
-                currentCategoryBrandKeys.has(`name:${brand.name.toLowerCase()}`);
-        });
-    }, [brands, selectedCategory, brandKeysByCategory]);
+        // Prefer the authoritative brand list from filter options. It is computed
+        // by the backend across the whole category, whereas `brandKeysByCategory`
+        // is derived from the paginated product list and can miss brands whose
+        // products are not on the first page.
+        if (filterOptions?.brands?.length) {
+            const brandsByName = new Map(brands.map(b => [b.name.toLowerCase(), b]));
+            return filterOptions.brands
+                .filter(fb => !isGeneric(fb.name))
+                .map(fb => {
+                    const match = brandsByName.get(fb.name.toLowerCase());
+                    // Fall back to a synthetic entry when the filter reports a brand
+                    // that has no linked Brand record (e.g. a legacy brand string).
+                    return match || { id: `name:${fb.name}`, name: fb.name, logo_url: null, logo: null };
+                });
+        }
+
+        // Fallback: derive from the loaded products (may be incomplete).
+        const currentCategoryBrandKeys = brandKeysByCategory.get(String(selectedCategory));
+        if (!currentCategoryBrandKeys) return [];
+
+        return brands.filter(brand =>
+            !isGeneric(brand.name) && (
+                currentCategoryBrandKeys.has(`id:${brand.id}`) ||
+                currentCategoryBrandKeys.has(`name:${brand.name.toLowerCase()}`)
+            )
+        );
+    }, [brands, selectedCategory, brandKeysByCategory, filterOptions]);
 
     const currentCategoryName = categories.find(c => c.id === selectedCategory)?.name || 'All Products';
     const activeSubcategory = subcategories.find(s => s.id === selectedSubcategory);

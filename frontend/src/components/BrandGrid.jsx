@@ -1,5 +1,35 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { getOptimizedImageUrl } from '../utils/imageUtils';
+
+const BrandLogo = ({ brand }) => {
+    const [failed, setFailed] = useState(false);
+    const src = brand.logo_url || brand.logo;
+
+    if (!src || failed) {
+        // Fallback: show the brand's initials in a soft badge
+        return (
+            <div className="w-full h-full flex items-center justify-center bg-gray-50 rounded-lg">
+                <span className="text-lg sm:text-xl font-bold text-gray-400 uppercase">
+                    {(brand.name || '?').trim().charAt(0)}
+                </span>
+            </div>
+        );
+    }
+
+    return (
+        <img
+            src={getOptimizedImageUrl(src, { width: 160 })}
+            alt={brand.name}
+            width="160"
+            height="160"
+            className="w-full h-full object-contain filter group-hover:brightness-105"
+            loading="lazy"
+            fetchPriority="low"
+            decoding="async"
+            onError={() => setFailed(true)}
+        />
+    );
+};
 
 const BrandGrid = ({ brands, onBrandClick, isLoading }) => {
     // Loading Skeleton (Horizontal)
@@ -29,16 +59,7 @@ const BrandGrid = ({ brands, onBrandClick, isLoading }) => {
                 >
                     {/* COMPACT BOX */}
                     <div className="w-20 h-20 sm:w-24 sm:h-24 bg-white border border-gray-200 rounded-xl flex items-center justify-center p-3 shadow-sm transition-all duration-200 group-hover:shadow-md group-hover:border-emerald-500 group-hover:-translate-y-1">
-                        <img
-                            src={getOptimizedImageUrl(brand.logo_url || brand.logo || "/api/placeholder/100/100", { width: 160 })}
-                            alt={brand.name}
-                            width="160"
-                            height="160"
-                            className="w-full h-full object-contain filter group-hover:brightness-105"
-                            loading="lazy"
-                            fetchPriority="low"
-                            decoding="async"
-                        />
+                        <BrandLogo brand={brand} />
                     </div>
 
                     {/* LABEL */}
