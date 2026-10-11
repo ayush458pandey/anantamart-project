@@ -191,15 +191,15 @@ export default function ProductDetail({ product, onClose, onAddToCart, onBrandCl
                   {/* Price */}
                   <div className="flex items-center gap-3 flex-wrap mt-4">
                     <span className="bg-emerald-600 text-white text-xl font-bold px-3 py-1 rounded-lg">
-                      ₹{Math.round(parseFloat(product.base_price))}
+                      ₹{parseFloat(product.base_price).toFixed(2)}
                     </span>
                     {product.mrp > product.base_price && (
                       <>
                         <span className="text-gray-400 line-through text-sm">
-                          MRP ₹{Math.round(parseFloat(product.mrp))}
+                          MRP ₹{parseFloat(product.mrp).toFixed(2)}
                         </span>
                         <span className="text-emerald-600 text-sm font-semibold">
-                          ₹{Math.round(parseFloat(product.mrp) - parseFloat(product.base_price))} OFF
+                          ₹{(parseFloat(product.mrp) - parseFloat(product.base_price)).toFixed(2)} OFF
                         </span>
                       </>
                     )}

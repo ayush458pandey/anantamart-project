@@ -208,11 +208,11 @@ export default function ProductCard({ product, cart, onAddToCart, removeFromCart
             <div className="p-2 sm:p-3">
                 <div className="flex items-center gap-1.5 sm:gap-2 mb-1">
                     <div className="bg-emerald-600 text-white px-2 sm:px-2.5 py-0.5 sm:py-1 rounded">
-                        <span className="text-xs sm:text-sm font-bold">₹{Math.round(product.base_price)}</span>
+                        <span className="text-xs sm:text-sm font-bold">₹{parseFloat(product.base_price).toFixed(2)}</span>
                     </div>
                     {product.mrp && (
                         <span className="text-gray-500 line-through text-[10px] sm:text-xs">
-                            ₹{Math.round(product.mrp)}
+                            ₹{parseFloat(product.mrp).toFixed(2)}
                         </span>
                     )}
                 </div>
