@@ -4,6 +4,13 @@ import { useCart } from '../context/CartContext';
 import { useToast } from '../context/ToastContext';
 import { formatCaseSize } from '../utils/formatters';
 
+// Smart price formatter: shows decimals only when needed (e.g., 100, 99.25, 0.50)
+const formatPrice = (price) => {
+  const num = parseFloat(price);
+  if (isNaN(num)) return '0';
+  return num % 1 === 0 ? num.toString() : num.toFixed(2);
+};
+
 export default function ProductDetail({ product, onClose, onAddToCart, onBrandClick, embedded = false }) {
   const { fetchCart } = useCart();
   const toast = useToast();
@@ -191,15 +198,15 @@ export default function ProductDetail({ product, onClose, onAddToCart, onBrandCl
                   {/* Price */}
                   <div className="flex items-center gap-3 flex-wrap mt-4">
                     <span className="bg-emerald-600 text-white text-xl font-bold px-3 py-1 rounded-lg">
-                      ₹{parseFloat(product.base_price).toFixed(2)}
+                      ₹{formatPrice(product.base_price)}
                     </span>
                     {product.mrp > product.base_price && (
                       <>
                         <span className="text-gray-400 line-through text-sm">
-                          MRP ₹{parseFloat(product.mrp).toFixed(2)}
+                          MRP ₹{formatPrice(product.mrp)}
                         </span>
                         <span className="text-emerald-600 text-sm font-semibold">
-                          ₹{(parseFloat(product.mrp) - parseFloat(product.base_price)).toFixed(2)} OFF
+                          ₹{formatPrice(product.mrp - product.base_price)} OFF
                         </span>
                       </>
                     )}

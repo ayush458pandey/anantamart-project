@@ -4,6 +4,13 @@ import { useComparison } from '../context/ComparisonContext';
 import { formatCaseSize } from '../utils/formatters';
 import { getImageSrcSet, getOptimizedImageUrl } from '../utils/imageUtils';
 
+// Smart price formatter: shows decimals only when needed (e.g., 100, 99.25, 0.50)
+const formatPrice = (price) => {
+  const num = parseFloat(price);
+  if (isNaN(num)) return '0';
+  return num % 1 === 0 ? num.toString() : num.toFixed(2);
+};
+
 export default function ProductCard({ product, cart, onAddToCart, removeFromCart, updateQuantity, onViewDetails, onNavigateToCategory, priority = false }) {
     const [mode, setMode] = useState('pcs'); // 'pcs' or 'case'
     const [isEditing, setIsEditing] = useState(false);
@@ -208,11 +215,11 @@ export default function ProductCard({ product, cart, onAddToCart, removeFromCart
             <div className="p-2 sm:p-3">
                 <div className="flex items-center gap-1.5 sm:gap-2 mb-1">
                     <div className="bg-emerald-600 text-white px-2 sm:px-2.5 py-0.5 sm:py-1 rounded">
-                        <span className="text-xs sm:text-sm font-bold">₹{parseFloat(product.base_price).toFixed(2)}</span>
+                        <span className="text-xs sm:text-sm font-bold">₹{formatPrice(product.base_price)}</span>
                     </div>
                     {product.mrp && (
                         <span className="text-gray-500 line-through text-[10px] sm:text-xs">
-                            ₹{parseFloat(product.mrp).toFixed(2)}
+                            ₹{formatPrice(product.mrp)}
                         </span>
                     )}
                 </div>
