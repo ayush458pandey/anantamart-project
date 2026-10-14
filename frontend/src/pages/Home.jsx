@@ -169,6 +169,9 @@ export default function Home() {
             const targetSubcat = intentionalNavRef.current.subcategoryId;
             intentionalNavRef.current = { subcategoryId: null, navigating: false };
 
+            // Clear stale options so the previous category's tags/brands don't flash.
+            setFilterOptions(null);
+
             const fetchSubcategoriesOnly = async () => {
                 if (selectedCategory && selectedCategory !== 'all') {
                     setLoadingSubcategories(true);
@@ -220,31 +223,46 @@ export default function Home() {
 
     // Fetch available brand and subcategory filters for the selected category
     useEffect(() => {
+        let cancelled = false;
+
+        // Unique key for the current filter scope (category + selected subcategories).
+        // Used to detect when cached options belong to a different scope.
+        const subcategoriesForFilterOptions = selectedSubcategory
+            ? [selectedSubcategory]
+            : selectedFilterSubcategories;
+        const filterScopeKey = `${selectedCategory}|${subcategoriesForFilterOptions.join(',')}`;
+
         const fetchFilterOptions = async () => {
             if (!selectedCategory || selectedCategory === 'all') {
                 setFilterOptions(null);
                 return;
             }
 
+            // Immediately drop options from a different scope so stale tags/brands
+            // (e.g. the previous category) never flash before the new data arrives.
+            setFilterOptions(prev => (prev && prev._scopeKey === filterScopeKey ? prev : null));
+
             setLoadingFilters(true);
             try {
-                const subcategoriesForFilterOptions = selectedSubcategory
-                    ? [selectedSubcategory]
-                    : selectedFilterSubcategories;
                 const data = await productService.getFilterOptions(
                     selectedCategory,
                     subcategoriesForFilterOptions
                 );
-                setFilterOptions(data);
+                if (cancelled) return;
+                setFilterOptions({ ...data, _scopeKey: filterScopeKey });
             } catch (err) {
                 console.error('Failed to fetch filter options:', err);
-                setFilterOptions(null);
+                if (!cancelled) setFilterOptions(null);
             } finally {
-                setLoadingFilters(false);
+                if (!cancelled) setLoadingFilters(false);
             }
         };
 
         fetchFilterOptions();
+
+        return () => {
+            cancelled = true;
+        };
     }, [selectedCategory, selectedSubcategory, selectedFilterSubcategories]);
 
     // Fetch Business Tags for the homepage
@@ -375,6 +393,9 @@ export default function Home() {
         setSelectedBrands([]);
         setSelectedFilterSubcategories([]);
         setSelectedTags([]);
+        // Drop the previous category's filter options right away so its tags/brands
+        // never flash while the new category's options are being fetched.
+        setFilterOptions(null);
         if (subcategoryId) {
             intentionalNavRef.current = { subcategoryId: subcategoryId, navigating: true };
         }
@@ -1024,14 +1045,18 @@ export default function Home() {
                             {/* Mobile Left Sidebar (Only visible in product view) */}
                             {isProductView && (
                                 <div className="w-[80px] flex-shrink-0 bg-[#f3f4f6] overflow-y-auto hide-scrollbar sm:hidden h-full border-r border-gray-200">
-                                    <TagDirectory 
-                                        tags={filterOptions?.tag_groups?.flatMap(group => group.tags) || []}
-                                        selectedTags={selectedTags}
-                                        onSelectTag={(tag) => {
-                                            const isSelected = selectedTags.includes(tag.id) || selectedTags.includes(String(tag.id));
-                                            setSelectedTags(isSelected ? [] : [tag.id]);
-                                        }}
-                                    />
+                                    {loadingFilters ? (
+                                        <TagDirectorySkeleton />
+                                    ) : (
+                                        <TagDirectory 
+                                            tags={filterOptions?.tag_groups?.flatMap(group => group.tags) || []}
+                                            selectedTags={selectedTags}
+                                            onSelectTag={(tag) => {
+                                                const isSelected = selectedTags.includes(tag.id) || selectedTags.includes(String(tag.id));
+                                                setSelectedTags(isSelected ? [] : [tag.id]);
+                                            }}
+                                        />
+                                    )}
                                 </div>
                             )}
 
@@ -1125,5 +1150,20 @@ export default function Home() {
                 </>
             )}
         </>
+    );
+}
+
+// Skeleton shown in the mobile tag rail while the correct (scope-specific) tags load.
+// Prevents the previous category's tags from flashing before the new ones arrive.
+function TagDirectorySkeleton() {
+    return (
+        <div className="flex flex-col py-2 w-full animate-pulse">
+            {[0, 1, 2, 3, 4, 5, 6].map((i) => (
+                <div key={i} className="relative flex flex-col items-center py-3">
+                    <div className="w-14 h-14 rounded-full bg-gray-200 mb-1" />
+                    <div className="h-2.5 w-10 rounded bg-gray-200" />
+                </div>
+            ))}
+        </div>
     );
 }
