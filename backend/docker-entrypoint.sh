@@ -106,13 +106,16 @@ except Exception as e:
 # -----------------------------------------------------------------------------
 run_migrations() {
     log "Running database migrations..."
-    
-    # First, fake the cart migrations to avoid constraint issues
-    python manage.py migrate cart --fake || true
-    
+
+    # NOTE: Do NOT run `migrate cart --fake` here. With no migration target that
+    # command fakes the cart app *up to its latest migration*, which would mark a
+    # brand-new migration as applied WITHOUT actually creating its columns. The
+    # historical constraint issue it was working around is already handled by the
+    # idempotent cart migrations themselves.
+
     # Run all migrations
     python manage.py migrate --noinput
-    
+
     log "Migrations completed"
 }
 
