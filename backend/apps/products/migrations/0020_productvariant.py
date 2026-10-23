@@ -29,7 +29,7 @@ def create_variant_table_if_missing(apps, schema_editor):
         schema_editor.create_model(ProductVariant)
         return
 
-    # --- Table exists: add any missing columns with model-matching definitions ---
+    # --- Table exists: inspect what we actually have ---
     with connection.cursor() as cursor:
         existing = {
             c.name for c in
@@ -54,6 +54,22 @@ def create_variant_table_if_missing(apps, schema_editor):
         'created_at': 'timestamptz NOT NULL DEFAULT now()',
         'product_id': 'bigint NULL',
     }
+
+    missing_columns = (set(column_defs) | {'id'}) - existing
+
+    # An incompatible leftover table (created by an earlier, different model) is
+    # safest to discard when it holds no data — this feature was never live, so an
+    # empty table has nothing worth keeping.
+    if missing_columns:
+        with connection.cursor() as cursor:
+            cursor.execute(f'SELECT COUNT(*) FROM {table}')
+            row_count = cursor.fetchone()[0]
+        if row_count == 0:
+            schema_editor.execute(f'DROP TABLE {table}')
+            schema_editor.create_model(ProductVariant)
+            return
+
+    # --- Otherwise reconcile additively (handles a populated leftover table) ---
     for column, definition in column_defs.items():
         if column not in existing:
             schema_editor.execute(
