@@ -26,14 +26,16 @@ export const cartService = {
   },
 
   // Add to cart
-  // Add to cart
-  addToCart: async (productId, quantity, variant = null) => {
+  addToCart: async (productId, quantity, variant = null, variantId = null) => {
     const payload = {
       product_id: productId,
       quantity: quantity
     };
     if (variant) {
       payload.variant = variant;
+    }
+    if (variantId) {
+      payload.variant_id = variantId;
     }
     const response = await axiosInstance.post('/cart/add/', payload);
     return response.data;

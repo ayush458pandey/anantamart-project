@@ -4,7 +4,7 @@ from django.contrib import admin
 from django.contrib import messages
 from django.shortcuts import render
 from django.utils.html import format_html, format_html_join
-from .models import Category, Product, PriceTier, ProductImage, Subcategory, Brand, TagGroup, ProductTag
+from .models import Category, Product, PriceTier, ProductImage, Subcategory, Brand, TagGroup, ProductTag, ProductVariant
 
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
@@ -50,6 +50,17 @@ class PriceTierInline(admin.TabularInline):
     model = PriceTier
     extra = 1
     fields = ['min_quantity', 'max_quantity', 'price']
+
+
+class ProductVariantInline(admin.TabularInline):
+    model = ProductVariant
+    extra = 0
+    fields = [
+        'variant_type', 'name', 'sku', 'base_price', 'mrp',
+        'stock', 'stock_status', 'moq', 'case_size',
+        'image', 'hex_color', 'sort_order', 'is_active',
+    ]
+    ordering = ['variant_type', 'sort_order', 'id']
 
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
@@ -235,7 +246,7 @@ class ProductAdmin(admin.ModelAdmin):
         }),
     )
     
-    inlines = [ProductImageInline, PriceTierInline]
+    inlines = [ProductImageInline, PriceTierInline, ProductVariantInline]
     filter_horizontal = ['tags']
 
 @admin.register(ProductImage)
@@ -290,4 +301,35 @@ class ProductTagAdmin(admin.ModelAdmin):
     list_editable = ['display_order', 'is_active']
     prepopulated_fields = {'slug': ('name',)}
     search_fields = ['name', 'group__name']
-    filter_horizontal = ['subcategories']
+    filter_horizontal = ['subcategories']
+
+
+@admin.register(ProductVariant)
+class ProductVariantAdmin(admin.ModelAdmin):
+    list_display = [
+        'product', 'variant_type', 'name', 'effective_sku_display',
+        'base_price', 'mrp', 'stock', 'stock_status', 'moq', 'is_active',
+    ]
+    list_select_related = ['product']
+    list_filter = ['variant_type', 'is_active', 'stock_status', 'product__category']
+    search_fields = ['name', 'sku', 'product__name', 'product__sku']
+    list_editable = ['base_price', 'stock', 'is_active']
+    autocomplete_fields = ['product']
+    fieldsets = (
+        ('Variant', {
+            'fields': ('product', 'variant_type', 'name', 'sku', 'sort_order', 'is_active')
+        }),
+        ('Pricing (leave blank to inherit from product)', {
+            'fields': ('base_price', 'mrp')
+        }),
+        ('Stock & Ordering', {
+            'fields': ('stock', 'stock_status', 'moq', 'case_size')
+        }),
+        ('Presentation', {
+            'fields': ('image', 'hex_color')
+        }),
+    )
+
+    @admin.display(description='SKU', ordering='sku')
+    def effective_sku_display(self, obj):
+        return obj.effective_sku

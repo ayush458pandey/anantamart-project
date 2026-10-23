@@ -1,20 +1,23 @@
 from rest_framework import serializers
 from .models import Cart, CartItem
-from apps.products.serializers import ProductSerializer
+from apps.products.serializers import ProductSerializer, ProductVariantSerializer
 
 class CartItemSerializer(serializers.ModelSerializer):
     product = ProductSerializer(read_only=True)
+    variant_ref = ProductVariantSerializer(read_only=True)
+    unit_price = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True)
     total_price = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True)
     
     class Meta:
         model = CartItem
-        fields = ['id', 'product', 'variant', 'quantity', 'total_price']
+        fields = ['id', 'product', 'variant', 'variant_ref', 'quantity', 'unit_price', 'total_price']
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         # Ensure ProductSerializer gets request context for image URLs
         if 'context' in kwargs and 'request' in kwargs['context']:
             self.fields['product'].context = kwargs['context']
+            self.fields['variant_ref'].context = kwargs['context']
 
 class CartSerializer(serializers.ModelSerializer):
     items = CartItemSerializer(many=True, read_only=True)

@@ -42,10 +42,10 @@ export const CartProvider = ({ children }) => {
     }
   }, [fetchCart, location.pathname]);
 
-  const addToCart = async (productId, quantity = 1, variant = null) => {
+  const addToCart = async (productId, quantity = 1, variant = null, variantId = null) => {
     try {
       setLoading(true);
-      const data = await cartService.addToCart(productId, quantity, variant);
+      const data = await cartService.addToCart(productId, quantity, variant, variantId);
       setCart(data);
       return { success: true, data };
     } catch (err) {

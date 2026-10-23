@@ -199,7 +199,8 @@ export default function AdvancedCheckout({ cart, onClose, onPlaceOrder }) {
         items: cart.items.map(item => ({
           product_id: item.product.id,
           quantity: item.quantity,
-          variant: item.variant
+          variant: item.variant,
+          variant_id: item.variant_ref?.id || null
         })),
         payment_method: allowBackorder ? 'advance' : selectedPayment,
         delivery_option: deliveryOptions.find(d => d.id === selectedDelivery)?.name,

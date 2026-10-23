@@ -14,7 +14,7 @@ from .serializers import ProductSerializer, CategorySerializer, SubcategorySeria
 class ProductViewSet(viewsets.ModelViewSet):
     queryset = Product.objects.filter(is_active=True).select_related(
         'category', 'subcategory', 'brand_ref'
-    ).prefetch_related('tiers', 'images', 'tags__group')
+    ).prefetch_related('tiers', 'images', 'tags__group', 'variants')
     serializer_class = ProductSerializer
     permission_classes = [AllowAny]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]

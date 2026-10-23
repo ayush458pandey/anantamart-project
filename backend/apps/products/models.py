@@ -248,3 +248,98 @@ class ProductTag(models.Model):
         if not self.slug:
             self.slug = slugify(self.name)
         super().save(*args, **kwargs)
+
+
+class ProductVariant(models.Model):
+    """
+    A purchasable variation of a product that can differ in price, image and stock.
+
+    Supports multiple variant dimensions (e.g. "Size" and "Colour") on the same
+    product by using `variant_type` to group options.
+
+        Jupiter Scissors
+          ├─ Size:   10"  ₹120   [image]
+          ├─ Size:   11"  ₹140   [image]
+          ├─ Size:   12"  ₹160   [image]
+          └─ Colour: Red / Blue  (hex swatch, uses parent price)
+
+    Any field left blank/NULL falls back to the parent Product's value, so you
+    only override what actually changes per variant.
+    """
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='variants')
+
+    variant_type = models.CharField(
+        max_length=50, default='Size', blank=True,
+        help_text="Dimension this option belongs to, e.g. 'Size' or 'Colour'"
+    )
+    name = models.CharField(max_length=100, help_text="Option label, e.g. '10\"' or 'Red'")
+    sku = models.CharField(
+        max_length=120, blank=True, default='',
+        help_text="Optional variant-level SKU (falls back to parent SKU)"
+    )
+
+    # --- Price overrides (NULL = inherit from parent product) ---
+    base_price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    mrp = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+
+    # --- Stock / ordering overrides ---
+    stock = models.PositiveIntegerField(default=0)
+    stock_status = models.CharField(
+        max_length=20,
+        choices=Product.STOCK_STATUS_CHOICES,
+        default='in-stock',
+    )
+    moq = models.PositiveIntegerField(default=1, help_text="Minimum Order Quantity")
+    case_size = models.PositiveIntegerField(default=1, help_text="Units per case")
+
+    # --- Presentation ---
+    image = models.ImageField(
+        upload_to='variants/', null=True, blank=True,
+        help_text="Variant-specific image (falls back to parent product image)"
+    )
+    hex_color = models.CharField(
+        max_length=20, blank=True, default='',
+        help_text="Optional colour hex for swatches, e.g. #FF0000"
+    )
+    sort_order = models.PositiveIntegerField(default=0)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['variant_type', 'sort_order', 'id']
+        unique_together = ['product', 'variant_type', 'name']
+        verbose_name = 'Product Variant'
+        verbose_name_plural = 'Product Variants'
+
+    def __str__(self):
+        return f"{self.product.name} — {self.variant_type}: {self.name}"
+
+    # --- Effective values with fallback to the parent product ---
+    @property
+    def effective_base_price(self):
+        return self.base_price if self.base_price is not None else self.product.base_price
+
+    @property
+    def effective_mrp(self):
+        if self.mrp is not None:
+            return self.mrp
+        return self.product.mrp
+
+    @property
+    def effective_sku(self):
+        return self.sku or self.product.sku
+
+    @property
+    def effective_moq(self):
+        return self.moq or self.product.moq
+
+    @property
+    def effective_case_size(self):
+        return self.case_size or self.product.case_size
+
+    @property
+    def discount_percentage(self):
+        mrp = self.effective_mrp
+        if mrp and mrp > 0:
+            return round(((mrp - self.effective_base_price) / mrp) * 100)
+        return 0

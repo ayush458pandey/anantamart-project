@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Product, Category, PriceTier, ProductImage, Subcategory, Brand, TagGroup, ProductTag
+from .models import Product, Category, PriceTier, ProductImage, Subcategory, Brand, TagGroup, ProductTag, ProductVariant
 
 def optimize_cloudinary_url(url):
     """Automatically compress and optimize Cloudinary images"""
@@ -122,6 +122,36 @@ class TagGroupSerializer(serializers.ModelSerializer):
         model = TagGroup
         fields = ['id', 'name', 'slug', 'display_order', 'tags']
 
+
+class ProductVariantSerializer(OptimizedImageMixin, serializers.ModelSerializer):
+    """Purchasable variation (size / colour / etc.) with fallbacks to parent product."""
+    image_url = serializers.SerializerMethodField()
+    effective_base_price = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True)
+    effective_mrp = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True, allow_null=True)
+    effective_sku = serializers.CharField(read_only=True)
+    effective_moq = serializers.IntegerField(read_only=True)
+    effective_case_size = serializers.IntegerField(read_only=True)
+
+    class Meta:
+        model = ProductVariant
+        fields = [
+            'id', 'variant_type', 'name', 'sku', 'effective_sku',
+            'base_price', 'mrp', 'effective_base_price', 'effective_mrp',
+            'stock', 'stock_status', 'moq', 'case_size', 'effective_moq', 'effective_case_size',
+            'image', 'image_url', 'hex_color', 'sort_order', 'is_active',
+        ]
+
+    def get_image_url(self, obj):
+        # Variant image wins; otherwise fall back to the parent product's image.
+        image = obj.image or (obj.product.image if obj.product_id else None)
+        if not image:
+            return None
+        request = self.context.get('request')
+        if request:
+            return request.build_absolute_uri(image.url)
+        return image.url
+
+
 class ProductSerializer(OptimizedImageMixin, serializers.ModelSerializer):
     category_name = serializers.CharField(source='category.name', read_only=True)
     subcategory_name = serializers.CharField(source='subcategory.name', read_only=True, allow_null=True)
@@ -141,6 +171,7 @@ class ProductSerializer(OptimizedImageMixin, serializers.ModelSerializer):
     
     tiers = PriceTierSerializer(many=True, read_only=True)
     tag_list = ProductTagInlineSerializer(source='tags', many=True, read_only=True)
+    variants = serializers.SerializerMethodField()
 
     class Meta:
         model = Product
@@ -153,8 +184,16 @@ class ProductSerializer(OptimizedImageMixin, serializers.ModelSerializer):
             'image', 'image_url', 'images', 'mrp', 'base_price', 
             'tax_rate', 'gst_rate', 'hsn_code',  # ✅ tax_rate for writes, gst_rate for reads
             'stock', 'stock_status',
-            'moq', 'case_size', 'is_active', 'created_at', 'tiers', 'tag_list'
+            'moq', 'case_size', 'is_active', 'created_at', 'tiers', 'tag_list',
+            'has_variants', 'variants',
         ]
+
+    def get_variants(self, obj):
+        """Only active variants, serialized with request context for absolute image URLs."""
+        active_variants = [v for v in obj.variants.all() if v.is_active]
+        return ProductVariantSerializer(
+            active_variants, many=True, context=self.context
+        ).data
     
     def get_brand_name(self, obj):
         if obj.brand_ref:

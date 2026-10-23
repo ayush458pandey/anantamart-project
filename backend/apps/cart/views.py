@@ -6,7 +6,7 @@ from django.shortcuts import get_object_or_404
 from django.db import transaction
 from .models import Cart, CartItem
 from .serializers import CartSerializer
-from apps.products.models import Product
+from apps.products.models import Product, ProductVariant
 
 # --- HELPER FUNCTION ---
 def get_cart(request):
@@ -30,7 +30,10 @@ def get_cart(request):
                             cart=cart,
                             product=item.product,
                             variant=item.variant,
-                            defaults={'quantity': item.quantity}
+                            defaults={
+                                'quantity': item.quantity,
+                                'variant_ref': item.variant_ref,
+                            }
                         )
                         if not item_created:
                             cart_item.quantity += item.quantity
@@ -65,7 +68,8 @@ def my_cart(request):
 def add_to_cart(request):
     cart = get_cart(request)
     product_id = request.data.get('product_id')
-    variant = request.data.get('variant', '').strip()  # 🆕 Handle Variant
+    variant = (request.data.get('variant') or '').strip()  # 🆕 Handle Variant label
+    variant_id = request.data.get('variant_id')            # 🆕 Handle exact ProductVariant
     quantity = int(request.data.get('quantity', 1))
     
     if not product_id:
@@ -73,17 +77,43 @@ def add_to_cart(request):
     
     try:
         product = Product.objects.get(id=product_id)
+
+        # Resolve the ProductVariant when the client sent one. Accept either an
+        # explicit variant_id or derive it from a "Type: Name" label.
+        variant_obj = None
+        if variant_id:
+            variant_obj = ProductVariant.objects.filter(
+                id=variant_id, product=product, is_active=True
+            ).first()
+        elif variant:
+            variant_obj = _resolve_variant_from_label(product, variant)
+
+        # Normalise the stored label so identical selections always merge.
+        if variant_obj:
+            variant = f"{variant_obj.variant_type}: {variant_obj.name}"
+        elif not variant:
+            variant = ''
+
+        # Stock guard against the exact variant when we have one.
+        if variant_obj and variant_obj.stock < quantity:
+            return Response(
+                {'error': f'Only {variant_obj.stock} in stock for {variant_obj.name}'},
+                status=400
+            )
         
         # Check specific variant item
         cart_item, created = CartItem.objects.get_or_create(
             cart=cart,
             product=product,
             variant=variant,
-            defaults={'quantity': quantity}
+            defaults={'quantity': quantity, 'variant_ref': variant_obj}
         )
         
         if not created:
             cart_item.quantity += quantity  # 🆕 Increment instead of replace
+            # Backfill the variant ref if it was missing previously.
+            if variant_obj and not cart_item.variant_ref_id:
+                cart_item.variant_ref = variant_obj
             cart_item.save()
         
         serializer = CartSerializer(cart, context={'request': request})
@@ -91,6 +121,14 @@ def add_to_cart(request):
     
     except Product.DoesNotExist:
         return Response({'error': 'Product not found'}, status=404)
+
+
+def _resolve_variant_from_label(product, label):
+    """Best-effort match of a stored variant label ('Size: 10"') to a ProductVariant."""
+    if not label:
+        return None
+    name = label.split(':', 1)[1].strip() if ':' in label else label.strip()
+    return product.variants.filter(name__iexact=name, is_active=True).first()
 
 @api_view(['PUT'])
 @permission_classes([AllowAny])

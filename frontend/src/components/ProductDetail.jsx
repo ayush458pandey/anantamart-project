@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { X, ArrowLeft, Plus, Minus, ShoppingCart, Package, Truck, Shield } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useToast } from '../context/ToastContext';
@@ -17,24 +17,101 @@ export default function ProductDetail({ product, onClose, onAddToCart, onBrandCl
   const [quantity, setQuantity] = useState(product.moq || 1);
   const [selectedImage, setSelectedImage] = useState(0);
 
-  const images = product.images?.length > 0
-    ? product.images.map(img => img.image_url || img.image)
-    : product.image
-      ? [product.image]
-      : [];
+  // --- STRUCTURED VARIANTS (size / colour / etc.) ---
+  // Group the product's variants by variant_type so each dimension renders as
+  // its own row of selectable options.
+  const variantGroups = useMemo(() => {
+    const groups = new Map();
+    (product.variants || []).forEach((v) => {
+      const type = v.variant_type || 'Option';
+      if (!groups.has(type)) groups.set(type, []);
+      groups.get(type).push(v);
+    });
+    return Array.from(groups, ([type, options]) => ({ type, options }));
+  }, [product.variants]);
 
-  // --- STATE FOR COLOR QUANTITIES ---
+  const hasVariantOptions = variantGroups.length > 0;
+
+  // Legacy colour options — only used when a product has no structured variants.
+  const hasColors =
+    !hasVariantOptions &&
+    product.available_colors_list &&
+    product.available_colors_list.length > 0;
+
+  // Selection state: variantType -> chosen variant object. Defaults to the first
+  // option of every group.
+  const [selectedVariants, setSelectedVariants] = useState(() => {
+    const initial = {};
+    (product.variants || []).forEach((v) => {
+      const type = v.variant_type || 'Option';
+      if (!(type in initial)) initial[type] = v;
+    });
+    return initial;
+  });
+
+  const selectedVariantList = useMemo(
+    () => variantGroups.map((g) => selectedVariants[g.type]).filter(Boolean),
+    [variantGroups, selectedVariants]
+  );
+
+  // The variant that drives price / MOQ / case size / stock. Prefer one with an
+  // explicit price override, otherwise fall back to the first selected option.
+  const pricingVariant = useMemo(() => {
+    if (selectedVariantList.length === 0) return null;
+    return selectedVariantList.find((v) => v.base_price != null) || selectedVariantList[0];
+  }, [selectedVariantList]);
+
+  const effectivePrice = pricingVariant
+    ? parseFloat(pricingVariant.effective_base_price)
+    : parseFloat(product.base_price);
+  const effectiveMrp = pricingVariant
+    ? (pricingVariant.effective_mrp != null ? parseFloat(pricingVariant.effective_mrp) : null)
+    : (product.mrp != null ? parseFloat(product.mrp) : null);
+  const effectiveMoq = (pricingVariant ? pricingVariant.effective_moq : product.moq) || 1;
+  const effectiveCaseSize =
+    (pricingVariant ? pricingVariant.effective_case_size : product.case_size) || 1;
+  const effectiveStock =
+    pricingVariant && pricingVariant.stock != null ? pricingVariant.stock : product.stock;
+
+  const selectVariant = (type, option) => {
+    setSelectedVariants((prev) => ({ ...prev, [type]: option }));
+  };
+
+  // Keep the quantity valid for the currently selected variant's MOQ.
+  useEffect(() => {
+    setQuantity(effectiveMoq);
+  }, [effectiveMoq]);
+
+  // --- STATE FOR LEGACY COLOR QUANTITIES ---
   // Map of color -> quantity, e.g. { "Red": 2, "Blue": 1 }
   const [colorQuantities, setColorQuantities] = useState({});
   const [searchTerm, setSearchTerm] = useState('');
-  const hasColors = product.available_colors_list && product.available_colors_list.length > 0;
+
+  // Images: product gallery first, then any variant-specific images.
+  const images = useMemo(() => {
+    const base = product.images?.length > 0
+      ? product.images.map((img) => img.image_url || img.image)
+      : product.image
+        ? [product.image]
+        : [];
+    const variantImgs = (product.variants || []).map((v) => v.image_url).filter(Boolean);
+    return [...base, ...variantImgs.filter((url) => !base.includes(url))];
+  }, [product.images, product.image, product.variants]);
+
+  // Jump the gallery to the selected variant's image when it changes.
+  useEffect(() => {
+    if (pricingVariant?.image_url) {
+      const idx = images.indexOf(pricingVariant.image_url);
+      if (idx >= 0) setSelectedImage(idx);
+    }
+  }, [pricingVariant, images]);
 
   // Calculate total quantity from map or single state
   const totalQuantity = hasColors
     ? Object.values(colorQuantities).reduce((sum, q) => sum + q, 0)
     : quantity;
 
-  const currentTotalPrice = parseFloat(product.base_price) * (totalQuantity || 0);
+  const currentTotalPrice = effectivePrice * (totalQuantity || 0);
 
   // Helper to update color quantity
   const updateColorQty = (color, delta) => {
@@ -59,8 +136,8 @@ export default function ProductDetail({ product, onClose, onAddToCart, onBrandCl
     }
 
     // Verify MOQ
-    if (totalQuantity < product.moq) {
-      toast.error(`Minimum order quantity is ${product.moq}`);
+    if (totalQuantity < effectiveMoq) {
+      toast.error(`Minimum order quantity is ${effectiveMoq}`);
       return;
     }
 
@@ -71,11 +148,23 @@ export default function ProductDetail({ product, onClose, onAddToCart, onBrandCl
       const itemsToAdd = [];
 
       if (hasColors) {
-        // Prepare list of variants
+        // Legacy colour options: one cart line per selected colour.
         Object.entries(colorQuantities).forEach(([color, qty]) => {
           if (qty > 0) {
             itemsToAdd.push({ product_id: product.id, quantity: qty, variant: color });
           }
+        });
+      } else if (hasVariantOptions) {
+        // Combine every selected dimension into one label, e.g.
+        // 'Size: 10", Colour: Red', and pin the pricing variant for stock/price.
+        const variantLabel = selectedVariantList
+          .map((v) => `${v.variant_type}: ${v.name}`)
+          .join(', ');
+        itemsToAdd.push({
+          product_id: product.id,
+          quantity: quantity,
+          variant: variantLabel,
+          variantId: pricingVariant?.id,
         });
       } else {
         // Standard single item
@@ -84,7 +173,7 @@ export default function ProductDetail({ product, onClose, onAddToCart, onBrandCl
 
       // Send requests in parallel using cartService
       const promises = itemsToAdd.map(item =>
-        cartService.addToCart(item.product_id, item.quantity, item.variant)
+        cartService.addToCart(item.product_id, item.quantity, item.variant, item.variantId)
       );
 
       await Promise.all(promises);
@@ -198,15 +287,15 @@ export default function ProductDetail({ product, onClose, onAddToCart, onBrandCl
                   {/* Price */}
                   <div className="flex items-center gap-3 flex-wrap mt-4">
                     <span className="bg-emerald-600 text-white text-xl font-bold px-3 py-1 rounded-lg">
-                      ₹{formatPrice(product.base_price)}
+                      ₹{formatPrice(effectivePrice)}
                     </span>
-                    {product.mrp > product.base_price && (
+                    {effectiveMrp > effectivePrice && (
                       <>
                         <span className="text-gray-400 line-through text-sm">
-                          MRP ₹{formatPrice(product.mrp)}
+                          MRP ₹{formatPrice(effectiveMrp)}
                         </span>
                         <span className="text-emerald-600 text-sm font-semibold">
-                          ₹{formatPrice(product.mrp - product.base_price)} OFF
+                          ₹{formatPrice(effectiveMrp - effectivePrice)} OFF
                         </span>
                       </>
                     )}
@@ -237,6 +326,63 @@ export default function ProductDetail({ product, onClose, onAddToCart, onBrandCl
 
                 {/* Card 2 — Order / quantity */}
                 <div className="bg-white border border-gray-200 rounded-2xl p-5">
+                  {/* Structured variants (size / colour / etc.) */}
+                  {hasVariantOptions && (
+                    <div className="space-y-4 mb-4">
+                      {variantGroups.map((group) => (
+                        <div key={group.type}>
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="text-sm font-semibold text-gray-900">
+                              {group.type}
+                            </span>
+                            <span className="text-xs text-gray-500">
+                              {selectedVariants[group.type]?.name}
+                            </span>
+                          </div>
+                          <div className="flex flex-wrap gap-2">
+                            {group.options.map((option) => {
+                              const isActive = selectedVariants[group.type]?.id === option.id;
+                              const isOutOfStock = option.stock === 0;
+                              const hasHex = !!option.hex_color;
+                              return (
+                                <button
+                                  key={option.id}
+                                  type="button"
+                                  disabled={isOutOfStock}
+                                  onClick={() => selectVariant(group.type, option)}
+                                  title={isOutOfStock ? 'Out of stock' : option.name}
+                                  className={`relative flex items-center gap-2 rounded-xl border-2 px-3 py-2 text-sm transition-all ${
+                                    isActive
+                                      ? 'border-emerald-600 bg-emerald-50 text-emerald-800 font-semibold'
+                                      : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300'
+                                  } ${isOutOfStock ? 'opacity-40 cursor-not-allowed line-through' : ''}`}
+                                >
+                                  {hasHex && (
+                                    <span
+                                      className="w-4 h-4 rounded-full border border-gray-200"
+                                      style={{ backgroundColor: option.hex_color }}
+                                    />
+                                  )}
+                                  {!hasHex && option.image_url && (
+                                    <img
+                                      src={option.image_url}
+                                      alt=""
+                                      className="w-6 h-6 rounded object-contain bg-white"
+                                    />
+                                  )}
+                                  <span>{option.name}</span>
+                                  <span className="text-xs text-gray-500">
+                                    ₹{formatPrice(option.effective_base_price)}
+                                  </span>
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
                   {hasColors ? (
                     <>
                       <div className="flex items-center justify-between mb-3">
@@ -305,11 +451,11 @@ export default function ProductDetail({ product, onClose, onAddToCart, onBrandCl
                     <>
                       <div className="flex items-center justify-between mb-3">
                         <span className="text-sm font-semibold text-gray-900">Quantity</span>
-                        <span className="text-xs text-gray-500">MOQ: {product.moq}</span>
+                        <span className="text-xs text-gray-500">MOQ: {effectiveMoq}</span>
                       </div>
                       <div className="flex items-center border border-gray-200 rounded-xl w-fit">
                         <button
-                          onClick={() => setQuantity(Math.max(product.moq, quantity - product.moq))}
+                          onClick={() => setQuantity(Math.max(effectiveMoq, quantity - effectiveMoq))}
                           className="p-2.5 hover:bg-gray-50 transition-colors rounded-l-xl"
                         >
                           <Minus className="w-4 h-4 text-gray-600" />
@@ -317,13 +463,13 @@ export default function ProductDetail({ product, onClose, onAddToCart, onBrandCl
                         <input
                           type="number"
                           value={quantity}
-                          onChange={(e) => setQuantity(Math.max(product.moq, parseInt(e.target.value) || product.moq))}
+                          onChange={(e) => setQuantity(Math.max(effectiveMoq, parseInt(e.target.value) || effectiveMoq))}
                           className="w-16 text-center font-bold text-base border-none focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                          min={product.moq}
-                          step={product.moq}
+                          min={effectiveMoq}
+                          step={effectiveMoq}
                         />
                         <button
-                          onClick={() => setQuantity(quantity + product.moq)}
+                          onClick={() => setQuantity(quantity + effectiveMoq)}
                           className="p-2.5 hover:bg-gray-50 transition-colors rounded-r-xl"
                         >
                           <Plus className="w-4 h-4 text-gray-600" />
@@ -371,10 +517,10 @@ export default function ProductDetail({ product, onClose, onAddToCart, onBrandCl
                     {product.dietary_preference && <DetailRow label="Dietary Preference" value={product.dietary_preference} />}
                     <DetailRow
                       label="MOQ"
-                      value={product.moq === 1 ? (product.unit || 'unit') : `${product.moq} ${product.unit || 'units'}`}
+                      value={effectiveMoq === 1 ? (product.unit || 'unit') : `${effectiveMoq} ${product.unit || 'units'}`}
                     />
-                    <DetailRow label="Case Size" value={formatCaseSize(product.case_size, product.unit)} />
-                    <DetailRow label="Stock Available" value={`${product.stock} units`} />
+                    <DetailRow label="Case Size" value={formatCaseSize(effectiveCaseSize, product.unit)} />
+                    <DetailRow label="Stock Available" value={`${effectiveStock} units`} />
                   </div>
                 </div>
 

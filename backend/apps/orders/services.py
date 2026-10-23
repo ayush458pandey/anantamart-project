@@ -12,7 +12,7 @@ from django.db import transaction
 from django.db.models import F
 
 from apps.cart.models import Cart
-from apps.products.models import Product
+from apps.products.models import Product, ProductVariant
 from .models import Order, OrderItem
 from .utils import send_order_confirmation_email
 
@@ -63,11 +63,16 @@ class OrderService:
                 return existing
         
         product_ids = [item['product_id'] for item in items_data]
+        variant_ids = [item['variant_id'] for item in items_data if item.get('variant_id')]
         
         with transaction.atomic():
             # Lock product rows for stock validation
             products = {
                 p.id: p for p in Product.objects.select_for_update().filter(id__in=product_ids)
+            }
+            # Lock variant rows (when supplied) for variant-level stock validation
+            variants = {
+                v.id: v for v in ProductVariant.objects.select_for_update().filter(id__in=variant_ids)
             }
             
             # Validate all products exist
@@ -76,13 +81,33 @@ class OrderService:
                 if pid not in products:
                     raise Product.DoesNotExist(f'Product with id {pid} not found')
             
-            # Validate stock
+            # Resolve the exact variant for each line (explicit id, else label match)
+            resolved_variants = {}
+            for item_data in items_data:
+                product = products[item_data['product_id']]
+                variant_obj = None
+                vid = item_data.get('variant_id')
+                if vid and vid in variants:
+                    variant_obj = variants[vid]
+                elif item_data.get('variant'):
+                    label = item_data['variant']
+                    name = label.split(':', 1)[1].strip() if ':' in label else label.strip()
+                    variant_obj = product.variants.filter(name__iexact=name, is_active=True).first()
+                resolved_variants[item_data['product_id']] = variant_obj
+            
+            # Validate stock (variant stock when a variant is selected, else product stock)
             if not allow_backorder:
                 out_of_stock = []
                 for item_data in items_data:
                     product = products[item_data['product_id']]
                     qty = item_data['quantity']
-                    if product.stock < qty:
+                    variant_obj = resolved_variants.get(item_data['product_id'])
+                    if variant_obj:
+                        if variant_obj.stock < qty:
+                            out_of_stock.append(
+                                f"{product.name} ({variant_obj.name}) (available: {variant_obj.stock}, requested: {qty})"
+                            )
+                    elif product.stock < qty:
                         out_of_stock.append(
                             f"{product.name} (available: {product.stock}, requested: {qty})"
                         )
@@ -103,18 +128,33 @@ class OrderService:
             for item_data in items_data:
                 product = products[item_data['product_id']]
                 qty = item_data['quantity']
+                variant_obj = resolved_variants.get(item_data['product_id'])
+                
+                # Price by variant when selected, otherwise by product.
+                unit_price = variant_obj.effective_base_price if variant_obj else product.base_price
+                variant_label = item_data.get('variant')
+                if variant_obj:
+                    variant_label = f"{variant_obj.variant_type}: {variant_obj.name}"
                 
                 OrderItem.objects.create(
                     order=order,
                     product=product,
                     quantity=qty,
-                    variant=item_data.get('variant'),
-                    price=product.base_price,
-                    total=product.base_price * qty
+                    variant=variant_label,
+                    variant_ref=variant_obj,
+                    price=unit_price,
+                    total=unit_price * qty
                 )
                 
-                # Decrement stock if available
-                if product.stock >= qty:
+                # Decrement variant stock when applicable, else product stock.
+                if variant_obj:
+                    if variant_obj.stock >= qty:
+                        ProductVariant.objects.filter(id=variant_obj.id).update(
+                            stock=F('stock') - qty
+                        )
+                        variant_obj.refresh_from_db()
+                        cls._update_variant_stock_status(variant_obj)
+                elif product.stock >= qty:
                     Product.objects.filter(id=product.id).update(stock=F('stock') - qty)
                     product.refresh_from_db()
                     cls._update_stock_status(product)
@@ -126,6 +166,17 @@ class OrderService:
         send_order_confirmation_email(order)
         
         return order
+    
+    @staticmethod
+    def _update_variant_stock_status(variant):
+        """Update variant stock status based on current stock."""
+        if variant.stock == 0:
+            variant.stock_status = 'out-of-stock'
+        elif variant.stock <= 5:
+            variant.stock_status = 'low-stock'
+        else:
+            variant.stock_status = 'in-stock'
+        variant.save(update_fields=['stock_status'])
     
     @staticmethod
     def _update_stock_status(product):

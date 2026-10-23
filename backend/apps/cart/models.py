@@ -17,15 +17,30 @@ class Cart(models.Model):
 class CartItem(models.Model):
     cart = models.ForeignKey(Cart, on_delete=models.CASCADE, related_name='items')
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
-    variant = models.CharField(max_length=100, blank=True, help_text="Selected variant (e.g. Color)")
+    # `variant` stores a label like 'Size: 10"' or 'Colour: Red' (empty for no variant).
+    # `variant_ref` links to the ProductVariant row when one exists, so we can price
+    # and validate stock against the exact variant that was selected.
+    variant = models.CharField(max_length=100, blank=True, help_text="Selected variant label, e.g. 'Size: 10\"'")
+    variant_ref = models.ForeignKey(
+        'products.ProductVariant', on_delete=models.SET_NULL,
+        null=True, blank=True, related_name='cart_items',
+        help_text="The exact ProductVariant selected (when applicable)"
+    )
     quantity = models.PositiveIntegerField(default=1)
     
     class Meta:
         unique_together = ('cart', 'product', 'variant')
     
     @property
+    def unit_price(self):
+        """Price per unit — uses the variant price when a variant is selected."""
+        if self.variant_ref_id and self.variant_ref:
+            return self.variant_ref.effective_base_price
+        return self.product.base_price
+    
+    @property
     def total_price(self):
-        return self.product.base_price * self.quantity
+        return self.unit_price * self.quantity
     
     def __str__(self):
         if self.variant:

@@ -25,6 +25,20 @@ export default function ProductCard({ product, cart, onAddToCart, removeFromCart
     const caseSize = product.case_size || 1;
     const step = mode === 'case' ? caseSize : moq;
 
+    // Products with structured variants (size / colour / etc.) must be configured
+    // on the detail page before adding, so the grid routes there instead.
+    const productVariants = product.variants || [];
+    const hasVariants = productVariants.length > 0;
+
+    // Price range across variants (falls back to the base price).
+    const variantPrices = productVariants
+        .map(v => parseFloat(v.effective_base_price))
+        .filter(p => !isNaN(p));
+    const hasPriceRange = variantPrices.length > 0 &&
+        Math.min(...variantPrices) !== Math.max(...variantPrices);
+    const minVariantPrice = hasPriceRange ? Math.min(...variantPrices) : null;
+    const maxVariantPrice = hasPriceRange ? Math.max(...variantPrices) : null;
+
     const { addToCompare, removeFromCompare, compareList } = useComparison();
     const isInCompareList = compareList.some(p => p.id === product.id);
 
@@ -149,7 +163,19 @@ export default function ProductCard({ product, cart, onAddToCart, removeFromCart
                 </button>
 
                 <div className="absolute bottom-1.5 right-1.5 sm:bottom-2 sm:right-2 z-10">
-                    {!cartItem ? (
+                    {!cartItem && hasVariants ? (
+                        /* Variant products (not yet in cart): open detail page to choose */
+                        <button
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                onViewDetails();
+                            }}
+                            aria-label={`Choose options for ${product.name}`}
+                            className="bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-bold px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg shadow-lg active:scale-95 transition-all text-xs sm:text-sm touch-manipulation"
+                        >
+                            Choose
+                        </button>
+                    ) : !cartItem ? (
                         /* STATE 1: NOT IN CART - Show ADD Button */
                         <button
                             onClick={(e) => {
@@ -215,16 +241,26 @@ export default function ProductCard({ product, cart, onAddToCart, removeFromCart
             <div className="p-2 sm:p-3">
                 <div className="flex items-center gap-1.5 sm:gap-2 mb-1">
                     <div className="bg-emerald-600 text-white px-2 sm:px-2.5 py-0.5 sm:py-1 rounded">
-                        <span className="text-xs sm:text-sm font-bold">₹{formatPrice(product.base_price)}</span>
+                        <span className="text-xs sm:text-sm font-bold">
+                            {hasPriceRange
+                                ? `₹${formatPrice(minVariantPrice)} – ₹${formatPrice(maxVariantPrice)}`
+                                : `₹${formatPrice(product.base_price)}`}
+                        </span>
                     </div>
-                    {product.mrp && (
+                    {!hasPriceRange && product.mrp && (
                         <span className="text-gray-500 line-through text-[10px] sm:text-xs">
                             ₹{formatPrice(product.mrp)}
                         </span>
                     )}
                 </div>
 
-                {discountPercent > 0 && (
+                {hasVariants && (
+                    <div className="inline-flex items-center gap-1 text-[10px] sm:text-[11px] text-emerald-700 bg-emerald-50 border border-emerald-100 rounded px-1.5 py-0.5 mb-1.5 font-medium">
+                        {productVariants.length} option{productVariants.length > 1 ? 's' : ''}
+                    </div>
+                )}
+
+                {!hasVariants && discountPercent > 0 && (
                     <div className="text-[10px] sm:text-[11px] text-gray-600 mb-1.5 sm:mb-2 font-semibold">
                         {discountPercent}% OFF
                     </div>
