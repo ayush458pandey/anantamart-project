@@ -73,9 +73,57 @@ export default function ProductDetail({ product, onClose, onAddToCart, onBrandCl
   const effectiveStock =
     pricingVariant && pricingVariant.stock != null ? pricingVariant.stock : product.stock;
 
+  // Price range across all variant options (shown in the summary so buyers see
+  // that sizes differ in price before they open the picker).
+  const variantPriceRange = useMemo(() => {
+    const prices = (product.variants || [])
+      .map((v) => parseFloat(v.effective_base_price))
+      .filter((p) => !isNaN(p));
+    if (prices.length === 0) return null;
+    const min = Math.min(...prices);
+    const max = Math.max(...prices);
+    return min === max ? null : { min, max };
+  }, [product.variants]);
+
   const selectVariant = (type, option) => {
     setSelectedVariants((prev) => ({ ...prev, [type]: option }));
   };
+
+  // The FIRST variant dimension (usually "Size") is multi-select: the buyer can
+  // pick several sizes with individual quantities in a single order.
+  // Any remaining dimensions (e.g. "Colour") stay single-select and act as a
+  // shared attribute applied to every chosen size.
+  const primaryGroup = variantGroups[0] || null;
+  const modifierGroups = variantGroups.slice(1);
+
+  const [variantQuantities, setVariantQuantities] = useState({}); // { [variantId]: qty }
+
+  const updateVariantQty = (variantId, delta) => {
+    setVariantQuantities((prev) => {
+      const current = prev[variantId] || 0;
+      const next = current + delta;
+      if (next <= 0) {
+        const copy = { ...prev };
+        delete copy[variantId];
+        return copy;
+      }
+      return { ...prev, [variantId]: next };
+    });
+  };
+
+  // Sizes the buyer has actually chosen (qty > 0).
+  const selectedVariantLines = useMemo(() => {
+    if (!primaryGroup) return [];
+    return primaryGroup.options.filter((o) => (variantQuantities[o.id] || 0) > 0);
+  }, [primaryGroup, variantQuantities]);
+
+  const variantTotalQty = selectedVariantLines.reduce(
+    (sum, o) => sum + (variantQuantities[o.id] || 0), 0
+  );
+
+  const variantTotalPrice = selectedVariantLines.reduce(
+    (sum, o) => sum + parseFloat(o.effective_base_price) * (variantQuantities[o.id] || 0), 0
+  );
 
   // Keep the quantity valid for the currently selected variant's MOQ.
   useEffect(() => {
@@ -109,9 +157,13 @@ export default function ProductDetail({ product, onClose, onAddToCart, onBrandCl
   // Calculate total quantity from map or single state
   const totalQuantity = hasColors
     ? Object.values(colorQuantities).reduce((sum, q) => sum + q, 0)
-    : quantity;
+    : hasVariantOptions
+      ? variantTotalQty
+      : quantity;
 
-  const currentTotalPrice = effectivePrice * (totalQuantity || 0);
+  const currentTotalPrice = hasVariantOptions
+    ? variantTotalPrice
+    : effectivePrice * (totalQuantity || 0);
 
   // Helper to update color quantity
   const updateColorQty = (color, delta) => {
@@ -131,12 +183,17 @@ export default function ProductDetail({ product, onClose, onAddToCart, onBrandCl
   const handleAddToCart = async () => {
     // Validation
     if (totalQuantity === 0) {
-      toast.error("Please select at least 1 item");
+      toast.error(
+        hasVariantOptions
+          ? "Please choose a quantity for at least one option"
+          : "Please select at least 1 item"
+      );
       return;
     }
 
-    // Verify MOQ
-    if (totalQuantity < effectiveMoq) {
+    // Verify MOQ (only meaningful for the single-quantity path — each variant
+    // line carries its own quantity, and the server validates per variant).
+    if (!hasVariantOptions && totalQuantity < effectiveMoq) {
       toast.error(`Minimum order quantity is ${effectiveMoq}`);
       return;
     }
@@ -155,20 +212,34 @@ export default function ProductDetail({ product, onClose, onAddToCart, onBrandCl
           }
         });
       } else if (hasVariantOptions) {
-        // Combine every selected dimension into one label, e.g.
-        // 'Size: 10", Colour: Red', and pin the pricing variant for stock/price.
-        const variantLabel = selectedVariantList
-          .map((v) => `${v.variant_type}: ${v.name}`)
+        // Multi-size: one cart line per selected option of the primary dimension.
+        // Any remaining dimensions (e.g. Colour) are appended to each label.
+        const modifierLabel = modifierGroups
+          .map((g) => {
+            const chosen = selectedVariants[g.type];
+            return chosen ? `${chosen.variant_type}: ${chosen.name}` : null;
+          })
+          .filter(Boolean)
           .join(', ');
-        itemsToAdd.push({
-          product_id: product.id,
-          quantity: quantity,
-          variant: variantLabel,
-          variantId: pricingVariant?.id,
+
+        selectedVariantLines.forEach((option) => {
+          const baseLabel = `${option.variant_type}: ${option.name}`;
+          const variantLabel = modifierLabel ? `${baseLabel}, ${modifierLabel}` : baseLabel;
+          itemsToAdd.push({
+            product_id: product.id,
+            quantity: variantQuantities[option.id],
+            variant: variantLabel,
+            variantId: option.id,
+          });
         });
       } else {
         // Standard single item
         itemsToAdd.push({ product_id: product.id, quantity: quantity, variant: '' });
+      }
+
+      if (itemsToAdd.length === 0) {
+        toast.error("Please choose at least one option");
+        return;
       }
 
       // Send requests in parallel using cartService
@@ -287,9 +358,11 @@ export default function ProductDetail({ product, onClose, onAddToCart, onBrandCl
                   {/* Price */}
                   <div className="flex items-center gap-3 flex-wrap mt-4">
                     <span className="bg-emerald-600 text-white text-xl font-bold px-3 py-1 rounded-lg">
-                      ₹{formatPrice(effectivePrice)}
+                      {variantPriceRange
+                        ? `₹${formatPrice(variantPriceRange.min)} – ₹${formatPrice(variantPriceRange.max)}`
+                        : `₹${formatPrice(effectivePrice)}`}
                     </span>
-                    {effectiveMrp > effectivePrice && (
+                    {!variantPriceRange && effectiveMrp > effectivePrice && (
                       <>
                         <span className="text-gray-400 line-through text-sm">
                           MRP ₹{formatPrice(effectiveMrp)}
@@ -329,7 +402,107 @@ export default function ProductDetail({ product, onClose, onAddToCart, onBrandCl
                   {/* Structured variants (size / colour / etc.) */}
                   {hasVariantOptions && (
                     <div className="space-y-4 mb-4">
-                      {variantGroups.map((group) => (
+                      {primaryGroup && (
+                        <div>
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="text-sm font-semibold text-gray-900">
+                              Choose {primaryGroup.type}
+                              <span className="ml-2 text-xs font-normal text-gray-500">(you can pick more than one)</span>
+                            </span>
+                            {variantTotalQty > 0 && (
+                              <span className="text-xs font-semibold text-emerald-700">
+                                {variantTotalQty} {product.unit || 'items'}
+                              </span>
+                            )}
+                          </div>
+                          <div className="space-y-2">
+                            {primaryGroup.options.map((option) => {
+                              const qty = variantQuantities[option.id] || 0;
+                              const isChosen = qty > 0;
+                              const isOutOfStock = option.stock === 0;
+                              const maxStock = option.stock;
+                              return (
+                                <div
+                                  key={option.id}
+                                  className={`flex items-center justify-between gap-3 rounded-xl border-2 p-2.5 transition-all ${
+                                    isChosen
+                                      ? 'border-emerald-600 bg-emerald-50'
+                                      : 'border-gray-200 bg-white'
+                                  } ${isOutOfStock ? 'opacity-40' : ''}`}
+                                >
+                                  <div className="flex items-center gap-3 min-w-0">
+                                    {option.hex_color ? (
+                                      <span
+                                        className="w-8 h-8 rounded-full border border-gray-200 flex-shrink-0"
+                                        style={{ backgroundColor: option.hex_color }}
+                                      />
+                                    ) : option.image_url ? (
+                                      <img
+                                        src={option.image_url}
+                                        alt=""
+                                        className="w-9 h-9 rounded-lg object-contain bg-white border border-gray-100 flex-shrink-0"
+                                      />
+                                    ) : (
+                                      <span className="w-9 h-9 rounded-lg bg-gray-100 flex items-center justify-center text-xs font-bold text-gray-500 flex-shrink-0">
+                                        {option.name?.slice(0, 3)}
+                                      </span>
+                                    )}
+                                    <div className="min-w-0">
+                                      <div className="text-sm font-semibold text-gray-900 truncate">
+                                        {option.name}
+                                      </div>
+                                      <div className="text-xs text-gray-500">
+                                        ₹{formatPrice(option.effective_base_price)}
+                                        {!isOutOfStock && (
+                                          <span className="ml-2 text-gray-400">· {maxStock} in stock</span>
+                                        )}
+                                        {isOutOfStock && (
+                                          <span className="ml-2 text-red-500">· Out of stock</span>
+                                        )}
+                                      </div>
+                                    </div>
+                                  </div>
+
+                                  {isOutOfStock ? (
+                                    <span className="text-xs text-gray-400 px-3">—</span>
+                                  ) : (
+                                    <div className="flex items-center border border-gray-200 rounded-lg bg-white flex-shrink-0">
+                                      <button
+                                        type="button"
+                                        onClick={() => updateVariantQty(option.id, -1)}
+                                        disabled={qty === 0}
+                                        aria-label={`Remove one ${option.name}`}
+                                        className={`w-8 h-8 flex items-center justify-center rounded-l-lg transition-colors ${
+                                          qty === 0 ? 'text-gray-300' : 'text-gray-600 hover:bg-gray-100'
+                                        }`}
+                                      >
+                                        <Minus className="w-3.5 h-3.5" />
+                                      </button>
+                                      <span className="w-9 text-center font-bold text-sm text-gray-800">
+                                        {qty}
+                                      </span>
+                                      <button
+                                        type="button"
+                                        onClick={() => updateVariantQty(option.id, 1)}
+                                        disabled={qty >= maxStock}
+                                        aria-label={`Add one ${option.name}`}
+                                        className={`w-8 h-8 flex items-center justify-center rounded-r-lg transition-colors ${
+                                          qty >= maxStock ? 'text-gray-300' : 'text-emerald-600 hover:bg-emerald-50'
+                                        }`}
+                                      >
+                                        <Plus className="w-3.5 h-3.5" />
+                                      </button>
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Single-select modifier dimensions (e.g. Colour) */}
+                      {modifierGroups.map((group) => (
                         <div key={group.type}>
                           <div className="flex items-center justify-between mb-2">
                             <span className="text-sm font-semibold text-gray-900">
@@ -342,38 +515,24 @@ export default function ProductDetail({ product, onClose, onAddToCart, onBrandCl
                           <div className="flex flex-wrap gap-2">
                             {group.options.map((option) => {
                               const isActive = selectedVariants[group.type]?.id === option.id;
-                              const isOutOfStock = option.stock === 0;
-                              const hasHex = !!option.hex_color;
                               return (
                                 <button
                                   key={option.id}
                                   type="button"
-                                  disabled={isOutOfStock}
                                   onClick={() => selectVariant(group.type, option)}
-                                  title={isOutOfStock ? 'Out of stock' : option.name}
-                                  className={`relative flex items-center gap-2 rounded-xl border-2 px-3 py-2 text-sm transition-all ${
+                                  className={`flex items-center gap-2 rounded-xl border-2 px-3 py-2 text-sm transition-all ${
                                     isActive
                                       ? 'border-emerald-600 bg-emerald-50 text-emerald-800 font-semibold'
                                       : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300'
-                                  } ${isOutOfStock ? 'opacity-40 cursor-not-allowed line-through' : ''}`}
+                                  }`}
                                 >
-                                  {hasHex && (
+                                  {option.hex_color && (
                                     <span
                                       className="w-4 h-4 rounded-full border border-gray-200"
                                       style={{ backgroundColor: option.hex_color }}
                                     />
                                   )}
-                                  {!hasHex && option.image_url && (
-                                    <img
-                                      src={option.image_url}
-                                      alt=""
-                                      className="w-6 h-6 rounded object-contain bg-white"
-                                    />
-                                  )}
                                   <span>{option.name}</span>
-                                  <span className="text-xs text-gray-500">
-                                    ₹{formatPrice(option.effective_base_price)}
-                                  </span>
                                 </button>
                               );
                             })}
@@ -447,6 +606,9 @@ export default function ProductDetail({ product, onClose, onAddToCart, onBrandCl
                         )}
                       </div>
                     </>
+                  ) : hasVariantOptions ? (
+                    /* Quantities for structured variants are chosen per option above */
+                    null
                   ) : (
                     <>
                       <div className="flex items-center justify-between mb-3">
@@ -497,9 +659,9 @@ export default function ProductDetail({ product, onClose, onAddToCart, onBrandCl
                     disabled={totalQuantity === 0}
                   >
                     <ShoppingCart className="w-5 h-5" />
-                    {hasColors
-                      ? (totalQuantity > 0 ? `Add ${totalQuantity} Items to Cart` : 'Select variants to add')
-                      : 'Add to Cart'}
+                    {totalQuantity === 0
+                      ? (hasColors ? 'Select variants to add' : hasVariantOptions ? 'Choose options to add' : 'Add to Cart')
+                      : `Add ${totalQuantity} item${totalQuantity > 1 ? 's' : ''} to Cart`}
                   </button>
                 </div>
 
