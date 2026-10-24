@@ -55,25 +55,12 @@ def create_variant_table_if_missing(apps, schema_editor):
         'product_id': 'bigint NULL',
     }
 
-    missing_columns = (set(column_defs) | {'id'}) - existing
-
-    # An incompatible leftover table (created by an earlier, different model) is
-    # safest to discard when it holds no data — this feature was never live, so an
-    # empty table has nothing worth keeping.
-    if missing_columns:
-        with connection.cursor() as cursor:
-            cursor.execute(f'SELECT COUNT(*) FROM {table}')
-            row_count = cursor.fetchone()[0]
-        if row_count == 0:
-            schema_editor.execute(f'DROP TABLE {table}')
-            schema_editor.create_model(ProductVariant)
-            return
-
-    # --- Otherwise reconcile additively (handles a populated leftover table) ---
+    # --- Reconcile additively (never DROP: the table may be referenced by FKs
+    # from cart_cartitem / orders_orderitem, and 0021 repairs legacy columns) ---
     for column, definition in column_defs.items():
         if column not in existing:
             schema_editor.execute(
-                f'ALTER TABLE {table} ADD COLUMN {column} {definition}'
+                f'ALTER TABLE {table} ADD COLUMN "{column}" {definition}'
             )
 
     # A leftover table could even be missing its primary key — restore it.
