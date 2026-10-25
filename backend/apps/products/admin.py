@@ -61,6 +61,16 @@ class ProductVariantInline(admin.TabularInline):
         'image', 'hex_color', 'sort_order', 'is_active',
     ]
     ordering = ['variant_type', 'sort_order', 'id']
+    verbose_name = 'Variant option'
+    verbose_name_plural = 'Variant options'
+    # Keep "variant_type" IDENTICAL for every option of the same dimension.
+    #   variant_type = the DIMENSION  ->  'Size'   (or 'Colour')
+    #   name         = the OPTION      ->  '10"'
+    # Each option shows on the storefront as one selectable row with its own price.
+    help_text = (
+        "Group by dimension: use the SAME variant_type for every option of a set "
+        "(e.g. all rows 'Size'), and put the option in 'name' (e.g. 10\", 11\", 12\")."
+    )
 
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):

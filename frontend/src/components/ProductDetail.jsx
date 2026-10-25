@@ -19,15 +19,35 @@ export default function ProductDetail({ product, onClose, onAddToCart, onBrandCl
 
   // --- STRUCTURED VARIANTS (size / colour / etc.) ---
   // Group the product's variants by variant_type so each dimension renders as
-  // its own row of selectable options.
+  // its own list of selectable options.
   const variantGroups = useMemo(() => {
     const groups = new Map();
     (product.variants || []).forEach((v) => {
-      const type = v.variant_type || 'Option';
+      const type = (v.variant_type || 'Option').trim();
       if (!groups.has(type)) groups.set(type, []);
       groups.get(type).push(v);
     });
-    return Array.from(groups, ([type, options]) => ({ type, options }));
+
+    let result = Array.from(groups, ([type, options]) => ({ type, options }));
+
+    // Data-entry safety net: if there is more than one "dimension" but EVERY one
+    // of them holds a single option, the data almost certainly used
+    // `variant_type` as the option label (e.g. variant_type: '8"', name: '<product>').
+    // Collapse them into one list so every option (with its own price) shows together
+    // instead of fragmenting into meaningless single-choice dimensions.
+    const GENERIC_TYPES = new Set(['size', 'colour', 'color', 'option', 'variant', 'type', 'style']);
+    if (result.length > 1 && result.every((g) => g.options.length === 1)) {
+      result = [{
+        type: 'Options',
+        options: result.map((g) => {
+          const v = g.options[0];
+          const isGeneric = GENERIC_TYPES.has(g.type.toLowerCase());
+          return isGeneric ? v : { ...v, displayLabel: g.type };
+        }),
+      }];
+    }
+
+    return result;
   }, [product.variants]);
 
   const hasVariantOptions = variantGroups.length > 0;
@@ -449,7 +469,7 @@ export default function ProductDetail({ product, onClose, onAddToCart, onBrandCl
                                     )}
                                     <div className="min-w-0">
                                       <div className="text-sm font-semibold text-gray-900 truncate">
-                                        {option.name}
+                                        {option.displayLabel || option.name}
                                       </div>
                                       <div className="text-xs text-gray-500">
                                         ₹{formatPrice(option.effective_base_price)}
