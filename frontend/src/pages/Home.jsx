@@ -766,7 +766,7 @@ export default function Home() {
 
             {/* Brand Horizontal Scroll */}
             {!selectedSubcategory && showBrandRail && visibleBrands.length > 0 && (
-                <div className="mb-8">
+                <div className="mb-5">
                     <div className="flex items-center justify-between mb-3 px-1">
                         <h3 className="text-base sm:text-lg font-bold text-gray-800">
                             Browse by Brand
@@ -959,13 +959,14 @@ export default function Home() {
 
                             <CategoryDirectory
                                 categories={categories}
+                                limit={16}
                                 onSelectCategory={(id) => {
                                     setSelectedCategory(id);
                                     window.scrollTo({ top: 0, behavior: 'smooth' });
                                 }}
                             />
 
-                            <div className="space-y-10 border-t border-gray-100 pt-8">
+                            <div className="space-y-6 border-t border-gray-100 pt-6">
                                 {categories.map((category, catIndex) => {
                                     const CategoryIcon = getCategoryIcon(category.name);
                                     const categoryProducts = productsByCategory.get(String(category.id)) || [];
@@ -973,8 +974,8 @@ export default function Home() {
                                     if (categoryProducts.length === 0 && !loadingMore) return null;
 
                                     return (
-                                        <div key={category.id} className="border-b border-gray-100 pb-6 last:border-0">
-                                            <div className="flex items-center justify-between mb-4 px-1">
+                                        <div key={category.id} className="border-b border-gray-100 pb-4 last:border-0">
+                                            <div className="flex items-center justify-between mb-3 px-1">
                                                 <h3 className="text-lg sm:text-xl font-bold text-gray-800 flex items-center gap-2">
                                                     {CategoryIcon && <CategoryIcon className="w-5 h-5 text-emerald-600" />}
                                                     {category.name}
@@ -989,7 +990,7 @@ export default function Home() {
                                                     View All
                                                 </button>
                                             </div>
-                                            <div className="flex overflow-x-auto gap-3 sm:gap-4 pb-4 -mx-3 px-3 scrollbar-hide snap-x">
+                                            <div className="flex overflow-x-auto gap-3 sm:gap-4 pb-1 -mx-3 px-3 scrollbar-hide snap-x">
                                                 {categoryProducts.length === 0 && loadingMore && [1, 2, 3, 4].map((item) => (
                                                     <div key={item} className="flex-shrink-0 w-[160px] sm:w-[200px] snap-start">
                                                         <div className="h-[278px] sm:h-[326px] rounded-lg sm:rounded-xl bg-white shadow-sm overflow-hidden animate-pulse">

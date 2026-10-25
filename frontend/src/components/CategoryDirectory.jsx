@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
     Scissors, Armchair, Sparkles, Coffee,
     Utensils, Droplet, Briefcase, Shirt,
@@ -22,7 +22,7 @@ const getCategoryIcon = (categoryName) => {
     return Package;
 };
 
-const CategoryDirectory = ({ categories, onSelectCategory, layout = 'grid', selectedCategory = null }) => {
+const CategoryDirectory = ({ categories, onSelectCategory, layout = 'grid', selectedCategory = null, limit = null }) => {
     if (layout === 'vertical') {
         return (
             <div className="flex flex-col py-2 w-full bg-[#f3f4f6]">
@@ -70,23 +70,39 @@ const CategoryDirectory = ({ categories, onSelectCategory, layout = 'grid', sele
         );
     }
 
+    // Optional cap so a long tail of categories doesn't leave a mostly-empty
+    // final grid row (e.g. 17 items in an 8-column grid wastes a whole row).
+    const [expanded, setExpanded] = useState(false);
+    const hasLimit = typeof limit === 'number' && categories.length > limit;
+    const visibleCategories = hasLimit && !expanded
+        ? categories.slice(0, limit)
+        : categories;
+
     return (
-        <div className="pb-4">
+        <div className="pb-2">
             <div className="flex items-center justify-between mb-4 px-1">
                 <h3 className="text-base sm:text-lg font-bold text-gray-800">
                     Shop by Category
                 </h3>
+                {hasLimit && (
+                    <button
+                        onClick={() => setExpanded(v => !v)}
+                        className="text-xs sm:text-sm font-medium text-emerald-600 hover:text-emerald-700 transition-colors"
+                    >
+                        {expanded ? 'Show Less' : `View All (${categories.length})`}
+                    </button>
+                )}
             </div>
 
-            <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 gap-3 sm:gap-4">
-                {categories.map((category, index) => {
+            <div className="flex flex-wrap justify-center sm:justify-start gap-3 sm:gap-4">
+                {visibleCategories.map((category, index) => {
                     const Icon = getCategoryIcon(category.name);
 
                     return (
                         <div
                             key={category.id}
                             onClick={() => onSelectCategory(category.id)}
-                            className="group flex flex-col items-center cursor-pointer"
+                            className="group flex flex-col items-center cursor-pointer w-[calc(25%-0.5625rem)] sm:w-[calc(20%-0.8rem)] md:w-[calc(16.6667%-0.834rem)] lg:w-[calc(12.5%-0.875rem)]"
                         >
                             {/* SQUARE CONTAINER */}
                             <div className={`w-20 h-20 sm:w-24 sm:h-24 bg-white border border-gray-200 rounded-xl flex items-center justify-center shadow-sm transition-all duration-200 group-hover:shadow-md group-hover:border-emerald-500 group-hover:-translate-y-1 overflow-hidden ${category.image ? '' : 'p-3'}`}>
