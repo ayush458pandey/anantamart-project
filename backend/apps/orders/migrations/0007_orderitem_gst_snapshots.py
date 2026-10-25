@@ -34,39 +34,46 @@ def add_snapshot_columns(apps, schema_editor):
 
 
 def backfill_snapshots(apps, schema_editor):
-    """Populate snapshot columns for historical rows from the live product."""
-    OrderItem = apps.get_model('orders', 'OrderItem')
-    ProductVariant = apps.get_model('products', 'ProductVariant')
+    """Populate snapshot columns for historical rows from the live product.
 
-    variant_skus = {
-        v.id: v.sku
-        for v in ProductVariant.objects.exclude(sku='').only('id', 'sku')
-    }
+    NOTE: inside SeparateDatabaseAndState the `apps` argument reflects the OLD
+    state, so the newly added snapshot columns are NOT visible on the historical
+    OrderItem model. Use raw SQL against the real table instead.
+    """
+    connection = schema_editor.connection
 
-    for item in OrderItem.objects.select_related('product').iterator():
-        product = item.product
-        if product is None:
-            continue
-        updates = []
-        if not item.product_name:
-            item.product_name = product.name
-            updates.append('product_name')
-        if not item.hsn_code:
-            item.hsn_code = product.hsn_code
-            updates.append('hsn_code')
-        if item.tax_rate is None:
-            item.tax_rate = product.tax_rate
-            updates.append('tax_rate')
-        if not item.unit:
-            item.unit = product.unit
-            updates.append('unit')
-        if not item.sku:
-            item.sku = (
-                variant_skus.get(item.variant_ref_id) or product.sku
-            )
-            updates.append('sku')
-        if updates:
-            item.save(update_fields=updates)
+    with connection.cursor() as cursor:
+        # 1) Prefer the variant's SKU where a variant was purchased.
+        cursor.execute("""
+            UPDATE orders_orderitem AS oi
+            SET sku = pv.sku
+            FROM products_productvariant AS pv
+            WHERE pv.id = oi.variant_ref_id
+              AND oi.sku IS NULL
+              AND pv.sku IS NOT NULL
+              AND pv.sku <> ''
+        """)
+
+        # 2) Fill everything else from the product, never overwriting a value
+        #    that was already captured at order time.
+        cursor.execute("""
+            UPDATE orders_orderitem AS oi
+            SET
+                product_name = COALESCE(oi.product_name, p.name),
+                hsn_code     = COALESCE(oi.hsn_code, p.hsn_code),
+                tax_rate     = COALESCE(oi.tax_rate, p.tax_rate),
+                unit         = COALESCE(oi.unit, p.unit),
+                sku          = COALESCE(oi.sku, p.sku)
+            FROM products_product AS p
+            WHERE oi.product_id = p.id
+              AND (
+                    oi.product_name IS NULL
+                 OR oi.hsn_code   IS NULL
+                 OR oi.tax_rate   IS NULL
+                 OR oi.unit       IS NULL
+                 OR oi.sku        IS NULL
+              )
+        """)
 
 
 class Migration(migrations.Migration):
