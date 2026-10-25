@@ -94,7 +94,7 @@ const CategoryDirectory = ({ categories, onSelectCategory, layout = 'grid', sele
                 )}
             </div>
 
-            <div className="flex flex-wrap justify-center sm:justify-start gap-3 sm:gap-4">
+            <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 gap-3 sm:gap-4">
                 {visibleCategories.map((category, index) => {
                     const Icon = getCategoryIcon(category.name);
 
@@ -102,7 +102,7 @@ const CategoryDirectory = ({ categories, onSelectCategory, layout = 'grid', sele
                         <div
                             key={category.id}
                             onClick={() => onSelectCategory(category.id)}
-                            className="group flex flex-col items-center cursor-pointer w-[calc(25%-0.5625rem)] sm:w-[calc(20%-0.8rem)] md:w-[calc(16.6667%-0.834rem)] lg:w-[calc(12.5%-0.875rem)]"
+                            className="group flex flex-col items-center cursor-pointer"
                         >
                             {/* SQUARE CONTAINER */}
                             <div className={`w-20 h-20 sm:w-24 sm:h-24 bg-white border border-gray-200 rounded-xl flex items-center justify-center shadow-sm transition-all duration-200 group-hover:shadow-md group-hover:border-emerald-500 group-hover:-translate-y-1 overflow-hidden ${category.image ? '' : 'p-3'}`}>
