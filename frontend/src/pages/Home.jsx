@@ -959,7 +959,6 @@ export default function Home() {
 
                             <CategoryDirectory
                                 categories={categories}
-                                limit={16}
                                 onSelectCategory={(id) => {
                                     setSelectedCategory(id);
                                     window.scrollTo({ top: 0, behavior: 'smooth' });
