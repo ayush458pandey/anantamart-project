@@ -67,8 +67,11 @@ export function generateInvoicePDF(orderData, type = 'invoice') {
   const discountRate = subtotal > 0 ? discount / subtotal : 0;
   const hsnMap = {};
   items.forEach(item => {
-    const hsn = item.product?.hsn_code || '';
-    const gstRate = parseFloat(item.product?.gst_rate || item.product?.tax_rate || 18);
+    // Prefer the immutable order snapshot (see OrderItem snapshot columns).
+    const hsn = item.effective_hsn_code ?? item.hsn_code ?? item.product?.hsn_code ?? '';
+    const gstRate = parseFloat(
+      item.effective_tax_rate ?? item.tax_rate ?? item.product?.gst_rate ?? 18
+    );
     const itemTotal = parseFloat(item.total_price || (item.product?.base_price || 0) * (item.quantity || 0));
     const discountedTotal = itemTotal * (1 - discountRate);
     const taxable = discountedTotal / (1 + gstRate / 100);
@@ -169,10 +172,12 @@ export function generateInvoicePDF(orderData, type = 'invoice') {
     const price = parseFloat(item.product?.base_price || item.price || 0);
     const qty = item.quantity || 0;
     const itemTotal = parseFloat(item.total_price || price * qty);
-    const gstRate = parseFloat(item.product?.gst_rate || item.product?.tax_rate || 18);
-    const unit = (item.product?.unit || 'Pcs').replace(/^1\s+/i, '');
-    const hsn = item.product?.hsn_code || '';
-    const name = item.product?.name || 'Item';
+    const gstRate = parseFloat(
+      item.effective_tax_rate ?? item.tax_rate ?? item.product?.gst_rate ?? 18
+    );
+    const unit = (item.unit || item.product?.unit || 'Pcs').replace(/^1\s+/i, '');
+    const hsn = item.effective_hsn_code ?? item.hsn_code ?? item.product?.hsn_code ?? '';
+    const name = item.product_name || item.product?.name || 'Item';
     const displayName = item.variant ? `${name} (${item.variant})` : name;
     return [
       (idx + 1).toString(),

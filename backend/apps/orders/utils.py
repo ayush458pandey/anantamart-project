@@ -15,9 +15,13 @@ def _build_order_email_html(order):
     """Build the HTML body for an order confirmation email."""
     items_html = ""
     for item in order.items.all():
+        # Use the immutable snapshot so the receipt matches what was purchased,
+        # even if the product is renamed later.
+        name = item.product_name or item.product.name
+        label = f"{name} ({item.variant})" if item.variant else name
         items_html += f"""
         <tr style="border-bottom: 1px solid #eee;">
-            <td style="padding: 10px;">{item.product.name}</td>
+            <td style="padding: 10px;">{label}</td>
             <td style="padding: 10px; text-align: center;">{item.quantity}</td>
             <td style="padding: 10px; text-align: right;">₹{item.price}</td>
             <td style="padding: 10px; text-align: right;">₹{item.total}</td>

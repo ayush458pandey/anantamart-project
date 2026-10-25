@@ -81,8 +81,12 @@ export default function InvoiceGenerator({ orderData, onClose, type = 'invoice' 
   const discountRate = subtotal > 0 ? discount / subtotal : 0;
   const hsnMap = {};
   items.forEach(item => {
-    const hsn = item.product?.hsn_code || '';
-    const gstRate = parseFloat(item.product?.gst_rate || item.product?.tax_rate || 18);
+    // Prefer the immutable order snapshot so an old invoice never changes when
+    // the product's HSN / GST slab is later edited.
+    const hsn = item.effective_hsn_code ?? item.hsn_code ?? item.product?.hsn_code ?? '';
+    const gstRate = parseFloat(
+      item.effective_tax_rate ?? item.tax_rate ?? item.product?.gst_rate ?? 18
+    );
     const itemTotal = parseFloat(item.total_price || (item.product?.base_price || 0) * (item.quantity || 0));
     const discountedTotal = itemTotal * (1 - discountRate);
     const taxable = discountedTotal / (1 + gstRate / 100);
@@ -230,21 +234,25 @@ export default function InvoiceGenerator({ orderData, onClose, type = 'invoice' 
                       const price = parseFloat(item.product?.base_price || item.price || 0);
                       const qty = item.quantity || 0;
                       const itemTotal = parseFloat(item.total_price || price * qty);
-                      const gstRate = parseFloat(item.product?.gst_rate || item.product?.tax_rate || 18);
+                      const gstRate = parseFloat(
+                        item.effective_tax_rate ?? item.tax_rate ?? item.product?.gst_rate ?? 18
+                      );
                       const taxAmt = itemTotal - (itemTotal / (1 + gstRate / 100));
-                      const unit = item.product?.unit || 'Pcs';
-                      const hsn = item.product?.hsn_code || '';
+                      const unit = item.unit || item.product?.unit || 'Pcs';
+                      const hsn = item.effective_hsn_code ?? item.hsn_code ?? item.product?.hsn_code ?? '';
+                      const itemName = item.product_name || item.product?.name || 'Product';
+                      const itemSku = item.effective_sku ?? item.sku ?? item.product?.sku;
 
                       return (
                         <tr key={item.id || idx}>
                           <td className={cellC}>{idx + 1}</td>
                           <td className={cell}>
-                            <span className="font-medium">{item.product?.name || 'Product'}</span>
+                            <span className="font-medium">{itemName}</span>
                             {item.variant && (
                               <span className="text-gray-500 ml-1">({item.variant})</span>
                             )}
-                            {item.product?.sku && (
-                              <div className="text-[10px] text-gray-400">SKU: {item.product.sku}</div>
+                            {itemSku && (
+                              <div className="text-[10px] text-gray-400">SKU: {itemSku}</div>
                             )}
                           </td>
                           <td className={cellC}>{hsn}</td>

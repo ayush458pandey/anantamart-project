@@ -143,7 +143,13 @@ class OrderService:
                     variant=variant_label,
                     variant_ref=variant_obj,
                     price=unit_price,
-                    total=unit_price * qty
+                    total=unit_price * qty,
+                    # --- Immutable snapshots so the invoice never changes later ---
+                    sku=(variant_obj.effective_sku if variant_obj else product.sku),
+                    product_name=product.name,
+                    hsn_code=product.hsn_code,
+                    tax_rate=product.tax_rate,
+                    unit=product.unit,
                 )
                 
                 # Decrement variant stock when applicable, else product stock.

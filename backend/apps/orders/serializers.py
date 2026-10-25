@@ -5,10 +5,23 @@ from apps.products.serializers import ProductSerializer, ProductVariantSerialize
 class OrderItemSerializer(serializers.ModelSerializer):
     product = ProductSerializer(read_only=True)
     variant_ref = ProductVariantSerializer(read_only=True)
-    
+
+    # Snapshot-aware fields: always present on the order, and backfilled for
+    # historical rows, so invoices never depend on the live product.
+    display_name = serializers.CharField(read_only=True)
+    effective_sku = serializers.CharField(read_only=True)
+    effective_hsn_code = serializers.CharField(read_only=True)
+    effective_tax_rate = serializers.DecimalField(
+        max_digits=5, decimal_places=2, read_only=True, allow_null=True
+    )
+
     class Meta:
         model = OrderItem
-        fields = ['id', 'product', 'variant', 'variant_ref', 'quantity', 'price', 'total']
+        fields = [
+            'id', 'product', 'variant', 'variant_ref', 'quantity', 'price', 'total',
+            'sku', 'product_name', 'hsn_code', 'tax_rate', 'unit',
+            'display_name', 'effective_sku', 'effective_hsn_code', 'effective_tax_rate',
+        ]
 
 class OrderSerializer(serializers.ModelSerializer):
     items = OrderItemSerializer(many=True, read_only=True)
