@@ -68,10 +68,39 @@ export const productService = {
     return response.data;
   },
 
-  // Get all brands
+  // Get all brands (follows pagination so brands beyond the first page,
+  // e.g. TAPARIA, are included with their logos).
   getBrands: async () => {
-    const response = await axiosInstance.get('/brands/');
-    return response.data.results || response.data; // Handle paginated response
+    const first = await axiosInstance.get('/brands/');
+
+    // Unpaginated response (plain array).
+    if (Array.isArray(first.data)) return first.data;
+
+    const results = [...(first.data.results || [])];
+    let next = first.data.next;
+
+    // Follow `next` links, rewriting the absolute API host to a relative path
+    // so the request goes through the configured axios baseURL/proxy.
+    while (next) {
+      let path = next;
+      try {
+        const parsed = new URL(next, window.location.origin);
+        path = parsed.pathname.replace(/^\/api/, '') + parsed.search;
+      } catch {
+        // Leave `next` as-is if it cannot be parsed.
+      }
+      const page = await axiosInstance.get(path);
+      if (Array.isArray(page.data)) {
+        results.push(...page.data);
+        break;
+      }
+      results.push(...(page.data.results || []));
+      next = page.data.next;
+      // Safety valve against an unexpected infinite loop.
+      if (results.length > 5000) break;
+    }
+
+    return results;
   },
 
   // Get brand by slug

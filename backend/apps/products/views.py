@@ -143,10 +143,27 @@ class ProductViewSet(viewsets.ModelViewSet):
             count=Count('products', filter=Q(products__is_active=True))
         ).order_by('name')
         
-        brands_list = [
-            {'name': name, 'count': count}
-            for name, count in sorted(brand_counts.items())
-        ]
+        # Resolve the full Brand records so the UI can render logos. The legacy
+        # Product.brand string has no logo, so fall back to the linked Brand.
+        brand_objs = {
+            b.name: b
+            for b in Brand.objects.filter(
+                name__in=list(brand_counts.keys()), is_active=True
+            ).only('id', 'name', 'slug', 'logo')
+        }
+        brands_list = []
+        for name, count in sorted(brand_counts.items()):
+            brand_obj = brand_objs.get(name)
+            logo_url = None
+            if brand_obj and brand_obj.logo:
+                logo_url = self.request.build_absolute_uri(brand_obj.logo.url)
+            brands_list.append({
+                'id': brand_obj.id if brand_obj else None,
+                'name': name,
+                'slug': brand_obj.slug if brand_obj else None,
+                'logo_url': logo_url,
+                'count': count,
+            })
         # Append the "Unbranded" pseudo-filter so buyers can find items without a brand.
         if unbranded_count:
             brands_list.append({
