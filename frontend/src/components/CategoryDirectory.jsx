@@ -25,7 +25,7 @@ const getCategoryIcon = (categoryName) => {
 const CategoryDirectory = ({ categories, onSelectCategory, layout = 'grid', selectedCategory = null }) => {
     if (layout === 'vertical') {
         return (
-            <div className="flex flex-col py-2 w-full bg-[#f3f4f6]">
+            <div className="flex flex-col py-2 w-full bg-app-dark">
                 {categories.map((category, index) => {
                     const isActive = selectedCategory === category.id;
                     const Icon = getCategoryIcon(category.name);

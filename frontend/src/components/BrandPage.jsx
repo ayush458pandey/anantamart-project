@@ -83,7 +83,7 @@ export default function BrandPage({ brand, allProducts = [], onBack, onProductCl
     const headerExtension = document.getElementById('header-extension');
 
     const mobileBrandHeader = headerExtension && createPortal(
-        <div className="px-3 pb-3 pt-1 bg-white sm:hidden">
+        <div className="px-3 pb-3 pt-1 bg-app sm:hidden">
             <button
                 onClick={onBack}
                 className="inline-flex items-center gap-2 text-emerald-600 active:text-emerald-700 py-2 touch-manipulation"
@@ -111,10 +111,10 @@ export default function BrandPage({ brand, allProducts = [], onBack, onProductCl
     );
 
     return (
-        <div className="min-h-screen bg-gray-50">
+        <div className="min-h-screen bg-app">
             {mobileBrandHeader}
             {/* Header */}
-            <div className="hidden sm:block bg-white shadow-sm sticky top-0 z-10">
+            <div className="hidden sm:block bg-app shadow-sm sticky top-0 z-10">
                 <div className="max-w-7xl mx-auto px-3 sm:px-4 py-4">
                     <button
                         onClick={onBack}

@@ -16,7 +16,7 @@ export default function BottomNav() {
     const currentPath = location.pathname;
 
     return (
-        <nav className="fixed bottom-0 left-0 right-0 bg-white border-t-2 border-gray-200 z-50 safe-area-inset-bottom">
+        <nav className="fixed bottom-0 left-0 right-0 bg-app border-t border-app-dark z-50 safe-area-inset-bottom">
             <div className="max-w-7xl mx-auto px-2 sm:px-4">
                 <div className="flex justify-around py-1.5 sm:py-2">
                     <NavButton

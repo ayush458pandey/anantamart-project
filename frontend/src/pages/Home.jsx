@@ -558,7 +558,7 @@ export default function Home() {
 
                 {/* Mobile Search + Category Tabs Skeleton */}
                 {document.getElementById('header-extension') && createPortal(
-                    <div className="px-3 sm:px-4 pb-2 pt-1 bg-white sm:hidden animate-pulse">
+                    <div className="px-3 sm:px-4 pb-2 pt-1 bg-app sm:hidden animate-pulse">
                         <div className="h-10 bg-gray-100 rounded-lg mb-2"></div>
                         <div className="flex gap-2 overflow-hidden pb-1">
                             {[1, 2, 3, 4, 5].map(i => (
@@ -656,7 +656,7 @@ export default function Home() {
         <>
             {/* Desktop Search Portal (rendered into Layout header) */}
             {document.getElementById('desktop-search-container') && createPortal(
-                <div className="flex items-center bg-gray-100 rounded-lg px-3 py-2 w-full">
+                <div className="flex items-center bg-white rounded-lg px-3 py-2 w-full">
                     <Search className="w-5 h-5 text-gray-400 flex-shrink-0" />
                     <input
                         type="text"
@@ -672,9 +672,9 @@ export default function Home() {
 
             {/* Mobile Search + Category Tabs - rendered inside header via portal */}
             {document.getElementById('header-extension') && createPortal(
-                <div className="px-3 sm:px-4 pb-2 pt-1 bg-white sm:hidden">
+                <div className="px-3 sm:px-4 pb-2 pt-1 bg-app sm:hidden">
                     {/* Search Bar */}
-                    <div className="flex items-center bg-gray-100 rounded-lg px-3 py-2 mb-2">
+                    <div className="flex items-center bg-white rounded-lg px-3 py-2 mb-2">
                         <Search className="w-5 h-5 text-gray-400 flex-shrink-0" />
                         <input
                             type="text"
@@ -693,7 +693,7 @@ export default function Home() {
                                     onClick={() => handleSubcategoryFilterChange([])}
                                     className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 rounded-lg font-medium text-xs sm:text-sm whitespace-nowrap transition-all touch-manipulation ${activeFilterSubcategories.length === 0
                                         ? 'bg-emerald-600 text-white shadow-md'
-                                        : 'bg-gray-200 text-gray-700 active:bg-gray-300'
+                                        : 'bg-white text-gray-700 active:bg-gray-100'
                                         }`}
                                 >
                                     <span>All</span>
@@ -706,7 +706,7 @@ export default function Home() {
                                             onClick={() => handleSubcategoryFilterChange([subcat.id])}
                                             className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 rounded-lg font-medium text-xs sm:text-sm whitespace-nowrap transition-all touch-manipulation ${isActive
                                                 ? 'bg-emerald-600 text-white shadow-md'
-                                                : 'bg-gray-200 text-gray-700 active:bg-gray-300'
+                                                : 'bg-white text-gray-700 active:bg-gray-100'
                                                 }`}
                                         >
                                             {subcat.image && (
@@ -728,7 +728,7 @@ export default function Home() {
                                     }}
                                     className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 rounded-lg font-medium text-xs sm:text-sm whitespace-nowrap transition-all touch-manipulation ${selectedCategory === 'all'
                                         ? 'bg-emerald-600 text-white shadow-md'
-                                        : 'bg-gray-200 text-gray-700 active:bg-gray-300'
+                                        : 'bg-white text-gray-700 active:bg-gray-100'
                                         }`}
                                 >
                                     <Package className={`w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0 ${selectedCategory === 'all' ? 'text-white' : 'text-emerald-600'}`} />
@@ -749,7 +749,7 @@ export default function Home() {
                                             }}
                                             className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 rounded-lg font-medium text-xs sm:text-sm whitespace-nowrap transition-all touch-manipulation ${isActive
                                                 ? 'bg-emerald-600 text-white shadow-md'
-                                                : 'bg-gray-200 text-gray-700 active:bg-gray-300'
+                                                : 'bg-white text-gray-700 active:bg-gray-100'
                                                 }`}
                                         >
                                             <CategoryIcon className={`w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0 ${isActive ? 'text-white' : 'text-emerald-600'}`} />
@@ -1061,10 +1061,10 @@ export default function Home() {
                             )}
 
                             {/* Main Content / Product Grid */}
-                            <div className={isProductView ? "flex-1 overflow-y-auto h-full sm:h-auto sm:overflow-visible bg-white relative" : ""}>
+                            <div className={isProductView ? "flex-1 overflow-y-auto h-full sm:h-auto sm:overflow-visible bg-app relative" : ""}>
                                 {/* Sticky Filter Header for Mobile */}
                                 {isProductView && (
-                                    <div className="sticky top-0 bg-white z-20 px-2 py-2 border-b border-gray-100 sm:hidden flex items-center gap-2 overflow-x-auto hide-scrollbar">
+                                    <div className="sticky top-0 bg-app z-20 px-2 py-2 border-b border-app-dark sm:hidden flex items-center gap-2 overflow-x-auto hide-scrollbar">
                                         <button 
                                             onClick={() => setMobileFiltersOpen(true)}
                                             className="flex items-center gap-1 border border-gray-300 rounded-lg px-2.5 py-1.5 text-xs font-medium text-gray-700 whitespace-nowrap bg-white shadow-sm"

@@ -16,9 +16,9 @@ const AllBrands = ({ brands, onBrandClick, onBack }) => {
     });
 
     return (
-        <div className="min-h-screen bg-white">
+        <div className="min-h-screen bg-app">
             {/* Header */}
-            <div className="sticky top-0 bg-white border-b z-10 px-4 py-3 flex items-center gap-3">
+            <div className="sticky top-0 bg-app border-b border-app-dark z-10 px-4 py-3 flex items-center gap-3">
                 <button onClick={onBack} className="p-2 hover:bg-gray-100 rounded-full">
                     <ChevronLeft className="w-6 h-6 text-gray-700" />
                 </button>
@@ -37,7 +37,7 @@ const AllBrands = ({ brands, onBrandClick, onBack }) => {
                         placeholder="Find a brand..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none transition-all"
+                        className="w-full pl-10 pr-4 py-3 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none transition-all"
                     />
                 </div>
 

@@ -19,9 +19,9 @@ export default function Layout() {
     }
 
     return (
-        <div className="min-h-screen bg-gray-50 pb-24 sm:pb-20">
+        <div className="min-h-screen bg-app pb-24 sm:pb-20">
             {/* Header */}
-            <header className="sticky top-0 bg-white shadow-md z-40">
+            <header className="sticky top-0 bg-app shadow-sm z-40">
                 <div className="max-w-7xl mx-auto px-3 sm:px-4 py-2 sm:py-4">
                     <div className="flex items-center justify-between sm:justify-start gap-2 sm:gap-4 sm:mb-0">
                         <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0 cursor-pointer" onClick={() => window.location.href = '/'}>
@@ -37,7 +37,7 @@ export default function Layout() {
 
                         <div className="hidden sm:flex flex-1 max-w-2xl min-w-0 min-h-10" id="desktop-search-container">
                             {location.pathname !== '/' && (
-                                <div className="flex items-center bg-gray-100 rounded-lg px-3 py-2 w-full cursor-pointer" onClick={() => navigate('/')}>
+                                <div className="flex items-center bg-white rounded-lg px-3 py-2 w-full cursor-pointer" onClick={() => navigate('/')}>
                                     <Search className="w-5 h-5 text-gray-400 flex-shrink-0" />
                                     <span className="flex-1 ml-2 text-gray-400 text-base">Search products...</span>
                                 </div>

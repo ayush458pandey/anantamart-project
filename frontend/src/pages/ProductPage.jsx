@@ -87,7 +87,7 @@ export default function ProductPage() {
   }
 
   return (
-    <div className="bg-gray-50 min-h-screen">
+    <div className="bg-app min-h-screen">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4">
         {/* Breadcrumb */}
         <nav className="flex items-center flex-wrap gap-1 text-xs sm:text-sm text-gray-500 mb-4">

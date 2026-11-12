@@ -4,7 +4,7 @@ import { getImageSrcSet, getOptimizedImageUrl } from '../utils/imageUtils';
 
 const TagDirectory = ({ tags, onSelectTag, selectedTags = [] }) => {
     return (
-        <div className="flex flex-col py-2 w-full bg-[#f3f4f6]">
+        <div className="flex flex-col py-2 w-full bg-app-dark">
             {tags && tags.map((tag, index) => {
                 const isActive = selectedTags.includes(tag.id) || selectedTags.includes(String(tag.id));
                 
