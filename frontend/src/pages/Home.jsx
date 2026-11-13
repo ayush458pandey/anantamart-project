@@ -18,6 +18,7 @@ import FilterSidebar from '../components/FilterSidebar';
 import { productService } from '../api/services/productService';
 import CategoryDirectory from '../components/CategoryDirectory';
 import TagDirectory from '../components/TagDirectory';
+import { UNTAGGED_TAG_ID } from '../utils/tagConstants';
 import { getOptimizedImageUrl } from '../utils/imageUtils';
 
 import '../index.css';
@@ -444,7 +445,11 @@ export default function Home() {
             let matchesTags = true;
             if (selectedTags.length > 0) {
                 const productTagIds = (product.tag_list || []).map(t => t.id);
-                if (filterOptions?.tag_groups) {
+
+                // "Others" is a pseudo-tag: it matches products with no tags at all.
+                if (selectedTags.includes(UNTAGGED_TAG_ID)) {
+                    matchesTags = productTagIds.length === 0;
+                } else if (filterOptions?.tag_groups) {
                     // 1. Group selected tags by their TagGroup
                     const selectedGroups = {};
                     const unscopedTagIds = [];
@@ -487,6 +492,21 @@ export default function Home() {
             return matchesSearch && matchesCategory && matchesSubcategory && matchesBrand && matchesTags;
         });
     }, [products, searchQuery, selectedCategory, activeFilterSubcategories, selectedBrands, selectedTags, filterOptions]);
+
+    // Products in the current subcategory scope that carry no tags. Drives the
+    // "Others" tile in the tag rail.
+    const untaggedCount = useMemo(() => {
+        if (activeFilterSubcategories.length === 0) return 0;
+
+        return products.filter(product => {
+            const matchesCategory = selectedCategory === 'all' ||
+                String(getProductCategoryId(product)) === String(selectedCategory);
+            const matchesSubcategory = activeFilterSubcategories.some(
+                subcategoryId => String(getProductSubcategoryId(product)) === String(subcategoryId)
+            );
+            return matchesCategory && matchesSubcategory && (product.tag_list || []).length === 0;
+        }).length;
+    }, [products, selectedCategory, activeFilterSubcategories]);
 
     const productsByCategory = useMemo(() => {
         const groups = new Map();
@@ -1070,11 +1090,11 @@ export default function Home() {
                                         <TagDirectory 
                                             tags={filterOptions?.tag_groups?.flatMap(group => group.tags) || []}
                                             selectedTags={selectedTags}
+                                            untaggedCount={untaggedCount}
                                             onSelectTag={(tag) => {
                                                 const isSelected = selectedTags.includes(tag.id) || selectedTags.includes(String(tag.id));
                                                 setSelectedTags(isSelected ? [] : [tag.id]);
                                             }}
-                                            onClearTags={() => setSelectedTags([])}
                                         />
                                     )}
                                 </div>

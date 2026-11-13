@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { X, Filter, ChevronDown, ChevronUp } from 'lucide-react';
+import { UNTAGGED_TAG_ID } from '../utils/tagConstants';
 
 /**
  * FilterSidebar Component
@@ -239,7 +240,9 @@ function FilterContent({
                                 key={tagId}
                                 className="inline-flex items-center gap-1 bg-white border border-emerald-200 rounded-full px-2 py-1 mr-2 mb-2 text-xs"
                             >
-                                <span className="text-gray-700">{tagObj ? tagObj.name : 'Selected tag'}</span>
+                                <span className="text-gray-700">
+                                    {tagId === UNTAGGED_TAG_ID ? 'Others (No Tags)' : (tagObj ? tagObj.name : 'Selected tag')}
+                                </span>
                                 <button
                                     onClick={() => handleTagToggle(tagId)}
                                     className="text-gray-500 hover:text-red-600"
