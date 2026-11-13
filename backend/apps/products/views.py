@@ -182,15 +182,19 @@ class ProductViewSet(viewsets.ModelViewSet):
                 }
                 for s in subcategories
             ],
-            'tag_groups': self._get_tag_groups_for_category(category_id, subcategory_list, products)
+            # Count tags over the same scope as the tag list, so the number shown
+            # next to a tag matches the products returned when it is selected.
+            'tag_groups': self._get_tag_groups_for_category(
+                category_id, subcategory_list, products_for_brands
+            )
         })
     
     def _get_tag_groups_for_category(self, category_id, subcategory_list, products_qs):
         """Get tag groups applicable to this category, with tag counts.
         
-        Tags are scoped by subcategory: if a subcategory is selected,
-        ONLY tags explicitly assigned to that subcategory will be shown.
-        Category-wide tags (Group tags) will only show when viewing the parent category.
+        Tags are scoped by subcategory: if a subcategory is selected, tags
+        explicitly assigned to that subcategory are shown, plus category-wide
+        tags (those with no subcategories assigned), which apply everywhere.
         """
         # Get all active tags that belong to groups linked to this category,
         # OR ungrouped tags linked to subcategories in this category
@@ -209,10 +213,14 @@ class ProductViewSet(viewsets.ModelViewSet):
             Q(subcategories__id__in=category_subcategory_ids)
         ).distinct().select_related('group').prefetch_related('subcategories')
         
-        # If specific subcategories are selected, ONLY show tags explicitly assigned to them
+        # If specific subcategories are selected, show tags explicitly assigned to
+        # them plus category-wide tags. A tag with no subcategories assigned means
+        # "applies to all in the category" (see ProductTag.subcategories help_text),
+        # so it must not be dropped by the M2M join.
         if subcategory_list:
             tags = tags.filter(
-                subcategories__id__in=subcategory_list
+                Q(subcategories__id__in=subcategory_list) |
+                Q(subcategories__isnull=True)
             ).distinct()
         
         # Group tags by their TagGroup (None key for ungrouped)
