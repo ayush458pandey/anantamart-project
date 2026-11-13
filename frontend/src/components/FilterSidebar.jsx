@@ -73,11 +73,11 @@ export default function FilterSidebar({
             return (
                 <button
                     onClick={onToggle}
-                    className="fixed bottom-20 right-4 bg-emerald-600 text-white p-3 rounded-full shadow-lg z-40 flex items-center gap-2"
+                    className="fixed bottom-20 right-4 bg-white text-blue-700 p-3 rounded-full shadow-lg z-40 flex items-center gap-2"
                 >
                     <Filter className="w-5 h-5" />
                     {hasActiveFilters && (
-                        <span className="bg-white text-emerald-600 text-xs font-bold px-2 py-0.5 rounded-full">
+                        <span className="bg-blue-700 text-white text-xs font-bold px-2 py-0.5 rounded-full">
                             {selectedBrands.length + selectedSubcategories.length + selectedTags.length}
                         </span>
                     )}

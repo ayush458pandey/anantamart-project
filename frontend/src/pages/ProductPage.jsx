@@ -72,9 +72,9 @@ export default function ProductPage() {
   if (error || !product) {
     return (
       <div className="max-w-2xl mx-auto py-16 px-4 text-center">
-        <Package className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-        <h1 className="text-xl font-bold text-gray-900 mb-2">{error || 'Product not found'}</h1>
-        <p className="text-sm text-gray-500 mb-6">The product you are looking for may have been removed or is unavailable.</p>
+        <Package className="w-16 h-16 text-white/50 mx-auto mb-4" />
+        <h1 className="text-xl font-bold text-white mb-2">{error || 'Product not found'}</h1>
+        <p className="text-sm text-white/80 mb-6">The product you are looking for may have been removed or is unavailable.</p>
         <button
           onClick={() => navigate('/')}
           className="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-5 py-2.5 rounded-lg transition-colors"
@@ -90,21 +90,21 @@ export default function ProductPage() {
     <div className="bg-app min-h-screen">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4">
         {/* Breadcrumb */}
-        <nav className="flex items-center flex-wrap gap-1 text-xs sm:text-sm text-gray-500 mb-4">
-          <Link to="/" className="hover:text-emerald-600 transition-colors">Home</Link>
+        <nav className="flex items-center flex-wrap gap-1 text-xs sm:text-sm text-white/80 mb-4">
+          <Link to="/" className="hover:text-white transition-colors">Home</Link>
           {product.category_name && (
             <>
-              <ChevronRight className="w-3.5 h-3.5 text-gray-300" />
+              <ChevronRight className="w-3.5 h-3.5 text-white/50" />
               <span>{product.category_name}</span>
             </>
           )}
-          <ChevronRight className="w-3.5 h-3.5 text-gray-300" />
-          <span className="text-gray-700 font-medium truncate max-w-[200px] sm:max-w-none">{product.name}</span>
+          <ChevronRight className="w-3.5 h-3.5 text-white/50" />
+          <span className="text-white font-medium truncate max-w-[200px] sm:max-w-none">{product.name}</span>
         </nav>
 
         <Suspense fallback={
           <div className="min-h-[60vh] flex items-center justify-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600"></div>
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
           </div>
         }>
           <ProductDetail

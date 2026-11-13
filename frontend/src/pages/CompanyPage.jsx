@@ -64,11 +64,11 @@ export default function CompanyPage({ page = 'about' }) {
   return (
     <div className="max-w-4xl mx-auto py-8 sm:py-12">
       <div className="mb-8">
-        <Link to="/" className="text-sm font-medium text-emerald-600 hover:text-emerald-700">
+        <Link to="/" className="text-sm font-medium text-white hover:text-white/80">
           Back to catalog
         </Link>
-        <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mt-4">{content.title}</h1>
-        <p className="text-base sm:text-lg text-gray-600 mt-3">{content.subtitle}</p>
+        <h1 className="text-3xl sm:text-4xl font-bold text-white mt-4">{content.title}</h1>
+        <p className="text-base sm:text-lg text-white/80 mt-3">{content.subtitle}</p>
       </div>
 
       <div className="space-y-6">

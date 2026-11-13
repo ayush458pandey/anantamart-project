@@ -303,7 +303,7 @@ export default function ProductDetail({ product, onClose, onAddToCart, onBrandCl
           {embedded ? (
             <button
               onClick={onClose}
-              className="flex items-center gap-2 text-sm font-semibold text-gray-600 hover:text-emerald-600 transition-colors mb-3"
+              className="flex items-center gap-2 text-sm font-semibold text-white hover:text-white/80 transition-colors mb-3"
             >
               <ArrowLeft className="w-4 h-4" />
               Back to catalog

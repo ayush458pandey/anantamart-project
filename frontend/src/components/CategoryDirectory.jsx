@@ -55,12 +55,12 @@ const CategoryDirectory = ({ categories, onSelectCategory, layout = 'grid', sele
                                         decoding={index < 8 ? "sync" : "async"}
                                     />
                                 ) : (
-                                    <Icon className={`w-6 h-6 ${isActive ? 'text-green-600' : 'text-gray-500'}`} />
+                                    <Icon className={`w-6 h-6 ${isActive ? 'text-green-600' : 'text-white/80'}`} />
                                 )}
                             </div>
                             
                             {/* Label */}
-                            <span className={`text-[10px] text-center leading-tight px-1 font-medium ${isActive ? 'text-gray-900' : 'text-gray-500'}`}>
+                            <span className={`text-[10px] text-center leading-tight px-1 font-medium ${isActive ? 'text-gray-900' : 'text-white/80'}`}>
                                 {category.short_name || category.name}
                             </span>
                         </div>
@@ -73,7 +73,7 @@ const CategoryDirectory = ({ categories, onSelectCategory, layout = 'grid', sele
     return (
         <div className="pb-2">
             <div className="flex items-center justify-between mb-4 px-1">
-                <h3 className="text-base sm:text-lg font-bold text-gray-800">
+                <h3 className="text-base sm:text-lg font-bold text-white">
                     Shop by Category
                 </h3>
             </div>
@@ -109,7 +109,7 @@ const CategoryDirectory = ({ categories, onSelectCategory, layout = 'grid', sele
                             </div>
 
                             {/* Category Name */}
-                            <span className="mt-2 text-[10px] sm:text-xs font-medium text-gray-600 text-center w-full px-1 group-hover:text-emerald-700 line-clamp-2">
+                            <span className="mt-2 text-[10px] sm:text-xs font-medium text-white text-center w-full px-1 line-clamp-2">
                                 {category.short_name || category.name}
                             </span>
                         </div>
