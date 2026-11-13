@@ -232,12 +232,14 @@ function FilterContent({
                             }
                         }
                         
-                        return tagObj ? (
+                        // Render even when the tag is not in the current scope, so a
+                        // stale selection can always be removed.
+                        return (
                             <div
                                 key={tagId}
                                 className="inline-flex items-center gap-1 bg-white border border-emerald-200 rounded-full px-2 py-1 mr-2 mb-2 text-xs"
                             >
-                                <span className="text-gray-700">{tagObj.name}</span>
+                                <span className="text-gray-700">{tagObj ? tagObj.name : 'Selected tag'}</span>
                                 <button
                                     onClick={() => handleTagToggle(tagId)}
                                     className="text-gray-500 hover:text-red-600"
@@ -245,7 +247,7 @@ function FilterContent({
                                     <X className="w-3 h-3" />
                                 </button>
                             </div>
-                        ) : null;
+                        );
                     })}
                 </div>
             )}

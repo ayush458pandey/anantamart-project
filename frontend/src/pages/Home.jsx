@@ -156,6 +156,10 @@ export default function Home() {
     const selectSubcategory = (subcat) => {
         pushHistory();
         setSelectedSubcategory(subcat);
+        // Tags are scoped per subcategory, so a tag picked in the previous
+        // subcategory may not exist here. Clear it instead of leaving a filter
+        // that silently matches nothing.
+        setSelectedTags([]);
         setShowSubcategoryView(false);
     };
     const openAllBrands = () => {
@@ -361,6 +365,7 @@ export default function Home() {
     const handleBackToSubcategories = () => {
         setSelectedSubcategory(null);
         setSelectedFilterSubcategories([]);
+        setSelectedTags([]);
         setShowSubcategoryView(true);
     };
 
@@ -372,6 +377,9 @@ export default function Home() {
     const handleSubcategoryFilterChange = (subcategories) => {
         setSelectedSubcategory(null);
         setSelectedFilterSubcategories(subcategories);
+        // Same reason as selectSubcategory: the available tags change with the
+        // subcategory scope, so a stale tag would filter nothing.
+        setSelectedTags([]);
         setShowSubcategoryView(false);
     };
 
@@ -435,20 +443,26 @@ export default function Home() {
             // Tag logic: OR within group, AND across groups
             let matchesTags = true;
             if (selectedTags.length > 0) {
+                const productTagIds = (product.tag_list || []).map(t => t.id);
                 if (filterOptions?.tag_groups) {
                     // 1. Group selected tags by their TagGroup
                     const selectedGroups = {};
+                    const unscopedTagIds = [];
                     for (const tagId of selectedTags) {
                         // Find which group this tag belongs to
                         const group = filterOptions.tag_groups.find(g => g.tags.some(t => t.id === tagId));
                         if (group) {
                             if (!selectedGroups[group.id]) selectedGroups[group.id] = [];
                             selectedGroups[group.id].push(tagId);
+                        } else {
+                            // Tag is not offered in the current scope. Filter by it
+                            // anyway so results match the active-filter badge instead
+                            // of silently ignoring the selection.
+                            unscopedTagIds.push(tagId);
                         }
                     }
-                    
+
                     // 2. Check each group
-                    const productTagIds = (product.tag_list || []).map(t => t.id);
                     for (const groupId in selectedGroups) {
                         const groupSelectedTagIds = selectedGroups[groupId];
                         // Product must have AT LEAST ONE tag from this group (OR logic within group)
@@ -458,11 +472,16 @@ export default function Home() {
                             break; // Failed AND condition across groups
                         }
                     }
-                } else {
+
+                    if (matchesTags && unscopedTagIds.length > 0) {
+                        matchesTags = unscopedTagIds.some(tagId => productTagIds.includes(tagId));
+                    }
+                } else if (selectedCategory === 'all') {
                     // Global fallback: when no category is selected, just check if product has ALL selected tags
-                    const productTagIds = (product.tag_list || []).map(t => t.id);
                     matchesTags = selectedTags.every(tagId => productTagIds.includes(tagId));
                 }
+                // Otherwise the category's tag groups are still loading. Leave the
+                // filter inactive rather than briefly applying the wrong AND logic.
             }
 
             return matchesSearch && matchesCategory && matchesSubcategory && matchesBrand && matchesTags;
@@ -1055,6 +1074,7 @@ export default function Home() {
                                                 const isSelected = selectedTags.includes(tag.id) || selectedTags.includes(String(tag.id));
                                                 setSelectedTags(isSelected ? [] : [tag.id]);
                                             }}
+                                            onClearTags={() => setSelectedTags([])}
                                         />
                                     )}
                                 </div>

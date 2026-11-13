@@ -1,10 +1,31 @@
 import React from 'react';
-import { Tag } from 'lucide-react';
+import { Tag, LayoutGrid } from 'lucide-react';
 import { getImageSrcSet, getOptimizedImageUrl } from '../utils/imageUtils';
 
-const TagDirectory = ({ tags, onSelectTag, selectedTags = [] }) => {
+const TagDirectory = ({ tags, onSelectTag, selectedTags = [], onClearTags }) => {
+    const hasSelection = selectedTags.length > 0;
+    const hasTags = Boolean(tags && tags.length > 0);
+
     return (
         <div className="flex flex-col py-2 w-full bg-[#f3f4f6]">
+            {/* "All" entry so a selected tag can be cleared without re-tapping it */}
+            {onClearTags && hasTags && (
+                <div
+                    onClick={onClearTags}
+                    className={`relative flex flex-col items-center py-3 cursor-pointer ${!hasSelection ? 'bg-white' : ''}`}
+                >
+                    {!hasSelection && (
+                        <div className="absolute right-0 top-0 bottom-0 w-1 bg-green-600 rounded-l" />
+                    )}
+                    <div className={`w-14 h-14 rounded-full flex items-center justify-center overflow-hidden mb-1 ${!hasSelection ? 'bg-green-100 ring-2 ring-green-100 ring-offset-1' : 'bg-white shadow-sm'}`}>
+                        <LayoutGrid className={`w-6 h-6 ${!hasSelection ? 'text-green-600' : 'text-gray-500'}`} />
+                    </div>
+                    <span className={`text-[10px] text-center leading-tight px-1 font-medium ${!hasSelection ? 'text-gray-900' : 'text-gray-500'}`}>
+                        All
+                    </span>
+                </div>
+            )}
+
             {tags && tags.map((tag, index) => {
                 const isActive = selectedTags.includes(tag.id) || selectedTags.includes(String(tag.id));
                 
