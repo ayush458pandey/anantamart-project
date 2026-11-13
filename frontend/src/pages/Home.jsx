@@ -558,7 +558,7 @@ export default function Home() {
 
                 {/* Mobile Search + Category Tabs Skeleton */}
                 {document.getElementById('header-extension') && createPortal(
-                    <div className="px-3 sm:px-4 pb-2 pt-1 bg-app sm:hidden animate-pulse">
+                    <div className="px-3 sm:px-4 pb-2 pt-1 bg-white sm:hidden animate-pulse">
                         <div className="h-10 bg-gray-100 rounded-lg mb-2"></div>
                         <div className="flex gap-2 overflow-hidden pb-1">
                             {[1, 2, 3, 4, 5].map(i => (
@@ -595,8 +595,8 @@ export default function Home() {
 
                     {/* Loading message */}
                     <div className="text-center mt-6">
-                        <div className="inline-flex items-center gap-2 text-white/80 text-sm">
-                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                        <div className="inline-flex items-center gap-2 text-gray-500 text-sm">
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-emerald-600"></div>
                             Loading Anantamart...
                         </div>
                     </div>
@@ -656,7 +656,7 @@ export default function Home() {
         <>
             {/* Desktop Search Portal (rendered into Layout header) */}
             {document.getElementById('desktop-search-container') && createPortal(
-                <div className="flex items-center bg-white rounded-lg px-3 py-2 w-full">
+                <div className="flex items-center bg-gray-100 rounded-lg px-3 py-2 w-full">
                     <Search className="w-5 h-5 text-gray-400 flex-shrink-0" />
                     <input
                         type="text"
@@ -672,9 +672,9 @@ export default function Home() {
 
             {/* Mobile Search + Category Tabs - rendered inside header via portal */}
             {document.getElementById('header-extension') && createPortal(
-                <div className="px-3 sm:px-4 pb-2 pt-1 bg-app sm:hidden">
+                <div className="px-3 sm:px-4 pb-2 pt-1 bg-white sm:hidden">
                     {/* Search Bar */}
-                    <div className="flex items-center bg-white rounded-lg px-3 py-2 mb-2">
+                    <div className="flex items-center bg-gray-100 rounded-lg px-3 py-2 mb-2">
                         <Search className="w-5 h-5 text-gray-400 flex-shrink-0" />
                         <input
                             type="text"
@@ -693,7 +693,7 @@ export default function Home() {
                                     onClick={() => handleSubcategoryFilterChange([])}
                                     className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 rounded-lg font-medium text-xs sm:text-sm whitespace-nowrap transition-all touch-manipulation ${activeFilterSubcategories.length === 0
                                         ? 'bg-emerald-600 text-white shadow-md'
-                                        : 'bg-white text-gray-700 active:bg-gray-100'
+                                        : 'bg-gray-200 text-gray-700 active:bg-gray-300'
                                         }`}
                                 >
                                     <span>All</span>
@@ -706,7 +706,7 @@ export default function Home() {
                                             onClick={() => handleSubcategoryFilterChange([subcat.id])}
                                             className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 rounded-lg font-medium text-xs sm:text-sm whitespace-nowrap transition-all touch-manipulation ${isActive
                                                 ? 'bg-emerald-600 text-white shadow-md'
-                                                : 'bg-white text-gray-700 active:bg-gray-100'
+                                                : 'bg-gray-200 text-gray-700 active:bg-gray-300'
                                                 }`}
                                         >
                                             {subcat.image && (
@@ -728,7 +728,7 @@ export default function Home() {
                                     }}
                                     className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 rounded-lg font-medium text-xs sm:text-sm whitespace-nowrap transition-all touch-manipulation ${selectedCategory === 'all'
                                         ? 'bg-emerald-600 text-white shadow-md'
-                                        : 'bg-white text-gray-700 active:bg-gray-100'
+                                        : 'bg-gray-200 text-gray-700 active:bg-gray-300'
                                         }`}
                                 >
                                     <Package className={`w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0 ${selectedCategory === 'all' ? 'text-white' : 'text-emerald-600'}`} />
@@ -749,7 +749,7 @@ export default function Home() {
                                             }}
                                             className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 rounded-lg font-medium text-xs sm:text-sm whitespace-nowrap transition-all touch-manipulation ${isActive
                                                 ? 'bg-emerald-600 text-white shadow-md'
-                                                : 'bg-white text-gray-700 active:bg-gray-100'
+                                                : 'bg-gray-200 text-gray-700 active:bg-gray-300'
                                                 }`}
                                         >
                                             <CategoryIcon className={`w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0 ${isActive ? 'text-white' : 'text-emerald-600'}`} />
@@ -768,12 +768,12 @@ export default function Home() {
             {!selectedSubcategory && showBrandRail && visibleBrands.length > 0 && (
                 <div className="mb-5">
                     <div className="flex items-center justify-between mb-3 px-1">
-                        <h3 className="text-base sm:text-lg font-bold text-white">
+                        <h3 className="text-base sm:text-lg font-bold text-gray-800">
                             Browse by Brand
                         </h3>
                         <button
                             onClick={() => openAllBrands()}
-                            className="text-xs sm:text-sm font-medium text-white hover:text-white/80 transition-colors flex items-center gap-1"
+                            className="text-xs sm:text-sm font-medium text-emerald-600 hover:text-emerald-700 transition-colors flex items-center gap-1"
                         >
                             View All <span className="text-lg">›</span>
                         </button>
@@ -790,26 +790,26 @@ export default function Home() {
             <div className="mb-3 sm:mb-4 px-1 flex items-start justify-between gap-3">
                 <div className="min-w-0">
                     {searchQuery ? (
-                        <h2 className="text-base sm:text-lg font-bold text-white">
+                        <h2 className="text-base sm:text-lg font-bold text-gray-800">
                             Search Results for "{searchQuery}"
-                            <span className="text-xs font-normal text-white bg-white/20 px-2 py-1 rounded-full">
+                            <span className="text-xs font-normal text-gray-500 bg-gray-100 px-2 py-1 rounded-full border border-gray-200">
                                 {filteredProducts.length} items
                             </span>
                         </h2>
                     ) : selectedSubcategory && activeSubcategory ? (
                         <div>
-                            <span className="text-xs font-medium text-white/80 uppercase tracking-wider">
+                            <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">
                                 {currentCategoryName}
                             </span>
-                            <h2 className="text-xl sm:text-2xl font-bold text-white flex items-center gap-2 mt-0.5">
+                            <h2 className="text-xl sm:text-2xl font-bold text-emerald-800 flex items-center gap-2 mt-0.5">
                                 {activeSubcategory.name}
-                                <span className="text-xs font-normal text-white bg-white/20 px-2 py-1 rounded-full">
+                                <span className="text-xs font-normal text-gray-500 bg-gray-100 px-2 py-1 rounded-full border border-gray-200">
                                     {filteredProducts.length} items
                                 </span>
                             </h2>
                         </div>
                     ) : (
-                        <h2 className="text-base sm:text-lg font-bold text-white">
+                        <h2 className="text-base sm:text-lg font-bold text-gray-800">
                             {selectedCategory === 'all' ? 'All Products' : currentCategoryName}
                         </h2>
                     )}
@@ -818,12 +818,12 @@ export default function Home() {
                 {selectedCategory !== 'all' && !isProductView && (
                     <button
                         onClick={() => setMobileFiltersOpen(true)}
-                        className="lg:hidden inline-flex items-center gap-1.5 rounded-lg bg-white px-3 py-2 text-xs font-semibold text-blue-700 shadow-sm active:bg-white/90"
+                        className="lg:hidden inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-3 py-2 text-xs font-semibold text-white shadow-sm active:bg-emerald-700"
                     >
                         <FilterIcon className="w-4 h-4" />
                         <span>Filters</span>
                         {(selectedBrands.length + activeFilterSubcategories.length + selectedTags.length) > 0 && (
-                            <span className="bg-blue-700 text-white rounded-full px-1.5 py-0.5 text-[10px] leading-none">
+                            <span className="bg-white text-emerald-700 rounded-full px-1.5 py-0.5 text-[10px] leading-none">
                                 {selectedBrands.length + activeFilterSubcategories.length + selectedTags.length}
                             </span>
                         )}
@@ -871,10 +871,10 @@ export default function Home() {
 
                         <div className="flex-1 min-w-0">
                             <div className="flex items-center justify-between mb-3 px-1">
-                                <h3 className="text-sm sm:text-base font-bold text-white">Browse by Subcategory</h3>
+                                <h3 className="text-sm sm:text-base font-bold text-gray-700">Browse by Subcategory</h3>
                                 <button
                                     onClick={() => setShowSubcategoryView(false)}
-                                    className="text-xs text-white hover:text-white/80 font-medium"
+                                    className="text-xs text-emerald-600 hover:text-emerald-700 font-medium"
                                 >
                                     View All Products
                                 </button>
@@ -895,7 +895,7 @@ export default function Home() {
             {selectedSubcategory && (
                 <button
                     onClick={handleBackToSubcategories}
-                    className="flex items-center text-sm font-medium text-white hover:text-white/80 mb-3 px-1 transition-colors group"
+                    className="flex items-center text-sm font-medium text-emerald-600 hover:text-emerald-700 mb-3 px-1 transition-colors group"
                 >
                     <ChevronLeft className="w-5 h-5 mr-1 group-hover:-translate-x-1 transition-transform" />
                     Back to {currentCategoryName}
@@ -913,7 +913,7 @@ export default function Home() {
                             {!loadingBusinessTags && businessTags && businessTags.length > 0 && (
                                 <div className="pb-4 border-b border-gray-100">
                                     <div className="flex items-center justify-between mb-4 px-1">
-                                        <h2 className="text-base sm:text-lg font-bold text-white">
+                                        <h2 className="text-base sm:text-lg font-bold text-gray-800">
                                             Shop by Business
                                         </h2>
                                     </div>
@@ -947,7 +947,7 @@ export default function Home() {
                                                 </div>
                                                 {/* TEXT LABEL */}
                                                 <div className="mt-2 w-full px-1 text-center">
-                                                    <span className="text-xs sm:text-sm font-semibold text-white line-clamp-2 leading-tight transition-colors">
+                                                    <span className="text-xs sm:text-sm font-semibold text-gray-800 line-clamp-2 leading-tight group-hover:text-emerald-700 transition-colors">
                                                         {tag.name}
                                                     </span>
                                                 </div>
@@ -975,8 +975,8 @@ export default function Home() {
                                     return (
                                         <div key={category.id} className="border-b border-gray-100 pb-4 last:border-0">
                                             <div className="flex items-center justify-between mb-3 px-1">
-                                                <h3 className="text-lg sm:text-xl font-bold text-white flex items-center gap-2">
-                                                    {CategoryIcon && <CategoryIcon className="w-5 h-5 text-white" />}
+                                                <h3 className="text-lg sm:text-xl font-bold text-gray-800 flex items-center gap-2">
+                                                    {CategoryIcon && <CategoryIcon className="w-5 h-5 text-emerald-600" />}
                                                     {category.name}
                                                 </h3>
                                                 <button
@@ -984,7 +984,7 @@ export default function Home() {
                                                         setSelectedCategory(category.id);
                                                         window.scrollTo({ top: 0, behavior: 'smooth' });
                                                     }}
-                                                    className="text-xs sm:text-sm font-medium text-white bg-white/15 hover:bg-white/25 px-3 py-1 rounded-full transition-colors"
+                                                    className="text-xs sm:text-sm font-medium text-emerald-600 hover:text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full transition-colors"
                                                 >
                                                     View All
                                                 </button>
@@ -1024,7 +1024,7 @@ export default function Home() {
                                                                 setSelectedCategory(category.id);
                                                                 window.scrollTo({ top: 0, behavior: 'smooth' });
                                                             }}
-                                                            className="flex flex-col items-center gap-2 text-white/80 hover:text-white"
+                                                            className="flex flex-col items-center gap-2 text-gray-500 hover:text-emerald-600"
                                                         >
                                                             <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gray-100 flex items-center justify-center">
                                                                 <span className="text-xl font-bold">→</span>
@@ -1061,10 +1061,10 @@ export default function Home() {
                             )}
 
                             {/* Main Content / Product Grid */}
-                            <div className={isProductView ? "flex-1 overflow-y-auto h-full sm:h-auto sm:overflow-visible bg-app relative" : ""}>
+                            <div className={isProductView ? "flex-1 overflow-y-auto h-full sm:h-auto sm:overflow-visible bg-white relative" : ""}>
                                 {/* Sticky Filter Header for Mobile */}
                                 {isProductView && (
-                                    <div className="sticky top-0 bg-app z-20 px-2 py-2 border-b border-app-dark sm:hidden flex items-center gap-2 overflow-x-auto hide-scrollbar">
+                                    <div className="sticky top-0 bg-white z-20 px-2 py-2 border-b border-gray-100 sm:hidden flex items-center gap-2 overflow-x-auto hide-scrollbar">
                                         <button 
                                             onClick={() => setMobileFiltersOpen(true)}
                                             className="flex items-center gap-1 border border-gray-300 rounded-lg px-2.5 py-1.5 text-xs font-medium text-gray-700 whitespace-nowrap bg-white shadow-sm"
@@ -1110,10 +1110,10 @@ export default function Home() {
                                 <div className="flex-1 min-w-0">
                                     {selectedTags.length > 0 && selectedCategory === 'all' && (
                                         <div className="flex items-center gap-2 mb-4 px-2 sm:px-0">
-                                            <span className="text-sm font-medium text-white">Viewing filtered products</span>
+                                            <span className="text-sm font-medium text-gray-700">Viewing filtered products</span>
                                             <button 
                                                 onClick={() => setSelectedTags([])}
-                                                className="text-xs bg-white text-blue-700 px-3 py-1.5 rounded-full hover:bg-white/90 transition-colors"
+                                                className="text-xs bg-emerald-100 text-emerald-700 px-3 py-1.5 rounded-full hover:bg-emerald-200 transition-colors"
                                             >
                                                 Clear Filter ✕
                                             </button>
@@ -1138,7 +1138,7 @@ export default function Home() {
                                     {filteredProducts.length === 0 && (
                                         <div className="text-center py-12 sm:py-16">
                                             <Package className="w-12 h-12 sm:w-16 sm:h-16 text-gray-300 mx-auto mb-3" />
-                                            <p className="text-sm sm:text-base text-white/80">No products found</p>
+                                            <p className="text-sm sm:text-base text-gray-500">No products found</p>
                                         </div>
                                     )}
                                 </div>
@@ -1160,8 +1160,8 @@ function TagDirectorySkeleton() {
         <div className="flex flex-col py-2 w-full animate-pulse">
             {[0, 1, 2, 3, 4, 5, 6].map((i) => (
                 <div key={i} className="relative flex flex-col items-center py-3">
-                    <div className="w-14 h-14 rounded-full bg-white/30 mb-1" />
-                    <div className="h-2.5 w-10 rounded bg-white/30" />
+                    <div className="w-14 h-14 rounded-full bg-gray-200 mb-1" />
+                    <div className="h-2.5 w-10 rounded bg-gray-200" />
                 </div>
             ))}
         </div>

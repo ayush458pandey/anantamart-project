@@ -10,8 +10,6 @@ export default {
         primary: '#00a86b',
         'primary-dark': '#008f5a',
         secondary: '#f3f4f6',
-        app: '#2454ff',
-        'app-dark': '#1c46d6',
       },
     },
   },

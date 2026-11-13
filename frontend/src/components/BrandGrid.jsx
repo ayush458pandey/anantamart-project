@@ -63,7 +63,7 @@ const BrandGrid = ({ brands, onBrandClick, isLoading }) => {
                     </div>
 
                     {/* LABEL */}
-                    <span className="mt-2 text-[10px] sm:text-xs font-medium text-white text-center truncate w-20 sm:w-24 px-1">
+                    <span className="mt-2 text-[10px] sm:text-xs font-medium text-gray-600 text-center truncate w-20 sm:w-24 px-1 group-hover:text-emerald-700">
                         {brand.name}
                     </span>
                 </div>

@@ -83,10 +83,10 @@ export default function BrandPage({ brand, allProducts = [], onBack, onProductCl
     const headerExtension = document.getElementById('header-extension');
 
     const mobileBrandHeader = headerExtension && createPortal(
-        <div className="px-3 pb-3 pt-1 bg-app sm:hidden">
+        <div className="px-3 pb-3 pt-1 bg-white sm:hidden">
             <button
                 onClick={onBack}
-                className="inline-flex items-center gap-2 text-white active:text-white/80 py-2 touch-manipulation"
+                className="inline-flex items-center gap-2 text-emerald-600 active:text-emerald-700 py-2 touch-manipulation"
             >
                 <ArrowLeft className="w-5 h-5" />
                 <span className="text-sm font-semibold">Back</span>
@@ -111,14 +111,14 @@ export default function BrandPage({ brand, allProducts = [], onBack, onProductCl
     );
 
     return (
-        <div className="min-h-screen bg-app">
+        <div className="min-h-screen bg-gray-50">
             {mobileBrandHeader}
             {/* Header */}
-            <div className="hidden sm:block bg-app shadow-sm sticky top-0 z-10">
+            <div className="hidden sm:block bg-white shadow-sm sticky top-0 z-10">
                 <div className="max-w-7xl mx-auto px-3 sm:px-4 py-4">
                     <button
                         onClick={onBack}
-                        className="flex items-center gap-2 text-white hover:text-white/80 mb-3 touch-manipulation"
+                        className="flex items-center gap-2 text-emerald-600 hover:text-emerald-700 mb-3 touch-manipulation"
                     >
                         <ArrowLeft className="w-5 h-5" />
                         <span className="text-sm font-medium">Back</span>
@@ -142,11 +142,11 @@ export default function BrandPage({ brand, allProducts = [], onBack, onProductCl
 
                         {/* Brand Info */}
                         <div className="flex-1">
-                            <h1 className="text-xl sm:text-2xl font-bold text-white">{brand.name}</h1>
+                            <h1 className="text-xl sm:text-2xl font-bold text-gray-900">{brand.name}</h1>
                             {brand.description && (
-                                <p className="text-sm text-white/80 mt-1 line-clamp-2">{brand.description}</p>
+                                <p className="text-sm text-gray-600 mt-1 line-clamp-2">{brand.description}</p>
                             )}
-                            <p className="text-sm text-white/80 font-medium mt-1">
+                            <p className="text-sm text-emerald-600 font-medium mt-1">
                                 {productCount} {productCount === 1 ? 'Product' : 'Products'}
                             </p>
                         </div>
@@ -171,12 +171,12 @@ export default function BrandPage({ brand, allProducts = [], onBack, onProductCl
                 {!loading && !error && displayProducts.length === 0 && (
                     <div className="min-h-[45vh] flex items-center justify-center text-center px-4">
                         <div>
-                            <Package className="w-16 h-16 text-white/50 mx-auto mb-3" />
-                            <h2 className="font-semibold text-white">No products listed yet</h2>
-                            <p className="text-sm text-white/80 mt-1">This brand is available in the directory, but products have not been linked yet.</p>
+                            <Package className="w-16 h-16 text-gray-300 mx-auto mb-3" />
+                            <h2 className="font-semibold text-gray-800">No products listed yet</h2>
+                            <p className="text-sm text-gray-500 mt-1">This brand is available in the directory, but products have not been linked yet.</p>
                             <button
                                 onClick={onBack}
-                                className="mt-4 inline-flex items-center justify-center rounded-lg bg-white px-4 py-2 text-sm font-semibold text-blue-700 active:bg-white/90"
+                                className="mt-4 inline-flex items-center justify-center rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white active:bg-emerald-700"
                             >
                                 Browse other brands
                             </button>

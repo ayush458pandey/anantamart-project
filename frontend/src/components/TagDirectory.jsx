@@ -4,7 +4,7 @@ import { getImageSrcSet, getOptimizedImageUrl } from '../utils/imageUtils';
 
 const TagDirectory = ({ tags, onSelectTag, selectedTags = [] }) => {
     return (
-        <div className="flex flex-col py-2 w-full bg-app-dark">
+        <div className="flex flex-col py-2 w-full bg-[#f3f4f6]">
             {tags && tags.map((tag, index) => {
                 const isActive = selectedTags.includes(tag.id) || selectedTags.includes(String(tag.id));
                 
@@ -32,12 +32,12 @@ const TagDirectory = ({ tags, onSelectTag, selectedTags = [] }) => {
                                     fetchPriority={index < 8 ? "high" : "auto"}
                                 />
                             ) : (
-                                <Tag className={`w-6 h-6 ${isActive ? 'text-green-600' : 'text-white/80'}`} />
+                                <Tag className={`w-6 h-6 ${isActive ? 'text-green-600' : 'text-gray-500'}`} />
                             )}
                         </div>
                         
                         {/* Label */}
-                        <span className={`text-[10px] text-center leading-tight px-1 font-medium ${isActive ? 'text-gray-900' : 'text-white/80'}`}>
+                        <span className={`text-[10px] text-center leading-tight px-1 font-medium ${isActive ? 'text-gray-900' : 'text-gray-500'}`}>
                             {tag.name}
                         </span>
                     </div>
@@ -45,7 +45,7 @@ const TagDirectory = ({ tags, onSelectTag, selectedTags = [] }) => {
             })}
             
             {(!tags || tags.length === 0) && (
-                <div className="flex flex-col items-center py-4 text-white/60">
+                <div className="flex flex-col items-center py-4 text-gray-400">
                     <span className="text-[10px] text-center px-2">No options</span>
                 </div>
             )}

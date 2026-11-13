@@ -29,7 +29,7 @@ export default function SubcategoryGrid({
         return (
             <div className="text-center py-8">
                 <Package className="w-12 h-12 text-gray-300 mx-auto mb-2" />
-                <p className="text-sm text-white/80">No subcategories found</p>
+                <p className="text-sm text-gray-500">No subcategories found</p>
             </div>
         );
     }
@@ -62,7 +62,7 @@ export default function SubcategoryGrid({
                     </div>
 
                     {/* Compact Name Label */}
-                    <span className="mt-2 text-[10px] sm:text-xs font-medium text-white text-center line-clamp-2 w-full px-1">
+                    <span className="mt-2 text-[10px] sm:text-xs font-medium text-gray-600 text-center line-clamp-2 w-full px-1 group-hover:text-emerald-700">
                         {subcategory.name}
                     </span>
                 </div>

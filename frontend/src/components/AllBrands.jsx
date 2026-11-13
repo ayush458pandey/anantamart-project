@@ -16,15 +16,15 @@ const AllBrands = ({ brands, onBrandClick, onBack }) => {
     });
 
     return (
-        <div className="min-h-screen bg-app">
+        <div className="min-h-screen bg-white">
             {/* Header */}
-            <div className="sticky top-0 bg-app border-b border-app-dark z-10 px-4 py-3 flex items-center gap-3">
-                <button onClick={onBack} className="p-2 hover:bg-white/15 rounded-full">
-                    <ChevronLeft className="w-6 h-6 text-white" />
+            <div className="sticky top-0 bg-white border-b z-10 px-4 py-3 flex items-center gap-3">
+                <button onClick={onBack} className="p-2 hover:bg-gray-100 rounded-full">
+                    <ChevronLeft className="w-6 h-6 text-gray-700" />
                 </button>
                 <div className="flex-1">
-                    <h1 className="text-xl font-bold text-white">Brand Directory</h1>
-                    <p className="text-xs text-white/80">{brands.length} brands available</p>
+                    <h1 className="text-xl font-bold text-gray-800">Brand Directory</h1>
+                    <p className="text-xs text-gray-500">{brands.length} brands available</p>
                 </div>
             </div>
 
@@ -37,7 +37,7 @@ const AllBrands = ({ brands, onBrandClick, onBack }) => {
                         placeholder="Find a brand..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        className="w-full pl-10 pr-4 py-3 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none transition-all"
+                        className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none transition-all"
                     />
                 </div>
 
@@ -49,7 +49,7 @@ const AllBrands = ({ brands, onBrandClick, onBack }) => {
                             onClick={() => setSelectedLetter(letter)}
                             className={`px-3 py-1.5 rounded-lg text-sm font-bold flex-shrink-0 transition-colors ${selectedLetter === letter
                                     ? 'bg-emerald-600 text-white shadow-md'
-                                    : 'bg-white text-gray-700 hover:bg-white/90'
+                                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                                 }`}
                         >
                             {letter}
@@ -73,22 +73,22 @@ const AllBrands = ({ brands, onBrandClick, onBack }) => {
                                         className="w-full h-full object-contain filter group-hover:brightness-105"
                                     />
                                 </div>
-                                <span className="mt-2 text-xs font-medium text-white text-center line-clamp-1">
+                                <span className="mt-2 text-xs font-medium text-gray-700 text-center line-clamp-1 group-hover:text-emerald-700">
                                     {brand.name}
                                 </span>
                             </div>
                         ))
                     ) : (
-                        <div className="col-span-full text-center py-12 text-white/80">
+                        <div className="col-span-full text-center py-12 text-gray-500">
                             No brands found starting with "{selectedLetter}"
                         </div>
                     )}
                 </div>
 
                 {/* LEGAL DISCLAIMER (Crucial for Non-Authorized Distributors) */}
-                <div className="bg-white/15 rounded-xl p-4 flex gap-3 items-start">
-                    <Info className="w-5 h-5 text-white/70 flex-shrink-0 mt-0.5" />
-                    <p className="text-xs text-white/80 leading-relaxed">
+                <div className="bg-gray-50 rounded-xl p-4 flex gap-3 items-start border border-gray-100">
+                    <Info className="w-5 h-5 text-gray-400 flex-shrink-0 mt-0.5" />
+                    <p className="text-xs text-gray-500 leading-relaxed">
                         <strong>Disclaimer:</strong> Ananta Mart is an independent wholesale platform.
                         All brand names, logos, and trademarks displayed on this site are the property of their respective owners.
                         We are not an authorized distributor or official partner for all brands listed, unless explicitly stated.
