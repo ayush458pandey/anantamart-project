@@ -1,0 +1,64 @@
+# =============================================================================
+# ANANTAMART - Backend CI
+# =============================================================================
+# The single backend quality gate. It runs the Django test suite and flake8 on
+# every backend-relevant push and on pull requests into main. It never deploys.
+#
+# Render only deploys `deployment-setup` once these checks pass, because all
+# three backend services use `autoDeployTrigger: checksPass` in render.yaml.
+#
+# No `paths:` filter is used on purpose: Render will not start a deploy when it
+# detects zero CI checks for a commit, so a filtered-out push could silently
+# block a deploy. The suite runs in well under a minute.
+# =============================================================================
+
+name: Backend CI
+
+on:
+  push:
+    branches: [main, deployment-setup]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: backend-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./backend
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+          cache-dependency-path: backend/requirements/
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements/testing.txt
+
+      - name: Run tests
+        run: |
+          python -m pytest tests/ -v --tb=short
+        env:
+          DJANGO_SETTINGS_MODULE: config.settings.testing
+
+      - name: Run linting
+        # Non-blocking: the codebase has ~430 pre-existing flake8 findings that
+        # predate the test suite. Keep the output visible without failing the
+        # pipeline; remove continue-on-error once the legacy cleanup lands.
+        continue-on-error: true
+        run: |
+          pip install flake8
+          flake8 apps/ config/ --max-line-length=120 --ignore=E501,W503 --statistics --count

@@ -18,7 +18,10 @@ services:
     plan: starter
     branch: deployment-setup
     healthCheckPath: /api/health/
-    autoDeploy: true
+    # Deploy only after 'Backend CI' passes for the commit. Render will not
+    # deploy when it detects zero checks, which is why Backend CI runs on every
+    # push to deployment-setup (no paths filter). Replaces deprecated autoDeploy.
+    autoDeployTrigger: checksPass
     envVars:
       - key: DJANGO_SETTINGS_MODULE
         value: config.settings.production
@@ -83,7 +86,10 @@ services:
     region: singapore
     plan: starter
     branch: deployment-setup
-    autoDeploy: true
+    # Deploy only after 'Backend CI' passes for the commit. Render will not
+    # deploy when it detects zero checks, which is why Backend CI runs on every
+    # push to deployment-setup (no paths filter). Replaces deprecated autoDeploy.
+    autoDeployTrigger: checksPass
     dockerCommand: celery -A config worker -l info --concurrency=2
     envVars:
       - key: DJANGO_SETTINGS_MODULE
@@ -128,7 +134,10 @@ services:
     region: singapore
     plan: starter
     branch: deployment-setup
-    autoDeploy: true
+    # Deploy only after 'Backend CI' passes for the commit. Render will not
+    # deploy when it detects zero checks, which is why Backend CI runs on every
+    # push to deployment-setup (no paths filter). Replaces deprecated autoDeploy.
+    autoDeployTrigger: checksPass
     dockerCommand: celery -A config beat -l info --scheduler django_celery_beat.schedulers:DatabaseScheduler
     envVars:
       - key: DJANGO_SETTINGS_MODULE

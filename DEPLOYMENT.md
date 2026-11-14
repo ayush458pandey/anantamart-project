@@ -170,33 +170,33 @@ Add in Vercel → Settings → Environment Variables:
 
 ## 🔄 CI/CD Workflow
 
-```
-┌─────────────┐     ┌─────────────┐     ┌─────────────┐
-│   GitHub    │────▶│   Render    │     │   Vercel    │
-│   (main)    │     │  (Backend)  │     │  (Frontend) │
-└─────────────┘     └─────────────┘     └─────────────┘
-       │                   │                   │
-       │            ┌──────┴──────┐            │
-       │            │             │            │
-       ▼            ▼             ▼            ▼
-   Webhook      Build          Deploy        Build
-   Trigger     Docker         Service       Vite
-               Image          (Gunicorn)    (Static)
-               Migrate        Health        Assets
-               Collectstatic  Check         CDN
+```mermaid
+flowchart LR
+    main["main<br/>(development)"] -->|push| ci["Backend CI<br/>74 tests"]
+    main -->|frontend| vercel["Vercel<br/>production"]
+    ci -->|green| promo["backend-only<br/>promotion PR"]
+    promo -->|merge| ds["deployment-setup"]
+    ds -->|checksPass| render["Render<br/>api / worker / beat"]
 ```
 
-### Automatic Deployments
-- **Backend**: Every push to `main` triggers Render build
-- **Frontend**: Every push to `main` triggers Vercel production deploy
-- **Preview**: Every PR triggers Vercel preview deploy
+### How changes reach production
+- **Backend**: developed on `main`, verified by `Backend CI`, then promoted to
+  `deployment-setup` through a backend-only pull request.
+- **Render**: watches `deployment-setup` only. All three services (`anantamart-api`,
+  `anantamart-worker`, `anantamart-beat`) use `autoDeployTrigger: checksPass`, so a
+  commit deploys only after its CI checks pass.
+- **Frontend**: every push to `main` triggers a Vercel production deploy.
+- **Preview**: every PR triggers a Vercel preview deploy.
 
 ### Manual Deployments
-```bash
-# Backend (Render CLI)
-render deploy --service anantamart-api
+Backend: Render Dashboard -> service -> **Manual Deploy**. This bypasses the CI
+gate, so use it only to recover a deploy whose checks have already passed.
 
-# Frontend (Vercel CLI)
+Emergency, from GitHub: Actions -> **Backend Manual Deploy** -> Run workflow ->
+type `DEPLOY`. That workflow re-runs the test suite before calling Render.
+
+Frontend:
+```bash
 cd frontend && vercel --prod
 ```
 

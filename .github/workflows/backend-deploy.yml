@@ -1,31 +1,34 @@
 # =============================================================================
-# ANANTAMART - Backend Deploy to Render
+# ANANTAMART - Backend Manual Deploy to Render
 # =============================================================================
-# Triggers: Push to deployment-setup (backend changes), Manual dispatch (with branch input)
+# Automatic deploys are handled by Render itself, not by this workflow. All
+# three backend services use `autoDeployTrigger: checksPass` in render.yaml, so
+# Render deploys `deployment-setup` only after `Backend CI` passes.
+#
+# The primary manual path is the Render Dashboard: service -> Manual Deploy.
+# It needs no secret and no workflow. This workflow is an OPTIONAL alternative
+# for when CI is unavailable or a deploy must be re-triggered from GitHub; it
+# re-runs the test suite first so it cannot bypass the gate.
+#
+# Optional secrets, one per service (Render -> service -> Settings -> Deploy Hook):
+#   RENDER_DEPLOY_HOOK_API     -> anantamart-api
+#   RENDER_DEPLOY_HOOK_WORKER  -> anantamart-worker
+#   RENDER_DEPLOY_HOOK_BEAT    -> anantamart-beat
 # =============================================================================
 
-name: Backend Deploy to Render
+name: Backend Manual Deploy
 
 on:
-  push:
-    branches: [deployment-setup]
-    paths:
-      - 'backend/**'
-      - '.github/workflows/backend-deploy.yml'
   workflow_dispatch:
     inputs:
-      branch:
-        description: 'Branch to deploy (default: deployment-setup)'
-        required: false
-        default: 'deployment-setup'
-        type: choice
-        options:
-          - deployment-setup
-          - main
+      confirm:
+        description: 'Type DEPLOY to confirm a production deploy'
+        required: true
+        type: string
 
-env:
-  REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}/backend
+concurrency:
+  group: backend-manual-deploy
+  cancel-in-progress: false
 
 jobs:
   test:
@@ -56,35 +59,54 @@ jobs:
         env:
           DJANGO_SETTINGS_MODULE: config.settings.testing
 
-      - name: Run linting
-        # Non-blocking: the codebase has ~430 pre-existing flake8 findings that
-        # predate the test suite. Keep the output visible without failing the
-        # pipeline; remove continue-on-error once the legacy cleanup lands.
-        continue-on-error: true
-        run: |
-          pip install flake8
-          flake8 apps/ config/ --max-line-length=120 --ignore=E501,W503 --statistics --count
-
-  build-and-deploy:
-    name: Build and Deploy to Render
+  deploy:
+    name: Deploy to Render
     needs: test
+    if: github.event.inputs.confirm == 'DEPLOY'
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' || github.event.inputs.branch == 'deployment-setup'
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - name: Trigger anantamart-api deploy hook
+        env:
+          HOOK_URL: ${{ secrets.RENDER_DEPLOY_HOOK_API }}
+        run: |
+          if [ -z "${HOOK_URL}" ]; then
+            echo "::error::Secret RENDER_DEPLOY_HOOK_API is not set (Settings -> Secrets and variables -> Actions)."
+            exit 1
+          fi
+          # --fail-with-body turns Render's 400/401/404/409 into a failed step
+          # instead of a silent success. 200 = started, 202 = queued.
+          curl --fail-with-body -sS -X POST "${HOOK_URL}"
+          echo "Deploy triggered for anantamart-api"
 
-      - name: Deploy to Render
-        uses: render/deploy-action@v1
-        with:
-          service-id: ${{ secrets.RENDER_SERVICE_ID }}
-          api-key: ${{ secrets.RENDER_API_KEY }}
-          wait-for-success: true
-          timeout: 600
+      - name: Trigger anantamart-worker deploy hook
+        env:
+          HOOK_URL: ${{ secrets.RENDER_DEPLOY_HOOK_WORKER }}
+        run: |
+          if [ -z "${HOOK_URL}" ]; then
+            echo "::error::Secret RENDER_DEPLOY_HOOK_WORKER is not set (Settings -> Secrets and variables -> Actions)."
+            exit 1
+          fi
+          # --fail-with-body turns Render's 400/401/404/409 into a failed step
+          # instead of a silent success. 200 = started, 202 = queued.
+          curl --fail-with-body -sS -X POST "${HOOK_URL}"
+          echo "Deploy triggered for anantamart-worker"
+
+      - name: Trigger anantamart-beat deploy hook
+        env:
+          HOOK_URL: ${{ secrets.RENDER_DEPLOY_HOOK_BEAT }}
+        run: |
+          if [ -z "${HOOK_URL}" ]; then
+            echo "::error::Secret RENDER_DEPLOY_HOOK_BEAT is not set (Settings -> Secrets and variables -> Actions)."
+            exit 1
+          fi
+          # --fail-with-body turns Render's 400/401/404/409 into a failed step
+          # instead of a silent success. 200 = started, 202 = queued.
+          curl --fail-with-body -sS -X POST "${HOOK_URL}"
+          echo "Deploy triggered for anantamart-beat"
 
   notify:
     name: Notify on Failure
-    needs: [test, build-and-deploy]
+    needs: [test, deploy]
     if: failure()
     runs-on: ubuntu-latest
     steps:
