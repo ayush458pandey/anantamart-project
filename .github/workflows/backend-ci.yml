@@ -16,7 +16,7 @@ name: Backend CI
 
 on:
   push:
-    branches: [main, deployment-setup, ci/repair-backend-pipeline]  # TEMP canary
+    branches: [main, deployment-setup]
   pull_request:
     branches: [main]
   workflow_dispatch:
