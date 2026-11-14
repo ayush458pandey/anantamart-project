@@ -418,7 +418,10 @@ class ProductWriteSerializer(serializers.ModelSerializer):
         return value
 
     def validate_sku(self, value):
-        value = (value or '').strip().upper()
+        # SKUs are stored lowercase. Case is normalised rather than preserved
+        # so 'ABC-1' and 'abc-1' cannot coexist; uniqueness stays
+        # case-insensitive via sku__iexact below.
+        value = (value or '').strip().lower()
         if not value:
             raise serializers.ValidationError('SKU is required.')
         if Product.objects.filter(sku__iexact=value).exists():
@@ -668,7 +671,7 @@ class ProductWriteSerializer(serializers.ModelSerializer):
                 })
             seen.add(key)
 
-            sku = (variant.get('sku') or '').strip().upper()
+            sku = (variant.get('sku') or '').strip().lower()
             if sku:
                 if sku in seen_skus:
                     raise serializers.ValidationError({
@@ -702,7 +705,7 @@ class ProductWriteSerializer(serializers.ModelSerializer):
             PriceTier.objects.create(product=product, **tier_data)
 
         for variant_data in variants_data:
-            sku = (variant_data.get('sku') or '').strip().upper()
+            sku = (variant_data.get('sku') or '').strip().lower()
             variant_data['sku'] = sku
             ProductVariant.objects.create(product=product, **variant_data)
 

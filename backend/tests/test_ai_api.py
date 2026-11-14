@@ -139,7 +139,8 @@ def test_draft_is_created_inactive(taxonomy):
     assert len(created) == 1
     product = Product.objects.get(pk=created[0]['id'])
     assert product.is_active is False
-    assert product.sku == 'APS-ER-500'
+    # SKUs are stored lowercase; the payload sent APS-ER-500.
+    assert product.sku == 'aps-er-500'
 
 
 def test_payload_cannot_force_is_active(taxonomy):
