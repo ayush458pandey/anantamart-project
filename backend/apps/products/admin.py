@@ -1,10 +1,43 @@
 from collections import OrderedDict
 
+from django import forms
 from django.contrib import admin
 from django.contrib import messages
 from django.shortcuts import render
 from django.utils.html import format_html, format_html_join
 from .models import Category, Product, PriceTier, ProductImage, Subcategory, Brand, TagGroup, ProductTag, ProductVariant
+
+
+class ProductAdminForm(forms.ModelForm):
+    """Enforces the lowercase SKU standard for objects created in the admin.
+
+    The admin uses a ModelForm and bypasses ProductWriteSerializer, so without
+    this the SKU would keep whatever casing was typed. Normalisation applies to
+    NEW objects only: editing an existing product never rewrites its stored SKU.
+    """
+
+    class Meta:
+        model = Product
+        fields = '__all__'
+
+    def clean_sku(self):
+        value = (self.cleaned_data.get('sku') or '').strip()
+        if not value:
+            raise forms.ValidationError('SKU is required.')
+
+        # Existing rows keep their casing; only new SKUs are normalised.
+        if self.instance.pk is None:
+            value = value.lower()
+
+        clash = Product.objects.filter(sku__iexact=value)
+        if self.instance.pk is not None:
+            clash = clash.exclude(pk=self.instance.pk)
+        if clash.exists():
+            raise forms.ValidationError(
+                f"A product with SKU '{value}' already exists."
+            )
+        return value
+
 
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
@@ -74,6 +107,8 @@ class ProductVariantInline(admin.TabularInline):
 
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
+    form = ProductAdminForm
+
     # 🟢 Added 'hsn_code' to the list view
     list_display = ['name', 'sku', 'brand_ref', 'category', 'subcategory', 'base_price', 'purchase_price', 'tax_rate', 'hsn_code', 'stock', 'stock_status', 'is_active']
     list_select_related = ['category', 'subcategory', 'subcategory__category', 'brand_ref']
@@ -278,6 +313,35 @@ class ProductImageAdmin(admin.ModelAdmin):
         return "-"
     image_size_display.short_description = 'Size'
 
+
+class ProductVariantAdminForm(forms.ModelForm):
+    """Lowercase variant SKUs too, matching ProductWriteSerializer.
+
+    Variant SKUs are optional (blank falls back to the parent SKU), so a blank
+    value is accepted. Editing an existing variant keeps its stored value.
+    """
+
+    class Meta:
+        model = ProductVariant
+        fields = '__all__'
+
+    def clean_sku(self):
+        value = (self.cleaned_data.get('sku') or '').strip()
+        if not value:
+            return ''
+        if self.instance.pk is None:
+            value = value.lower()
+
+        clash = ProductVariant.objects.filter(sku__iexact=value)
+        if self.instance.pk is not None:
+            clash = clash.exclude(pk=self.instance.pk)
+        if clash.exists():
+            raise forms.ValidationError(
+                f"A variant with SKU '{value}' already exists."
+            )
+        return value
+
+
 @admin.register(PriceTier)
 class PriceTierAdmin(admin.ModelAdmin):
     list_display = ['product', 'min_quantity', 'max_quantity', 'price']
@@ -316,6 +380,8 @@ class ProductTagAdmin(admin.ModelAdmin):
 
 @admin.register(ProductVariant)
 class ProductVariantAdmin(admin.ModelAdmin):
+    form = ProductVariantAdminForm
+
     list_display = [
         'product', 'variant_type', 'name', 'effective_sku_display',
         'base_price', 'mrp', 'stock', 'stock_status', 'moq', 'is_active',

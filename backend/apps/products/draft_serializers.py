@@ -72,7 +72,9 @@ class ProductDraftUpdateSerializer(serializers.ModelSerializer):
         ]
 
     def validate_sku(self, value):
-        value = (value or '').strip().upper()
+        # Lowercase, matching ProductWriteSerializer. Uniqueness stays
+        # case-insensitive so existing mixed-case rows still block a clash.
+        value = (value or '').strip().lower()
         if not value:
             raise serializers.ValidationError('SKU is required.')
         clash = Product.objects.filter(sku__iexact=value).exclude(pk=self.instance.pk)
