@@ -1,0 +1,18 @@
+{
+  "name": "Apsara Non-Dust Eraser",
+  "sku": "apsara-non-dust-eraser",
+  "description": "White non-dust eraser that lifts pencil and ink marks cleanly without tearing paper. Suitable for school and office use.",
+  "category_name": "Stationery/School Supplies",
+  "subcategory_name": "Writing Instruments",
+  "brand_name": "Apsara",
+  "tag_names": [],
+  "base_price": 5,
+  "mrp": 10,
+  "tax_rate": 18,
+  "moq": 10,
+  "case_size": 100,
+  "stock": 500,
+  "unit": "1 pack",
+  "weight": "20 g",
+  "product_type": "Standard"
+}
