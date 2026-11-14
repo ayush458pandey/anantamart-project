@@ -1,0 +1,17 @@
+{% extends "admin/base_site.html" %}
+{% block content %}
+  <h1>Create AI access token</h1>
+  <p>
+    The token is generated when you submit this form. It is shown
+    <strong>once</strong> and never stored in recoverable form, so copy it
+    immediately.
+  </p>
+  <form method="post" novalidate>
+    {% csrf_token %}
+    {{ form.as_p }}
+    <div class="submit-row">
+      <input type="submit" value="Create token" class="default">
+      <a href="{% url 'admin:ai_access_aiaccesstoken_changelist' %}" class="button cancel-link">Cancel</a>
+    </div>
+  </form>
+{% endblock %}

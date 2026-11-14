@@ -2,6 +2,7 @@ import React, { Suspense, lazy } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 
 import Layout from './components/Layout';
+import AdminGuard from './components/AdminGuard';
 import Home from './pages/Home';
 import './App.css';
 
@@ -14,6 +15,7 @@ const ComparePage = lazy(() => import('./pages/ComparePage'));
 const ForgotPassword = lazy(() => import('./pages/ForgotPassword'));
 const ResetPassword = lazy(() => import('./pages/ResetPassword'));
 const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
+const ProductDrafts = lazy(() => import('./pages/ProductDrafts'));
 const CompanyPage = lazy(() => import('./pages/CompanyPage'));
 const ProductPage = lazy(() => import('./pages/ProductPage'));
 
@@ -48,7 +50,8 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
-        <Route path="/admin" element={<AdminDashboard />} />
+        <Route path="/admin" element={<AdminGuard><AdminDashboard /></AdminGuard>} />
+        <Route path="/admin/drafts" element={<AdminGuard><ProductDrafts /></AdminGuard>} />
 
         {/* Catch-all redirect */}
         <Route path="*" element={<Navigate to="/" replace />} />

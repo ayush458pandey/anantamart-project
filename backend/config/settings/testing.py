@@ -58,6 +58,11 @@ REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': None,
     'PAGE_SIZE': None,
     'TEST_REQUEST_DEFAULT_FORMAT': 'json',
+    # The AI API throttles per token; without a rate here every AI request
+    # would raise ImproperlyConfigured under test settings.
+    'DEFAULT_THROTTLE_RATES': {
+        'ai_token': '1000/minute',
+    },
 }
 
 # --- JWT (Short tokens for tests) ---

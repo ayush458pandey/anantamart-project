@@ -1,0 +1,56 @@
+{% extends "admin/base_site.html" %}
+{% block content %}
+  <h1>AI access token created</h1>
+  <p class="help">
+    Copy this token now. It will not be shown again, and it cannot be recovered
+    from the database because only its hash is stored.
+  </p>
+
+  <fieldset class="module aligned">
+    <div class="form-row">
+      <label>Token</label>
+      <div>
+        <textarea id="raw-token" rows="3" readonly
+                  style="width:100%;font-family:monospace">{{ raw_token }}</textarea>
+      </div>
+    </div>
+    <div class="form-row">
+      <label>Name</label>
+      <div>{{ token.name }}</div>
+    </div>
+    <div class="form-row">
+      <label>Prefix</label>
+      <div>{{ token.token_prefix }}&hellip;</div>
+    </div>
+    <div class="form-row">
+      <label>Expires at</label>
+      <div>{{ token.expires_at }} ({{ ttl_minutes }} minutes from now)</div>
+    </div>
+    <div class="form-row">
+      <label>Scopes</label>
+      <div>{{ token.scopes|join:", " }}</div>
+    </div>
+    <div class="form-row">
+      <label>Max drafts</label>
+      <div>{% if token.max_drafts %}{{ token.max_drafts }}{% else %}unlimited{% endif %}</div>
+    </div>
+  </fieldset>
+
+  <div class="submit-row">
+    <a href="{% url 'admin:ai_access_aiaccesstoken_changelist' %}" class="button default">
+      Done
+    </a>
+  </div>
+
+  <script>
+    (function () {
+      var box = document.getElementById('raw-token');
+      if (!box) { return; }
+      box.focus();
+      box.select();
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(box.value).catch(function () {});
+      }
+    })();
+  </script>
+{% endblock %}
