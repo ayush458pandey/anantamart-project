@@ -7,10 +7,15 @@ is not configured on this viewset, and request.user is None for AI requests.
 from django.db import transaction
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
+from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
 
-from .draft_serializers import ProductDraftReadSerializer, ProductDraftUpdateSerializer
+from apps.ai_access.images import ImageRejected, process_upload
+
+from .draft_serializers import (
+    DraftImageSerializer, ProductDraftReadSerializer, ProductDraftUpdateSerializer,
+)
 from .draft_validation import validate_for_publish
 from .models import Product, ProductImage
 
@@ -161,6 +166,64 @@ class ProductDraftViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_409_CONFLICT,
             )
         return draft, None
+
+    @action(
+        detail=True, methods=['post'], url_path='images',
+        parser_classes=[MultiPartParser, FormParser],
+    )
+    def upload_image(self, request, pk=None):
+        """POST /api/admin/drafts/<id>/images/ -- staff upload for a pending draft.
+
+        Authenticated by the staff JWT only. The AI token cannot reach this
+        viewset (AIServiceTokenAuthentication is not configured here and
+        request.user is None for AI requests), so no AI credential is involved.
+
+        Reuses apps.ai_access.images.process_upload, so the catalogue rules are
+        identical to the AI path: JPEG/PNG/WebP in, 1120x1400 WebP under 200 KB
+        out, EXIF stripped, padded onto white rather than cropped.
+        """
+        draft, error = self._pending_draft_or_error(pk)
+        if error:
+            return error
+
+        uploaded = request.FILES.get('file')
+        if uploaded is None:
+            return Response(
+                {'error': 'Send the image as a multipart "file" field.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            content, width, height, size = process_upload(uploaded)
+        except ImageRejected as exc:
+            # The draft is left untouched: a bad image must never discard
+            # good product data.
+            return Response({'error': str(exc)}, status=status.HTTP_400_BAD_REQUEST)
+
+        is_primary = str(request.data.get('is_primary', '')).lower() in ('1', 'true', 'yes')
+        has_images = draft.images.exists()
+
+        image = ProductImage(
+            product=draft,
+            alt_text=(request.data.get('alt_text') or '')[:255],
+            # Staff-supplied, so provenance is 'user'. uploaded_by_token stays
+            # null: this image did not come from an AI token.
+            source_kind=ProductImage.SOURCE_USER,
+            order=draft.images.count(),
+            is_primary=is_primary or not has_images,
+        )
+        image.image.save(content.name, content, save=False)
+        image.save()
+
+        return Response(
+            {
+                'image': DraftImageSerializer(image, context={'request': request}).data,
+                'width': width,
+                'height': height,
+                'bytes': size,
+            },
+            status=status.HTTP_201_CREATED,
+        )
 
     @action(detail=True, methods=['post'], url_path='images/reorder')
     def reorder_images(self, request, pk=None):
