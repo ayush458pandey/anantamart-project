@@ -6,7 +6,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from django.db.models import Count, Q
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
-from .models import Product, Category, Subcategory, Brand, TagGroup, ProductTag
+from core.permissions import IsAdminOrReadOnly
 from .models import Product, Category, Subcategory, Brand, TagGroup, ProductTag
 from .serializers import ProductSerializer, CategorySerializer, SubcategorySerializer, BrandSerializer, TagGroupSerializer
 
@@ -16,7 +16,7 @@ class ProductViewSet(viewsets.ModelViewSet):
         'category', 'subcategory', 'brand_ref'
     ).prefetch_related('tiers', 'images', 'tags__group', 'variants')
     serializer_class = ProductSerializer
-    permission_classes = [AllowAny]
+    permission_classes = [IsAdminOrReadOnly]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     
     # Add brand and subcategory to filterset_fields
