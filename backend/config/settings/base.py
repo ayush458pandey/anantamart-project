@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     'apps.cart',
     'apps.orders',
     'apps.users.apps.UsersConfig',
+    'apps.ai_access.apps.AiAccessConfig',
 ]
 
 MIDDLEWARE = [
@@ -166,7 +167,25 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': ['rest_framework.permissions.IsAuthenticated'],
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 100,
+    # Per-token limit for the restricted AI API. Keyed on the token prefix,
+    # not the client IP, because an AI provider may call from many addresses.
+    'DEFAULT_THROTTLE_RATES': {
+        'ai_token': '60/minute',
+    },
 }
+
+# --- UPLOAD LIMITS ---
+# AI image uploads are capped at 200 KB after processing, but the raw upload
+# can be larger (a 4 MB JPEG that compresses well). These limits keep an
+# oversized body from being buffered in memory before validation runs.
+DATA_UPLOAD_MAX_MEMORY_SIZE = 8 * 1024 * 1024
+FILE_UPLOAD_MAX_MEMORY_SIZE = 8 * 1024 * 1024
+
+# --- AI DRAFT PUBLISHING RULES ---
+# An AI draft must have at least one image before it can be approved. This is
+# stricter than the legacy catalogue (6 of 396 live products have no image),
+# so it is a setting rather than a hard-coded rule.
+AI_DRAFT_REQUIRE_IMAGE = True
 
 # --- CORS & CSRF PRODUCTION CONFIG ---
 CORS_ALLOWED_ORIGINS = [

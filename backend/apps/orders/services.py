@@ -66,20 +66,33 @@ class OrderService:
         variant_ids = [item['variant_id'] for item in items_data if item.get('variant_id')]
         
         with transaction.atomic():
-            # Lock product rows for stock validation
+            # Lock product rows for stock validation. Inactive products are
+            # excluded here as well as in the cart: a draft must never be
+            # purchasable even if a stale cart or a direct API call references it.
             products = {
-                p.id: p for p in Product.objects.select_for_update().filter(id__in=product_ids)
+                p.id: p for p in Product.objects.select_for_update().filter(
+                    id__in=product_ids, is_active=True
+                )
             }
             # Lock variant rows (when supplied) for variant-level stock validation
             variants = {
                 v.id: v for v in ProductVariant.objects.select_for_update().filter(id__in=variant_ids)
             }
             
-            # Validate all products exist
+            # Validate all products exist and are published
+            inactive_ids = []
             for item_data in items_data:
                 pid = item_data['product_id']
                 if pid not in products:
-                    raise Product.DoesNotExist(f'Product with id {pid} not found')
+                    if Product.objects.filter(id=pid).exists():
+                        inactive_ids.append(pid)
+                    else:
+                        raise Product.DoesNotExist(f'Product with id {pid} not found')
+            if inactive_ids:
+                raise ValueError(
+                    'These products are not available for purchase: '
+                    + ', '.join(str(pid) for pid in inactive_ids)
+                )
             
             # Resolve the exact variant for each line (explicit id, else label match)
             resolved_variants = {}

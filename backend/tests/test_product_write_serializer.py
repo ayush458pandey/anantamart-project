@@ -114,7 +114,7 @@ def test_create_minimal_product(taxonomy):
 
     assert Product.objects.count() == 1
     assert product.name == 'Plain Notebook'
-    assert product.sku == 'NB-001'
+    assert product.sku == 'nb-001'
     assert product.category == taxonomy['category']
     assert product.subcategory is None
     assert product.brand == 'Generic'
@@ -363,13 +363,13 @@ def test_duplicate_sku_different_case_is_rejected(taxonomy):
 
 
 @pytest.mark.django_db
-def test_sku_is_normalised_to_uppercase(taxonomy):
+def test_sku_is_normalised_to_lowercase(taxonomy):
     """Scenario 10: lowercase input is stored uppercase."""
-    serializer = ProductWriteSerializer(data=base_payload(taxonomy, sku='aps-er-001'))
+    serializer = ProductWriteSerializer(data=base_payload(taxonomy, sku='APS-ER-001'))
     assert serializer.is_valid(), serializer.errors
     product = serializer.save()
 
-    assert product.sku == 'APS-ER-001'
+    assert product.sku == 'aps-er-001'
 
 
 @pytest.mark.django_db
@@ -580,14 +580,14 @@ def test_variant_type_default_does_not_hide_duplicates(taxonomy):
 
 
 @pytest.mark.django_db
-def test_variant_sku_is_normalised_to_uppercase(taxonomy):
+def test_variant_sku_is_normalised_to_lowercase(taxonomy):
     serializer = ProductWriteSerializer(data=base_payload(taxonomy, variants=[
         {'variant_type': 'Size', 'name': 'Large', 'sku': 'aps-l'},
     ]))
     assert serializer.is_valid(), serializer.errors
     product = serializer.save()
 
-    assert product.variants.get(name='Large').sku == 'APS-L'
+    assert product.variants.get(name='Large').sku == 'aps-l'
 
 
 @pytest.mark.django_db
@@ -788,7 +788,7 @@ def test_rollback_does_not_remove_pre_existing_rows(taxonomy):
             serializer.save()
 
     assert Product.objects.count() == 1
-    assert Product.objects.get().sku == 'APS-ER-001'
+    assert Product.objects.get().sku == 'aps-er-001'
 
 
 # ---------------------------------------------------------------------------
@@ -810,7 +810,7 @@ def test_created_product_serializes_with_public_serializer(taxonomy):
     data = ProductSerializer(product).data
 
     assert data['name'] == 'Apsara Non-Dust Eraser'
-    assert data['sku'] == 'APS-ER-001'
+    assert data['sku'] == 'aps-er-001'
     assert data['brand'] == 'Apsara'
     assert data['brand_name'] == 'Apsara'
     assert data['category_name'] == 'Stationery'
@@ -851,3 +851,96 @@ def test_public_serializer_hides_inactive_variants(taxonomy):
 
     data = ProductSerializer(product).data
     assert [v['name'] for v in data['variants']] == ['Large']
+
+
+# =============================================================================
+# SKU case standard
+# -----------------------------------------------------------------------------
+# SKUs are stored lowercase. Case is normalised on write, uniqueness stays
+# case-insensitive, and existing rows are never rewritten.
+# =============================================================================
+
+def test_uppercase_input_is_stored_lowercase(taxonomy):
+    serializer = ProductWriteSerializer(data=base_payload(taxonomy, sku='APSARA-ND-ERASER'))
+    assert serializer.is_valid(), serializer.errors
+    assert serializer.save().sku == 'apsara-nd-eraser'
+
+
+def test_mixed_case_input_is_stored_lowercase(taxonomy):
+    serializer = ProductWriteSerializer(data=base_payload(taxonomy, sku='Apsara-Nd-Eraser'))
+    assert serializer.is_valid(), serializer.errors
+    assert serializer.save().sku == 'apsara-nd-eraser'
+
+
+def test_already_lowercase_sku_is_unchanged(taxonomy):
+    serializer = ProductWriteSerializer(data=base_payload(taxonomy, sku='apsara-nd-eraser'))
+    assert serializer.is_valid(), serializer.errors
+    assert serializer.save().sku == 'apsara-nd-eraser'
+
+
+def test_uniqueness_is_case_insensitive(taxonomy):
+    first = ProductWriteSerializer(data=base_payload(taxonomy, sku='apsara-nd-eraser'))
+    assert first.is_valid(), first.errors
+    first.save()
+
+    # Same SKU in a different case must still be rejected.
+    second = ProductWriteSerializer(data=base_payload(taxonomy, sku='APSARA-ND-ERASER'))
+    assert not second.is_valid()
+    assert 'sku' in second.errors
+
+
+def test_existing_uppercase_row_still_blocks_a_lowercase_duplicate(taxonomy):
+    """Legacy rows were saved through admin, bypassing the serializer."""
+    Product.objects.create(
+        name='Legacy', sku='LEGACY-SKU', description='x',
+        category=taxonomy['category'], base_price='5.00',
+    )
+    serializer = ProductWriteSerializer(data=base_payload(taxonomy, sku='legacy-sku'))
+    assert not serializer.is_valid()
+    assert 'sku' in serializer.errors
+
+
+def test_existing_sku_is_never_rewritten(taxonomy):
+    """A pre-existing mixed-case SKU keeps its stored value."""
+    legacy = Product.objects.create(
+        name='Legacy', sku='Udyogi-vista-8001-lrx-helmet', description='x',
+        category=taxonomy['category'], base_price='5.00',
+    )
+    other = ProductWriteSerializer(data=base_payload(taxonomy, sku='brand-new-sku'))
+    assert other.is_valid(), other.errors
+    other.save()
+
+    legacy.refresh_from_db()
+    assert legacy.sku == 'Udyogi-vista-8001-lrx-helmet'
+
+
+def test_draft_update_serializer_lowercases_sku(taxonomy):
+    from apps.products.draft_serializers import ProductDraftUpdateSerializer
+
+    product = Product.objects.create(
+        name='Draft', sku='old-sku', description='x',
+        category=taxonomy['category'], base_price='5.00', is_active=False,
+    )
+    serializer = ProductDraftUpdateSerializer(
+        product, data={'sku': 'NEW-SKU-NAME'}, partial=True,
+    )
+    assert serializer.is_valid(), serializer.errors
+    assert serializer.save().sku == 'new-sku-name'
+
+
+def test_draft_update_serializer_still_blocks_case_insensitive_clash(taxonomy):
+    from apps.products.draft_serializers import ProductDraftUpdateSerializer
+
+    Product.objects.create(
+        name='Taken', sku='taken-sku', description='x',
+        category=taxonomy['category'], base_price='5.00',
+    )
+    product = Product.objects.create(
+        name='Draft', sku='other-sku', description='x',
+        category=taxonomy['category'], base_price='5.00', is_active=False,
+    )
+    serializer = ProductDraftUpdateSerializer(
+        product, data={'sku': 'TAKEN-SKU'}, partial=True,
+    )
+    assert not serializer.is_valid()
+    assert 'sku' in serializer.errors

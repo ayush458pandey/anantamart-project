@@ -76,7 +76,10 @@ def add_to_cart(request):
         return Response({'error': 'Product ID is required'}, status=400)
     
     try:
-        product = Product.objects.get(id=product_id)
+        # is_active=False marks an unpublished draft (including AI drafts).
+        # Filtering here keeps drafts out of carts entirely; a draft is reported
+        # as "not found" so its existence is not disclosed.
+        product = Product.objects.get(id=product_id, is_active=True)
 
         # Resolve the ProductVariant when the client sent one. Accept either an
         # explicit variant_id or derive it from a "Type: Name" label.
@@ -137,6 +140,14 @@ def update_cart_item(request, item_id):
     cart_item = get_object_or_404(CartItem, id=item_id, cart=cart)
     
     quantity = int(request.data.get('quantity', 1))
+
+    # A product can be deactivated after it was added to the cart. Refuse to
+    # keep or increase such a line so it cannot reach checkout.
+    if quantity > 0 and not cart_item.product.is_active:
+        return Response(
+            {'error': 'This product is no longer available.'},
+            status=400
+        )
     
     if quantity <= 0:
         cart_item.delete()
