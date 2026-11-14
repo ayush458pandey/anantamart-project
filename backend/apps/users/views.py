@@ -207,13 +207,10 @@ class GoogleLoginView(APIView):
             return Response({
                 'access': str(refresh.access_token),
                 'refresh': str(refresh),
-                'user': {
-                    'id': user.id,
-                    'username': user.username,
-                    'email': user.email,
-                    'first_name': user.first_name,
-                    'last_name': user.last_name,
-                },
+                # Same shape as /user/me/ so the client can trust this object.
+                # A hand-built dict here previously omitted is_staff, which made
+                # the admin route guard treat staff users as non-staff.
+                'user': UserSerializer(user).data,
                 'created': created,
             })
 
