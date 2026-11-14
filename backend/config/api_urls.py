@@ -23,4 +23,10 @@ urlpatterns = [
 
     # Products MUST BE LAST (has catch-all patterns)
     path('', include('apps.products.urls')),
+
+    # --- Restricted AI API (token-authenticated, scope-gated) ---
+    path('ai/v1/', include('apps.ai_access.urls')),
+
+    # --- Staff-only AI draft review (JWT + is_staff) ---
+    path('admin/', include('apps.products.draft_urls')),
 ]

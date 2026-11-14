@@ -126,6 +126,26 @@ class Product(models.Model):
     
     is_active = models.BooleanField(default=True)
     has_variants = models.BooleanField(default=False, help_text="Does this product have variants?")
+    # Provenance: set only when an AI token submitted this product. NULL means
+    # the product was created by a human (admin, import or storefront flow), so
+    # the AI Drafts screen can exclude it.
+    source_token = models.ForeignKey(
+        'ai_access.AIAccessToken', on_delete=models.SET_NULL,
+        null=True, blank=True, related_name='drafts',
+        help_text="AI token that submitted this draft, if any.",
+    )
+    # Review state for AI-submitted drafts. NULL means "not an AI draft", which
+    # is what keeps manually created inactive products out of the review screen.
+    draft_status = models.CharField(
+        max_length=10,
+        choices=[
+            ('pending', 'Pending review'),
+            ('approved', 'Approved'),
+            ('rejected', 'Rejected'),
+        ],
+        null=True, blank=True,
+        help_text="Review state. Only set for AI-submitted drafts.",
+    )
     variant_display_type = models.CharField(max_length=50, default='dropdown', blank=True, help_text="How to display variants")
     tags = models.ManyToManyField('ProductTag', blank=True, related_name='products', help_text="Filterable attribute tags")
     created_at = models.DateTimeField(auto_now_add=True)
@@ -133,6 +153,13 @@ class Product(models.Model):
     
     class Meta:
         ordering = ['-created_at']
+        indexes = [
+            # The review screen always filters on these two columns together.
+            models.Index(
+                fields=['draft_status', 'source_token'],
+                name='product_draft_review_idx',
+            ),
+        ]
     
     def __str__(self):
         return self.name
@@ -156,11 +183,38 @@ class Product(models.Model):
         return 0
 
 class ProductImage(models.Model):
+    SOURCE_WEB = 'web'
+    SOURCE_GENERATED = 'generated'
+    SOURCE_USER = 'user'
+    SOURCE_CHOICES = [
+        (SOURCE_WEB, 'Found on the web'),
+        (SOURCE_GENERATED, 'AI generated'),
+        (SOURCE_USER, 'Supplied by the operator'),
+    ]
+
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='images')
     image = models.ImageField(upload_to='products/gallery/')
     order = models.PositiveIntegerField(default=0, help_text="Display order")
     is_primary = models.BooleanField(default=False, help_text="Main product image")
     alt_text = models.CharField(max_length=255, blank=True)
+
+    # --- Provenance for AI-submitted images -------------------------------
+    # source_url is metadata for human review only. It is never fetched by the
+    # backend: the AI uploads the bytes, so there is no SSRF surface here.
+    source_url = models.URLField(
+        max_length=500, blank=True,
+        help_text="Where the image came from. Recorded for review, never fetched.",
+    )
+    source_kind = models.CharField(
+        max_length=16, choices=SOURCE_CHOICES, blank=True,
+        help_text="How the image was obtained.",
+    )
+    uploaded_by_token = models.ForeignKey(
+        'ai_access.AIAccessToken', on_delete=models.SET_NULL,
+        null=True, blank=True, related_name='uploaded_images',
+        help_text="Set when an AI token uploaded this image.",
+    )
+
     created_at = models.DateTimeField(auto_now_add=True)
     
     class Meta:
