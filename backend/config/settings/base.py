@@ -182,10 +182,10 @@ DATA_UPLOAD_MAX_MEMORY_SIZE = 8 * 1024 * 1024
 FILE_UPLOAD_MAX_MEMORY_SIZE = 8 * 1024 * 1024
 
 # --- AI DRAFT PUBLISHING RULES ---
-# An AI draft must have at least one image before it can be approved. This is
-# stricter than the legacy catalogue (6 of 396 live products have no image),
-# so it is a setting rather than a hard-coded rule.
-AI_DRAFT_REQUIRE_IMAGE = True
+# Whether an AI draft must have at least one image before it can be approved.
+# Disabled so bulk imports can be approved first and have images added later;
+# the storefront falls back to a placeholder for products without one.
+AI_DRAFT_REQUIRE_IMAGE = False
 
 # --- CORS & CSRF PRODUCTION CONFIG ---
 CORS_ALLOWED_ORIGINS = [

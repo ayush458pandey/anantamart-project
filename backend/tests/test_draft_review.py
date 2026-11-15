@@ -317,7 +317,10 @@ def test_rejected_sku_still_blocks_reuse(staff_client, category, ai_token):
 
 # --- Approval validation ----------------------------------------------------
 
-def test_approve_skips_a_draft_without_an_image(staff_client, category, ai_token):
+def test_approve_skips_a_draft_without_an_image(staff_client, category, ai_token, settings):
+    # The rule is off by default so bulk imports can be approved before images
+    # are added; this test pins it on to prove the check still works.
+    settings.AI_DRAFT_REQUIRE_IMAGE = True
     token, _raw = ai_token
     draft = make_draft(category, token, with_image=False)
 
@@ -398,7 +401,9 @@ def test_validator_flags_a_duplicate_sku(category, ai_token, monkeypatch):
     assert 'sku_duplicate' in codes
 
 
-def test_valid_draft_is_approved_alongside_an_invalid_one(staff_client, category, ai_token):
+def test_valid_draft_is_approved_alongside_an_invalid_one(staff_client, category, ai_token, settings):
+    # Pin the image rule on so the "bad" draft is invalid for a known reason.
+    settings.AI_DRAFT_REQUIRE_IMAGE = True
     token, _raw = ai_token
     good = make_draft(category, token, sku='GOOD-1')
     bad = make_draft(category, token, sku='BAD-1', with_image=False)
