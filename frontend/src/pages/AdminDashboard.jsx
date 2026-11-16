@@ -10,7 +10,6 @@ import {
 function BarChart({ data, labelKey, valueKey, color = '#059669', height = 200 }) {
     if (!data || data.length === 0) return <div className="text-gray-400 text-sm text-center py-8">No data</div>;
     const maxVal = Math.max(...data.map(d => d[valueKey]), 1);
-    const barWidth = Math.floor(100 / data.length);
 
     return (
         <svg viewBox={`0 0 ${data.length * 60} ${height + 30}`} className="w-full" style={{ maxHeight: height + 40 }}>
@@ -95,6 +94,7 @@ function HealthGauge({ score }) {
 
 // ─────────────────── KPI CARD ───────────────────
 function KpiCard({ icon: Icon, label, value, sub, color = 'emerald' }) {
+    const Comp = Icon;
     const colors = {
         emerald: 'from-emerald-500 to-emerald-700',
         blue: 'from-blue-500 to-blue-700',
@@ -111,7 +111,7 @@ function KpiCard({ icon: Icon, label, value, sub, color = 'emerald' }) {
                     {sub && <p className="text-[11px] sm:text-xs text-gray-400 mt-1">{sub}</p>}
                 </div>
                 <div className={`p-2.5 sm:p-3 rounded-xl bg-gradient-to-br ${colors[color]} flex-shrink-0`}>
-                    <Icon className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                    <Comp className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                 </div>
             </div>
         </div>
