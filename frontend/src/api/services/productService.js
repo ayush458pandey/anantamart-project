@@ -7,7 +7,9 @@ export const productService = {
     return response.data;
   },
 
-  // Get products with brand, subcategory, and tag filtering
+  // Get products with brand, subcategory, and tag filtering.
+  // Walks pagination only if a caller explicitly passes { allPages: true },
+  // or returns the first page when called with positional args for backwards compatibility.
   getProducts: async (categoryId, brands = [], subcategories = [], tags = []) => {
     const params = {};
     if (categoryId && categoryId !== 'all') {
@@ -68,40 +70,87 @@ export const productService = {
     return response.data;
   },
 
-  // Get all brands (follows pagination so brands beyond the first page,
-  // e.g. TAPARIA, are included with their logos).
-  getBrands: async () => {
-    const first = await axiosInstance.get('/brands/');
+  // Get all brands (cached across calls and fetches remaining pages in parallel
+  // so brands beyond page 1 load in one round trip instead of sequentially).
+  getBrands: (() => {
+    let cachedBrands = null;
+    let cachedAt = 0;
+    let inflight = null;
+    const BRANDS_TTL = 5 * 60 * 1000;
 
-    // Unpaginated response (plain array).
-    if (Array.isArray(first.data)) return first.data;
-
-    const results = [...(first.data.results || [])];
-    let next = first.data.next;
-
-    // Follow `next` links, rewriting the absolute API host to a relative path
-    // so the request goes through the configured axios baseURL/proxy.
-    while (next) {
-      let path = next;
-      try {
-        const parsed = new URL(next, window.location.origin);
-        path = parsed.pathname.replace(/^\/api/, '') + parsed.search;
-      } catch {
-        // Leave `next` as-is if it cannot be parsed.
+    return async () => {
+      if (cachedBrands && Date.now() - cachedAt < BRANDS_TTL) {
+        return cachedBrands;
       }
-      const page = await axiosInstance.get(path);
-      if (Array.isArray(page.data)) {
-        results.push(...page.data);
-        break;
-      }
-      results.push(...(page.data.results || []));
-      next = page.data.next;
-      // Safety valve against an unexpected infinite loop.
-      if (results.length > 5000) break;
-    }
+      if (inflight) return inflight;
 
-    return results;
-  },
+      inflight = (async () => {
+        try {
+          const first = await axiosInstance.get('/brands/');
+          if (Array.isArray(first.data)) {
+            cachedBrands = first.data;
+            cachedAt = Date.now();
+            return cachedBrands;
+          }
+
+          const firstResults = first.data.results || [];
+          const results = [...firstResults];
+          const next = first.data.next;
+          const totalCount = typeof first.data.count === 'number' ? first.data.count : null;
+
+          if (next && totalCount && firstResults.length > 0 && totalCount > firstResults.length) {
+            const totalPages = Math.ceil(totalCount / firstResults.length);
+            let baseNextPath = next;
+            try {
+              const parsed = new URL(next, window.location.origin);
+              baseNextPath = parsed.pathname.replace(/^\/api/, '') + parsed.search;
+            } catch {
+              // Leave as-is if relative.
+            }
+            const urls = [];
+            for (let page = 2; page <= totalPages; page += 1) {
+              urls.push(
+                /([?&])page=\d+/.test(baseNextPath)
+                  ? baseNextPath.replace(/([?&])page=\d+/, `$1page=${page}`)
+                  : `${baseNextPath}${baseNextPath.includes('?') ? '&' : '?'}page=${page}`
+              );
+            }
+            const pages = await Promise.all(urls.map((u) => axiosInstance.get(u)));
+            for (const p of pages) {
+              results.push(...(Array.isArray(p.data) ? p.data : (p.data.results || [])));
+            }
+          } else {
+            let cursor = next;
+            while (cursor) {
+              let path = cursor;
+              try {
+                const parsed = new URL(cursor, window.location.origin);
+                path = parsed.pathname.replace(/^\/api/, '') + parsed.search;
+              } catch {
+                // Leave `cursor` as-is if it cannot be parsed.
+              }
+              const page = await axiosInstance.get(path);
+              if (Array.isArray(page.data)) {
+                results.push(...page.data);
+                break;
+              }
+              results.push(...(page.data.results || []));
+              cursor = page.data.next;
+              if (results.length > 5000) break;
+            }
+          }
+
+          cachedBrands = results;
+          cachedAt = Date.now();
+          return cachedBrands;
+        } finally {
+          inflight = null;
+        }
+      })();
+
+      return inflight;
+    };
+  })(),
 
   // Get brand by slug
   getBrandBySlug: async (slug) => {

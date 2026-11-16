@@ -1,48 +1,21 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import axios from '../api/axios';
+import { readPage, buildRemainingPageUrls, fetchPagesInBatches } from './paginationHelpers';
 
 // Module-level cache persists across component remounts and route changes.
 let cachedProducts = null;
 let cachedCategories = null;
 let lastFetchTime = 0;
-// Very short TTL so admin changes appear almost instantly.
-// Combined with focus/visibility refetch, this keeps data fresh.
-const CACHE_TTL = 5 * 1000; // 5 seconds
-
-const scheduleAfterPaint = (callback) => {
-  const run = () => window.setTimeout(callback, 1200);
-
-  if (typeof window === 'undefined') {
-    callback();
-  } else if ('requestIdleCallback' in window) {
-    window.requestIdleCallback(run, { timeout: 3000 });
-  } else {
-    run();
-  }
-};
+// Keep the cache warm long enough that switching tabs or navigating back
+// doesn't re-walk 14+ paginated requests every few seconds.
+const CACHE_TTL = 60 * 1000; // 60 seconds
+const FOCUS_REFRESH_MIN_AGE = 30 * 1000; // 30 seconds
+const PAGE_CONCURRENCY = 5;
 
 const normalizeProducts = (productsData) => productsData.map(product => ({
   ...product,
   image: product.image_url || product.images?.[0]?.image || product.image,
 }));
-
-const readPage = (data) => {
-  if (Array.isArray(data)) {
-    return { products: data, nextUrl: null };
-  }
-
-  let nextUrl = null;
-  if (data.next) {
-    try {
-      const url = new URL(data.next);
-      nextUrl = url.pathname.replace(/^\/api/, '') + url.search;
-    } catch {
-      nextUrl = null;
-    }
-  }
-
-  return { products: data.results || [], nextUrl };
-};
 
 export const useProducts = () => {
   const [products, setProducts] = useState(cachedProducts || []);
@@ -90,40 +63,60 @@ export const useProducts = () => {
       const firstPage = readPage(firstProductsRes.data);
       const firstProductsData = normalizeProducts(firstPage.products);
 
-      // Paint with the first page quickly; pull the rest in after LCP is no longer blocked.
-      cachedProducts = firstProductsData;
+      // Only overwrite visible products immediately on initial cold load; during a
+      // background refresh keep the existing full list until all pages settle.
+      if (!cachedProducts) {
+        cachedProducts = firstProductsData;
+        setProducts(firstProductsData);
+      }
       cachedCategories = categoriesData;
       lastFetchTime = Date.now();
 
-      setProducts(firstProductsData);
       setCategories(categoriesData);
       setError(null);
       setLoading(false);
       setLoadingMore(Boolean(firstPage.nextUrl));
-      setAllLoaded(!firstPage.nextUrl);
+      if (!firstPage.nextUrl) {
+        cachedProducts = firstProductsData;
+        setProducts(firstProductsData);
+        setAllLoaded(true);
+        return;
+      }
 
       let productsData = firstProductsData;
-      let nextUrl = firstPage.nextUrl;
+      const remainingUrls = buildRemainingPageUrls(
+        firstPage.nextUrl,
+        firstProductsData.length,
+        firstPage.totalCount
+      );
 
-      while (nextUrl) {
-        const nextRes = await axios.get(nextUrl);
-        const nextPage = readPage(nextRes.data);
-        productsData = productsData.concat(normalizeProducts(nextPage.products));
-        cachedProducts = productsData;
-        lastFetchTime = Date.now();
-        nextUrl = nextPage.nextUrl;
-      }
-
-      if (productsData.length !== firstProductsData.length) {
-        scheduleAfterPaint(() => {
-          setProducts(productsData);
-          setLoadingMore(false);
-          setAllLoaded(true);
-        });
+      if (remainingUrls.length > 0) {
+        // Fetch pages 2..N in parallel batches so 1,361 products load in ~3s instead of ~20-40s.
+        const pageResponses = await fetchPagesInBatches(
+          remainingUrls,
+          (url) => axios.get(url),
+          PAGE_CONCURRENCY
+        );
+        for (const pageRes of pageResponses) {
+          const page = readPage(pageRes.data);
+          productsData = productsData.concat(normalizeProducts(page.products));
+        }
       } else {
-        setLoadingMore(false);
-        setAllLoaded(true);
+        // Fallback sequential walk if `count` wasn't returned.
+        let nextUrl = firstPage.nextUrl;
+        while (nextUrl) {
+          const nextRes = await axios.get(nextUrl);
+          const nextPage = readPage(nextRes.data);
+          productsData = productsData.concat(normalizeProducts(nextPage.products));
+          nextUrl = nextPage.nextUrl;
+        }
       }
+
+      cachedProducts = productsData;
+      lastFetchTime = Date.now();
+      setProducts(productsData);
+      setLoadingMore(false);
+      setAllLoaded(true);
     } catch (err) {
       if (cachedProducts) {
         setProducts(cachedProducts);
@@ -146,21 +139,25 @@ export const useProducts = () => {
     fetchData();
   }, [fetchData]);
 
-  // Re-fetch when the user returns to the tab (e.g. after editing in admin),
-  // so newly added/updated products appear without a manual refresh.
+  // Re-fetch when the user returns to the tab only if the cache is stale,
+  // avoiding a full multi-page reload on every window click/focus.
   useEffect(() => {
-    const handleVisibility = () => {
-      if (document.visibilityState === 'visible') {
+    const refreshIfStale = () => {
+      if (Date.now() - lastFetchTime >= FOCUS_REFRESH_MIN_AGE) {
         fetchData(true);
       }
     };
-    const handleFocus = () => fetchData(true);
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        refreshIfStale();
+      }
+    };
 
     document.addEventListener('visibilitychange', handleVisibility);
-    window.addEventListener('focus', handleFocus);
+    window.addEventListener('focus', refreshIfStale);
     return () => {
       document.removeEventListener('visibilitychange', handleVisibility);
-      window.removeEventListener('focus', handleFocus);
+      window.removeEventListener('focus', refreshIfStale);
     };
   }, [fetchData]);
 

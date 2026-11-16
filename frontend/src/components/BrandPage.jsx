@@ -43,18 +43,26 @@ export default function BrandPage({ brand, allProducts = [], onBack, onProductCl
         const fetchBrandProducts = async () => {
             if (!brand) return;
 
-            setLoading(true);
+            // Show any already-loaded matches right away while the authoritative
+            // brand endpoint finishes, avoiding a full-screen loading delay.
+            if (fallbackProducts.length > 0) {
+                setProducts(fallbackProducts);
+                setLoading(false);
+            } else {
+                setLoading(true);
+            }
             setError(null);
 
             try {
-                let data = [];
+                // Use the paginated ?brands=<name> endpoint first (~200-1200ms) instead
+                // of /brands/<slug>/products/ which returns unpaginated payloads and can
+                // take 20+ seconds for large brands like Anchor (281 products).
+                let data = normalizeProductResponse(
+                    await productService.getProducts(null, [brand.name])
+                );
 
-                if (brand.slug) {
+                if (data.length === 0 && brand.slug) {
                     data = normalizeProductResponse(await productService.getProductsByBrand(brand.slug));
-                }
-
-                if (data.length === 0) {
-                    data = normalizeProductResponse(await productService.getProducts(null, [brand.name]));
                 }
 
                 setProducts(data.map(normalizeProductImage));

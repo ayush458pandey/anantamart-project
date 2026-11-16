@@ -105,6 +105,11 @@ export default function Home() {
     const [selectedTags, setSelectedTags] = useState([]);
     const [loadingFilters, setLoadingFilters] = useState(false);
     const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+    // Server-fetched matches when a global tag/business filter is active before
+    // the full catalogue finishes loading, so clicking e.g. "Restaurants" shows
+    // results in <300ms instead of waiting for all 1,361 products.
+    const [serverFilteredProducts, setServerFilteredProducts] = useState(null);
+    const [loadingServerFilter, setLoadingServerFilter] = useState(false);
 
     // Ref to track intentional navigation
     const intentionalNavRef = React.useRef({ subcategoryId: null, navigating: false });
@@ -303,11 +308,53 @@ export default function Home() {
         };
     }, []);
 
-    // Fetch brands after the first catalog paint so brand logos do not compete with LCP.
+    // Fetch server-filtered products immediately when a tag filter is active on
+    // the homepage (e.g. "Shop by Business -> Restaurants"), or when a category
+    // is opened before the full catalogue finishes downloading.
+    useEffect(() => {
+        const hasSpecificTags = selectedTags.length > 0 && !selectedTags.includes(UNTAGGED_TAG_ID);
+        const shouldQueryServer = !allLoaded && (hasSpecificTags || selectedCategory !== 'all');
+
+        if (!shouldQueryServer) {
+            setServerFilteredProducts(null);
+            setLoadingServerFilter(false);
+            return;
+        }
+
+        let cancelled = false;
+        setLoadingServerFilter(true);
+
+        const fetchFiltered = async () => {
+            try {
+                const data = await productService.getProducts(
+                    selectedCategory,
+                    selectedBrands,
+                    activeFilterSubcategories,
+                    hasSpecificTags ? selectedTags : []
+                );
+                if (cancelled) return;
+                const raw = Array.isArray(data) ? data : (data?.results || []);
+                const normalized = raw.map(p => ({
+                    ...p,
+                    image: p.image_url || p.images?.[0]?.image || p.image,
+                }));
+                setServerFilteredProducts(normalized);
+            } catch {
+                if (!cancelled) setServerFilteredProducts(null);
+            } finally {
+                if (!cancelled) setLoadingServerFilter(false);
+            }
+        };
+
+        fetchFiltered();
+        return () => {
+            cancelled = true;
+        };
+    }, [allLoaded, selectedCategory, selectedBrands, activeFilterSubcategories, selectedTags]);
+
+    // Fetch brands right away so the brand rail loads with the rest of the page.
     useEffect(() => {
         let cancelled = false;
-        let timeoutId;
-        let idleId;
 
         const fetchBrands = async () => {
             setLoadingBrands(true);
@@ -330,20 +377,10 @@ export default function Home() {
             }
         };
 
-        const scheduleFetch = () => {
-            timeoutId = window.setTimeout(fetchBrands, 800);
-        };
-
-        if ('requestIdleCallback' in window) {
-            idleId = window.requestIdleCallback(scheduleFetch, { timeout: 2000 });
-        } else {
-            scheduleFetch();
-        }
+        fetchBrands();
 
         return () => {
             cancelled = true;
-            window.clearTimeout(timeoutId);
-            if (idleId) window.cancelIdleCallback(idleId);
         };
     }, []);
 
@@ -492,6 +529,15 @@ export default function Home() {
             return matchesSearch && matchesCategory && matchesSubcategory && matchesBrand && matchesTags;
         });
     }, [products, searchQuery, selectedCategory, activeFilterSubcategories, selectedBrands, selectedTags, filterOptions]);
+
+    // While the full catalogue is still streaming in, prefer instant server-filtered
+    // results whenever client-side filtering would otherwise operate on a partial list.
+    const displayedProducts = useMemo(() => {
+        if (!allLoaded && serverFilteredProducts !== null && serverFilteredProducts.length >= filteredProducts.length) {
+            return serverFilteredProducts;
+        }
+        return filteredProducts;
+    }, [allLoaded, serverFilteredProducts, filteredProducts]);
 
     // Products in the current subcategory scope that carry no tags. Drives the
     // "Others" tile in the tag rail.
@@ -832,7 +878,7 @@ export default function Home() {
                         <h2 className="text-base sm:text-lg font-bold text-gray-800">
                             Search Results for "{searchQuery}"
                             <span className="text-xs font-normal text-gray-500 bg-gray-100 px-2 py-1 rounded-full border border-gray-200">
-                                {filteredProducts.length} items
+                                {displayedProducts.length} items
                             </span>
                         </h2>
                     ) : selectedSubcategory && activeSubcategory ? (
@@ -843,7 +889,7 @@ export default function Home() {
                             <h2 className="text-xl sm:text-2xl font-bold text-emerald-800 flex items-center gap-2 mt-0.5">
                                 {activeSubcategory.name}
                                 <span className="text-xs font-normal text-gray-500 bg-gray-100 px-2 py-1 rounded-full border border-gray-200">
-                                    {filteredProducts.length} items
+                                    {displayedProducts.length} items
                                 </span>
                             </h2>
                         </div>
@@ -1160,7 +1206,7 @@ export default function Home() {
                                         </div>
                                     )}
                                     <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-2.5 sm:gap-3 md:gap-4 pb-4">
-                                        {filteredProducts.map((product, index) => (
+                                        {displayedProducts.map((product, index) => (
                                             <ProductCard
                                                 key={product.id}
                                                 product={product}
@@ -1175,17 +1221,17 @@ export default function Home() {
                                         ))}
                                     </div>
 
-                                    {filteredProducts.length === 0 && !allLoaded && (
+                                    {displayedProducts.length === 0 && (!allLoaded || loadingServerFilter) && (
                                         <div className="text-center py-12 sm:py-16">
                                             <div className="w-12 h-12 sm:w-16 sm:h-16 border-4 border-gray-200 border-t-emerald-600 rounded-full mx-auto mb-3 animate-spin" />
-                                            <p className="text-sm sm:text-base text-gray-500">Loading more products…</p>
+                                            <p className="text-sm sm:text-base text-gray-500">Loading products…</p>
                                             <p className="text-xs text-gray-400 mt-1">
                                                 Filters apply once the full catalogue has loaded.
                                             </p>
                                         </div>
                                     )}
 
-                                    {filteredProducts.length === 0 && allLoaded && (
+                                    {displayedProducts.length === 0 && allLoaded && !loadingServerFilter && (
                                         <div className="text-center py-12 sm:py-16">
                                             <Package className="w-12 h-12 sm:w-16 sm:h-16 text-gray-300 mx-auto mb-3" />
                                             <p className="text-sm sm:text-base text-gray-500">No products found</p>
