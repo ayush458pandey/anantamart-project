@@ -28,6 +28,61 @@ export const productService = {
     return response.data;
   },
 
+  // Get every product for a brand, following pagination.
+  // The brand filter paginates at 100 per page, so a large brand like Anchor
+  // (281 products) would otherwise be silently truncated to its first page.
+  getBrandProducts: async (brandName) => {
+    const first = await axiosInstance.get('/products/', {
+      params: { brands: brandName },
+    });
+
+    if (Array.isArray(first.data)) return first.data;
+
+    const results = [...(first.data.results || [])];
+    const totalCount = typeof first.data.count === 'number' ? first.data.count : null;
+    let next = first.data.next;
+
+    if (!next) return results;
+
+    // Derive the remaining page URLs from `count` and fetch them in parallel.
+    const pageSize = results.length;
+    if (totalCount && pageSize > 0 && totalCount > pageSize) {
+      const totalPages = Math.ceil(totalCount / pageSize);
+      const urls = [];
+      for (let page = 2; page <= totalPages; page += 1) {
+        urls.push({ brands: brandName, page });
+      }
+      const pages = await Promise.all(
+        urls.map((params) => axiosInstance.get('/products/', { params }))
+      );
+      for (const res of pages) {
+        results.push(...(Array.isArray(res.data) ? res.data : (res.data.results || [])));
+      }
+      return results;
+    }
+
+    // Fallback: follow `next` links sequentially.
+    while (next) {
+      let path = next;
+      try {
+        const parsed = new URL(next, window.location.origin);
+        path = parsed.pathname.replace(/^\/api/, '') + parsed.search;
+      } catch {
+        // Leave `next` as-is if it cannot be parsed.
+      }
+      const res = await axiosInstance.get(path);
+      if (Array.isArray(res.data)) {
+        results.push(...res.data);
+        break;
+      }
+      results.push(...(res.data.results || []));
+      next = res.data.next;
+      if (results.length > 5000) break;
+    }
+
+    return results;
+  },
+
   // Get single product
   getProductById: async (id) => {
     const response = await axiosInstance.get(`/products/${id}/`);

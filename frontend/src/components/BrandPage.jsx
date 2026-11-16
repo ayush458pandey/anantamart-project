@@ -1,9 +1,13 @@
 import { useState, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
-import { ArrowLeft, Package } from 'lucide-react';
+import { ArrowLeft, Package, ChevronRight, LayoutGrid } from 'lucide-react';
 import { productService } from '../api/services/productService';
 import ProductCard from './ProductCard';
 import { useCart } from '../context/useCart';
+import {
+    groupProductsBySubcategory,
+    shouldShowSubcategoryTiles,
+} from '../utils/brandGrouping';
 
 const normalizeProductResponse = (data) => Array.isArray(data)
     ? data
@@ -33,6 +37,8 @@ export default function BrandPage({ brand, allProducts = [], onBack, onProductCl
     const [products, setProducts] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    // null = showing the subcategory tiles; otherwise the selected group id.
+    const [activeGroupId, setActiveGroupId] = useState(null);
     const { cart, removeFromCart } = useCart();
 
     const fallbackProducts = useMemo(() => (
@@ -54,12 +60,10 @@ export default function BrandPage({ brand, allProducts = [], onBack, onProductCl
             setError(null);
 
             try {
-                // Use the paginated ?brands=<name> endpoint first (~200-1200ms) instead
-                // of /brands/<slug>/products/ which returns unpaginated payloads and can
-                // take 20+ seconds for large brands like Anchor (281 products).
-                let data = normalizeProductResponse(
-                    await productService.getProducts(null, [brand.name])
-                );
+                // Follows pagination, so a large brand (Anchor: 281 products) is not
+                // truncated to the first 100. Falls back to the slug endpoint only
+                // when the name filter returns nothing.
+                let data = await productService.getBrandProducts(brand.name);
 
                 if (data.length === 0 && brand.slug) {
                     data = normalizeProductResponse(await productService.getProductsByBrand(brand.slug));
@@ -89,6 +93,14 @@ export default function BrandPage({ brand, allProducts = [], onBack, onProductCl
     const productCount = displayProducts.length;
     const logoUrl = brand.logo_url || brand.logo;
     const headerExtension = document.getElementById('header-extension');
+
+    const groups = groupProductsBySubcategory(displayProducts);
+    const showTiles = shouldShowSubcategoryTiles(groups);
+    const activeGroup = activeGroupId
+        ? groups.find((g) => g.id === activeGroupId) || null
+        : null;
+    // Tiles are the landing view; picking one drills into that subcategory.
+    const visibleProducts = activeGroup ? activeGroup.products : displayProducts;
 
     const mobileBrandHeader = headerExtension && createPortal(
         <div className="px-3 pb-3 pt-1 bg-white sm:hidden">
@@ -170,6 +182,76 @@ export default function BrandPage({ brand, allProducts = [], onBack, onProductCl
                     </div>
                 )}
 
+                {/* Subcategory tiles: the landing view for a brand that spans
+                    more than one subcategory. */}
+                {!loading && !error && showTiles && (
+                    <div className="mb-5">
+                        <div className="flex items-center justify-between mb-3 px-1">
+                            <h2 className="text-sm sm:text-base font-bold text-gray-800">
+                                Shop {brand.name} by Category
+                            </h2>
+                            {activeGroup && (
+                                <button
+                                    onClick={() => setActiveGroupId(null)}
+                                    className="text-xs font-semibold text-emerald-600 hover:text-emerald-700"
+                                >
+                                    Show all
+                                </button>
+                            )}
+                        </div>
+                        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-3">
+                            <button
+                                onClick={() => setActiveGroupId(null)}
+                                className={`flex items-center gap-3 rounded-xl border p-3 text-left transition-colors ${
+                                    activeGroupId === null
+                                        ? 'border-emerald-500 bg-emerald-50'
+                                        : 'border-gray-200 bg-white hover:border-emerald-300'
+                                }`}
+                            >
+                                <span className="w-9 h-9 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center flex-shrink-0">
+                                    <LayoutGrid className="w-4 h-4" />
+                                </span>
+                                <span className="min-w-0">
+                                    <span className="block text-sm font-semibold text-gray-900 truncate">
+                                        All Products
+                                    </span>
+                                    <span className="block text-xs text-gray-500">
+                                        {productCount} {productCount === 1 ? 'item' : 'items'}
+                                    </span>
+                                </span>
+                            </button>
+
+                            {groups.map((group) => {
+                                const isActive = activeGroupId === group.id;
+                                return (
+                                    <button
+                                        key={group.id}
+                                        onClick={() => setActiveGroupId(group.id)}
+                                        className={`flex items-center gap-3 rounded-xl border p-3 text-left transition-colors ${
+                                            isActive
+                                                ? 'border-emerald-500 bg-emerald-50'
+                                                : 'border-gray-200 bg-white hover:border-emerald-300'
+                                        }`}
+                                    >
+                                        <span className="w-9 h-9 rounded-lg bg-gray-100 text-gray-600 flex items-center justify-center flex-shrink-0">
+                                            <Package className="w-4 h-4" />
+                                        </span>
+                                        <span className="min-w-0 flex-1">
+                                            <span className="block text-sm font-semibold text-gray-900 truncate">
+                                                {group.name}
+                                            </span>
+                                            <span className="block text-xs text-gray-500">
+                                                {group.count} {group.count === 1 ? 'item' : 'items'}
+                                            </span>
+                                        </span>
+                                        <ChevronRight className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    </div>
+                )}
+
                 {error && (
                     <div className="text-center py-12">
                         <p className="text-red-600">{error}</p>
@@ -192,9 +274,9 @@ export default function BrandPage({ brand, allProducts = [], onBack, onProductCl
                     </div>
                 )}
 
-                {!loading && !error && displayProducts.length > 0 && (
+                {!loading && !error && visibleProducts.length > 0 && (
                     <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2.5 sm:gap-3 md:gap-4">
-                        {displayProducts.map((product, index) => (
+                        {visibleProducts.map((product, index) => (
                             <ProductCard
                                 key={product.id}
                                 product={product}
