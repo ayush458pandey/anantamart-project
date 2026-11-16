@@ -61,8 +61,6 @@ export default function InvoiceGenerator({ orderData, onClose, type = 'invoice' 
   const p = orderData?.pricing || {};
   const subtotal = p.subtotal || 0;
   const discount = p.discount || 0;
-  const cgst = p.cgst || 0;
-  const sgst = p.sgst || 0;
   const deliveryCharges = p.delivery || 0;
   const total = p.total || 0;
   const isPaid = orderData?.payment_status === 'Paid';
@@ -75,7 +73,6 @@ export default function InvoiceGenerator({ orderData, onClose, type = 'invoice' 
   const deliveryOption = orderData?.delivery_option
     || (typeof orderData?.delivery_address === 'object' ? '' : '')
     || '';
-  const paymentMethod = orderData?.payment_method || '';
 
   // ── HSN Tax Breakdown ──────────────────────────────────────────
   const discountRate = subtotal > 0 ? discount / subtotal : 0;

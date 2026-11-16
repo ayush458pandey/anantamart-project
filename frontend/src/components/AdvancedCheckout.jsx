@@ -91,7 +91,7 @@ const loadRazorpay = (src) => {
   });
 };
 
-export default function AdvancedCheckout({ cart, onClose, onPlaceOrder }) {
+export default function AdvancedCheckout({ cart, onClose }) {
   const [step, setStep] = useState(1);
   const [selectedPayment, setSelectedPayment] = useState(null);
   const [selectedDelivery, setSelectedDelivery] = useState('standard');

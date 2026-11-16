@@ -98,10 +98,13 @@ const Footer = () => {
 };
 
 // Small helper for social icons
-const SocialIcon = ({ Icon }) => (
-    <a href="#" className="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 hover:bg-emerald-50 hover:text-emerald-600 transition-all">
-        <Icon className="w-5 h-5" />
-    </a>
-);
+const SocialIcon = ({ Icon }) => {
+    const Comp = Icon;
+    return (
+        <a href="#" className="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 hover:bg-emerald-50 hover:text-emerald-600 transition-all">
+            <Comp className="w-5 h-5" />
+        </a>
+    );
+};
 
 export default Footer;

@@ -128,7 +128,7 @@ function LoginView({ onLogin, onCancel, message, hideSignup }) {
                 const errObj = JSON.parse(err.message);
                 if (errObj.username) msg = "Please enter a valid email/username.";
                 if (errObj.detail) msg = errObj.detail;
-            } catch (e) {
+            } catch {
                 msg = err.message;
             }
 
@@ -312,8 +312,6 @@ function AppContent() {
     const { products, categories, loading, error } = useProducts();
     const { cart, addToCart, removeFromCart, updateQuantity, clearCart } = useCart();
     const { compareList } = useComparison();
-    // Add this new state for toggling brands
-    const [showAllBrands, setShowAllBrands] = useState(false);
 
     // Check for login token on load
     useEffect(() => {
@@ -1272,6 +1270,7 @@ function ProfileView({ user, onLogout }) {
 
 // Bottom Nav Button - Mobile Optimized
 function NavButton({ icon: Icon, label, active, onClick, badge }) {
+    const Comp = Icon;
     return (
         <button
             onClick={onClick}
@@ -1279,7 +1278,7 @@ function NavButton({ icon: Icon, label, active, onClick, badge }) {
                 }`}
         >
             <div className="relative">
-                <Icon className="w-5 h-5 sm:w-6 sm:h-6 mb-0.5 sm:mb-1" />
+                <Comp className="w-5 h-5 sm:w-6 sm:h-6 mb-0.5 sm:mb-1" />
                 {badge > 0 && (
                     <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] sm:text-xs rounded-full w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center font-bold">
                         {badge > 99 ? '99+' : badge}

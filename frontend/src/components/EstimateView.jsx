@@ -12,7 +12,7 @@ export default function EstimateView({ cart, removeFromCart, updateQuantity, sub
         try {
             const saved = localStorage.getItem('estimateBuyerDetails');
             if (saved) return JSON.parse(saved);
-        } catch (e) {
+        } catch {
             console.warn('Failed to load saved buyer details');
         }
         return { name: '', address: '', city: '', state: 'West Bengal', pincode: '', phone: '', hasGST: false, gstin: '' };
@@ -60,7 +60,7 @@ export default function EstimateView({ cart, removeFromCart, updateQuantity, sub
 
         try {
             localStorage.setItem('estimateBuyerDetails', JSON.stringify(formData));
-        } catch (e) {
+        } catch {
             console.warn('Failed to save buyer details');
         }
         generateInvoicePDF({
