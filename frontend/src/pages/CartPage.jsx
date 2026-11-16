@@ -1,6 +1,6 @@
 import React, { lazy, Suspense } from 'react';
 import { Navigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../context/useAuth';
 import { useCart } from '../context/CartContext';
 import { getTaxFromInclusive } from '../utils/priceUtils';
 

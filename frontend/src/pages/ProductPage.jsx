@@ -2,7 +2,7 @@ import { useState, useEffect, lazy, Suspense } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { Package, ArrowLeft, ChevronRight } from 'lucide-react';
 import { productService } from '../api/services/productService';
-import { useCart } from '../context/CartContext';
+import { useCart } from '../context/useCart';
 
 const ProductDetail = lazy(() => import('../components/ProductDetail'));
 

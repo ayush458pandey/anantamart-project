@@ -1,5 +1,5 @@
 import { X, Scale } from 'lucide-react';
-import { useComparison } from '../context/ComparisonContext';
+import { useComparison } from './useComparison';
 
 const ComparisonView = () => {
   const { compareProducts, removeFromCompare, clearComparison } = useComparison();

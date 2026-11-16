@@ -2,7 +2,7 @@ import React from 'react';
 import { useNavigate, useLocation, Outlet } from 'react-router-dom';
 import { Package, ShoppingCart, Search, User, BarChart3 } from 'lucide-react';
 import { useCart } from '../context/CartContext';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../context/useAuth';
 import Footer from './Footer';
 import BottomNav from './BottomNav';
 

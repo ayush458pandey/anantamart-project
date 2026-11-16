@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useCallback } from 'react';
+import { createContext, useState, useCallback } from 'react';
 import { CheckCircle, X, AlertCircle, Info, ShoppingCart } from 'lucide-react';
 
 const ToastContext = createContext();
@@ -31,14 +31,6 @@ export const ToastProvider = ({ children }) => {
             <ToastContainer toasts={toasts} removeToast={removeToast} />
         </ToastContext.Provider>
     );
-};
-
-export const useToast = () => {
-    const context = useContext(ToastContext);
-    if (!context) {
-        throw new Error('useToast must be used within ToastProvider');
-    }
-    return context;
 };
 
 // Toast Container Component

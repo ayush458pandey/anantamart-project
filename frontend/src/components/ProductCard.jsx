@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { Package, Plus, Minus, GitCompare } from 'lucide-react';
-import { useComparison } from '../context/ComparisonContext';
+import { useComparison } from '../context/useComparison';
 import { formatCaseSize } from '../utils/formatters';
 import { getImageSrcSet, getOptimizedImageUrl } from '../utils/imageUtils';
 

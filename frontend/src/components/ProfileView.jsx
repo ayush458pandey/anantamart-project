@@ -97,8 +97,6 @@ export default function ProfileView({ user, onLogout }) {
         }
     };
 
-    const defaultAddress = addresses.find(a => a.is_default) || addresses[0];
-
     if (!user) return null;
 
     return (

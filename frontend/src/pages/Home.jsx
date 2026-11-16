@@ -8,7 +8,7 @@ import {
 } from 'lucide-react';
 
 import { useProducts } from '../hooks/useProducts';
-import { useCart } from '../context/CartContext';
+import { useCart } from '../context/useCart';
 
 import ProductCard from '../components/ProductCard';
 

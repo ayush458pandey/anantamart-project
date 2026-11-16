@@ -7,7 +7,7 @@ import {
     MapPin, Building, Edit, LogOut, Settings, ChevronLeft
 } from 'lucide-react';
 import { useProducts } from './hooks/useProducts';
-import { useCart } from './context/CartContext';
+import { useCart } from './context/useCart';
 import { ComparisonProvider, useComparison } from './context/ComparisonContext';
 import ProductComparison from './components/ProductComparison';
 import ProductDetail from './components/ProductDetail';

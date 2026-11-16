@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { ArrowLeft, Package } from 'lucide-react';
 import { productService } from '../api/services/productService';
 import ProductCard from './ProductCard';
-import { useCart } from '../context/CartContext';
+import { useCart } from '../context/useCart';
 
 const normalizeProductResponse = (data) => Array.isArray(data)
     ? data

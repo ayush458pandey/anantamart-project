@@ -1,7 +1,7 @@
 import React from 'react'; // Added React import just in case
 import { X, Plus, ShoppingCart, Star, Package } from 'lucide-react';
-import { useComparison } from '../context/ComparisonContext';
-import { useCart } from '../context/CartContext';
+import { useComparison } from '../context/useComparison';
+import { useCart } from '../context/useCart';
 
 export default function ProductComparison({ onClose }) {
   const { compareList, removeFromCompare, clearCompare } = useComparison();

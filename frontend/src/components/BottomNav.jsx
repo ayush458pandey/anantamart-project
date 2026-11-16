@@ -1,9 +1,9 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Package, FileText, GitCompare, ShoppingCart, User } from 'lucide-react';
-import { useCart } from '../context/CartContext';
-import { useComparison } from '../context/ComparisonContext';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../context/useAuth';
+import { useCart } from '../context/useCart';
+import { useComparison } from '../context/useComparison';
 import NavButton from './NavButton';
 
 export default function BottomNav() {

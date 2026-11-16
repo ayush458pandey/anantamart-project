@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import { X, ArrowLeft, Plus, Minus, ShoppingCart, Package, Truck, Shield } from 'lucide-react';
-import { useCart } from '../context/CartContext';
-import { useToast } from '../context/ToastContext';
+import { useCart } from '../context/useCart';
+import { useToast } from '../context/useToast';
 import { formatCaseSize } from '../utils/formatters';
 
 // Smart price formatter: shows decimals only when needed (e.g., 100, 99.25, 0.50)

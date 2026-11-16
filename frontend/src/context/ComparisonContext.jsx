@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useState, useEffect } from 'react';
 
 const ComparisonContext = createContext();
 
@@ -59,4 +59,4 @@ export const ComparisonProvider = ({ children }) => {
   );
 };
 
-export const useComparison = () => useContext(ComparisonContext);
+export default ComparisonContext;

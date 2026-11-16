@@ -1,4 +1,4 @@
-import React, { createContext, useState, useEffect, useContext, useCallback } from 'react';
+import React, { createContext, useState, useEffect, useCallback } from 'react';
 import axiosInstance from '../api/axios';
 import { restoreSession, STORAGE_KEYS, SESSION_STATUS } from './sessionRestore';
 
@@ -76,4 +76,4 @@ export const AuthProvider = ({ children }) => {
     );
 };
 
-export const useAuth = () => useContext(AuthContext);
+export default AuthContext;

@@ -1,4 +1,3 @@
-import { useState, useEffect } from 'react';
 import { X, Package, CheckCircle, Truck, MapPin, Clock, FileText, Download } from 'lucide-react';
 
 const orderStatuses = [

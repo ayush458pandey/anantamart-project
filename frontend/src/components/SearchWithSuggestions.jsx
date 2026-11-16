@@ -79,12 +79,6 @@ export default function SearchWithSuggestions({
         setSearchQuery(term);
     };
 
-    const clearSearch = () => {
-        setSearchQuery('');
-        setSuggestions([]);
-        inputRef.current?.focus();
-    };
-
     return (
         <div ref={containerRef} className="relative w-full">
             {/* Search Input */}

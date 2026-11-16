@@ -122,7 +122,7 @@ export default function OrdersList() {
 }
 
 // Filter Tab Component
-function FilterTab({ label, count, active, onClick, color = 'gray' }) {
+function FilterTab({ label, count, active, onClick }) {
   return (
     <button
       onClick={onClick}
