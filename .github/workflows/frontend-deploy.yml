@@ -62,30 +62,57 @@ jobs:
           VITE_UPI_ID: ${{ secrets.VITE_UPI_ID }}
           VITE_GOOGLE_CLIENT_ID: ${{ secrets.VITE_GOOGLE_CLIENT_ID }}
 
+  # Vercel's own Git integration already deploys every push to main and every
+  # PR, so these CLI jobs are a redundant second deploy path. They are gated on
+  # VERCEL_TOKEN being configured: without it `vercel pull --token=` fails with
+  # "You defined --token, but it's missing a value" and turns the whole run red
+  # even though lint, tests and build all passed.
+  #
+  # The guard has to live on the steps, not the job: the `secrets` context is
+  # not available in a job-level `if` (only github, needs, vars and inputs are),
+  # so the token is surfaced through `env` and checked in a first step.
   deploy-preview:
     name: Deploy Preview (PRs)
     needs: lint-and-test
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
+    env:
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
     steps:
+      - name: Check Vercel token
+        id: token
+        run: |
+          if [ -z "$VERCEL_TOKEN" ]; then
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::VERCEL_TOKEN is not set - skipping the CLI deploy. Vercel's Git integration still deploys this PR."
+          else
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Checkout code
+        if: steps.token.outputs.configured == 'true'
         uses: actions/checkout@v4
 
       - name: Install Vercel CLI
+        if: steps.token.outputs.configured == 'true'
         run: npm install -g vercel@latest
 
       - name: Pull Vercel Environment
-        run: vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
+        if: steps.token.outputs.configured == 'true'
+        run: vercel pull --yes --environment=preview --token="$VERCEL_TOKEN"
 
       - name: Build Project Artifacts
-        run: vercel build --token=${{ secrets.VERCEL_TOKEN }}
+        if: steps.token.outputs.configured == 'true'
+        run: vercel build --token="$VERCEL_TOKEN"
 
       - name: Deploy to Vercel Preview
+        if: steps.token.outputs.configured == 'true'
         run: |
-          url=$(vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }})
+          url=$(vercel deploy --prebuilt --token="$VERCEL_TOKEN")
           echo "PREVIEW_URL=$url" >> $GITHUB_ENV
 
       - name: Comment PR with Preview URL
+        if: steps.token.outputs.configured == 'true'
         uses: actions/github-script@v7
         with:
           script: |
@@ -101,25 +128,43 @@ jobs:
     needs: lint-and-test
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     runs-on: ubuntu-latest
+    env:
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
     steps:
+      - name: Check Vercel token
+        id: token
+        run: |
+          if [ -z "$VERCEL_TOKEN" ]; then
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::VERCEL_TOKEN is not set - skipping the CLI deploy. Vercel's Git integration still deploys main."
+          else
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Checkout code
+        if: steps.token.outputs.configured == 'true'
         uses: actions/checkout@v4
 
       - name: Install Vercel CLI
+        if: steps.token.outputs.configured == 'true'
         run: npm install -g vercel@latest
 
       - name: Pull Vercel Environment
-        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
+        if: steps.token.outputs.configured == 'true'
+        run: vercel pull --yes --environment=production --token="$VERCEL_TOKEN"
 
       - name: Build Project Artifacts
-        run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
+        if: steps.token.outputs.configured == 'true'
+        run: vercel build --prod --token="$VERCEL_TOKEN"
 
       - name: Deploy to Vercel Production
+        if: steps.token.outputs.configured == 'true'
         run: |
-          url=$(vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }})
+          url=$(vercel deploy --prebuilt --prod --token="$VERCEL_TOKEN")
           echo "PRODUCTION_URL=$url" >> $GITHUB_ENV
 
       - name: Notify Success
+        if: steps.token.outputs.configured == 'true'
         run: |
           echo "✅ Production deployed to: ${{ env.PRODUCTION_URL }}"
           # Add Slack/Discord notification here
