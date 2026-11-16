@@ -8,7 +8,8 @@ import {
 } from 'lucide-react';
 import { useProducts } from './hooks/useProducts';
 import { useCart } from './context/useCart';
-import { ComparisonProvider, useComparison } from './context/ComparisonContext';
+import { ComparisonProvider } from './context/ComparisonContext';
+import { useComparison } from './context/useComparison';
 import ProductComparison from './components/ProductComparison';
 import ProductDetail from './components/ProductDetail';
 import AdvancedCheckout from './components/AdvancedCheckout';

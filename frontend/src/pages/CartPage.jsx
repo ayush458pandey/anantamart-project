@@ -1,7 +1,7 @@
 import React, { lazy, Suspense } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../context/useAuth';
-import { useCart } from '../context/CartContext';
+import { useCart } from '../context/useCart';
 import { getTaxFromInclusive } from '../utils/priceUtils';
 
 // Lazy-load heavy components (PDF libs) so they don't bloat the initial bundle
