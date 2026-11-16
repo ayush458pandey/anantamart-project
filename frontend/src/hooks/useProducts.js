@@ -49,6 +49,10 @@ export const useProducts = () => {
   const [categories, setCategories] = useState(cachedCategories || []);
   const [loading, setLoading] = useState(!cachedProducts);
   const [loadingMore, setLoadingMore] = useState(false);
+  // True once every page has been fetched (or the walk gave up). Consumers use
+  // this to tell "still loading" apart from "genuinely no matches", because the
+  // catalogue is paginated and filters only see what has arrived so far.
+  const [allLoaded, setAllLoaded] = useState(Boolean(cachedProducts));
   const [error, setError] = useState(null);
   const fetchingRef = useRef(false);
 
@@ -96,6 +100,7 @@ export const useProducts = () => {
       setError(null);
       setLoading(false);
       setLoadingMore(Boolean(firstPage.nextUrl));
+      setAllLoaded(!firstPage.nextUrl);
 
       let productsData = firstProductsData;
       let nextUrl = firstPage.nextUrl;
@@ -113,9 +118,11 @@ export const useProducts = () => {
         scheduleAfterPaint(() => {
           setProducts(productsData);
           setLoadingMore(false);
+          setAllLoaded(true);
         });
       } else {
         setLoadingMore(false);
+        setAllLoaded(true);
       }
     } catch (err) {
       if (cachedProducts) {
@@ -129,6 +136,8 @@ export const useProducts = () => {
     } finally {
       setLoading(false);
       setLoadingMore(false);
+      // A failed page walk must not leave the UI stuck on "loading more".
+      setAllLoaded(true);
       fetchingRef.current = false;
     }
   }, []);
@@ -155,5 +164,13 @@ export const useProducts = () => {
     };
   }, [fetchData]);
 
-  return { products, categories, loading, loadingMore, error, refetch: () => fetchData(true) };
+  return {
+    products,
+    categories,
+    loading,
+    loadingMore,
+    allLoaded,
+    error,
+    refetch: () => fetchData(true),
+  };
 };

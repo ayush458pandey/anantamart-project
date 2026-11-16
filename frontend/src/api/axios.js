@@ -4,8 +4,20 @@ import axios from 'axios';
 // API Base URL — Single source of truth
 // Uses VITE_API_URL env var with production fallback
 // ---------------------------------------------------------------------------
+const DEFAULT_API_BASE_URL = 'https://api.ananta-mart.in/api';
+
+// The Cloudflare Worker proxy (anantamart-hybrid.*.workers.dev) intermittently
+// closes connections mid-request, which surfaced as "Connection Error" and as
+// half-loaded catalogues. It is a pure pass-through, so talk to the API
+// directly and ignore any VITE_API_URL that still points at the worker.
+const isWorkerProxy = (url) => /\.workers\.dev(\/|$)/i.test(url || '');
+
+const configuredApiBaseUrl = import.meta.env.VITE_API_URL;
+
 const API_BASE_URL =
-  import.meta.env.VITE_API_URL || 'https://api.ananta-mart.in/api';
+  configuredApiBaseUrl && !isWorkerProxy(configuredApiBaseUrl)
+    ? configuredApiBaseUrl
+    : DEFAULT_API_BASE_URL;
 
 const axiosInstance = axios.create({
   baseURL: API_BASE_URL,

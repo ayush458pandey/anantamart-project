@@ -109,7 +109,7 @@ export default function Home() {
     // Ref to track intentional navigation
     const intentionalNavRef = React.useRef({ subcategoryId: null, navigating: false });
 
-    const { products, categories, loading, loadingMore, error } = useProducts();
+    const { products, categories, loading, loadingMore, allLoaded, error } = useProducts();
     const { cart, addToCart, removeFromCart, updateQuantity } = useCart();
     const activeFilterSubcategories = useMemo(() => (
         selectedSubcategory ? [selectedSubcategory] : selectedFilterSubcategories
@@ -1175,7 +1175,17 @@ export default function Home() {
                                         ))}
                                     </div>
 
-                                    {filteredProducts.length === 0 && (
+                                    {filteredProducts.length === 0 && !allLoaded && (
+                                        <div className="text-center py-12 sm:py-16">
+                                            <div className="w-12 h-12 sm:w-16 sm:h-16 border-4 border-gray-200 border-t-emerald-600 rounded-full mx-auto mb-3 animate-spin" />
+                                            <p className="text-sm sm:text-base text-gray-500">Loading more products…</p>
+                                            <p className="text-xs text-gray-400 mt-1">
+                                                Filters apply once the full catalogue has loaded.
+                                            </p>
+                                        </div>
+                                    )}
+
+                                    {filteredProducts.length === 0 && allLoaded && (
                                         <div className="text-center py-12 sm:py-16">
                                             <Package className="w-12 h-12 sm:w-16 sm:h-16 text-gray-300 mx-auto mb-3" />
                                             <p className="text-sm sm:text-base text-gray-500">No products found</p>
