@@ -1002,7 +1002,8 @@ export default function Home() {
                                             Shop by Business
                                         </h2>
                                     </div>
-                                    <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 gap-3 sm:gap-4">
+                                    {/* 10 tiles per row on desktop, matching Shop by Category. */}
+                                    <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-10 gap-2.5 sm:gap-3 lg:gap-2.5 xl:gap-3">
                                         {businessTags.map((tag, index) => (
                                             <div
                                                 key={tag.id}
@@ -1011,10 +1012,10 @@ export default function Home() {
                                                     setSelectedTags([tag.id]);
                                                     window.scrollTo({ top: 0, behavior: 'smooth' });
                                                 }}
-                                                className="group flex flex-col items-center cursor-pointer"
+                                                className="group flex flex-col items-center cursor-pointer min-w-0"
                                             >
                                                 {/* SQUARE CONTAINER */}
-                                                <div className={`w-20 h-20 sm:w-24 sm:h-24 bg-white border border-gray-200 rounded-xl flex items-center justify-center shadow-sm transition-all duration-200 group-hover:shadow-md group-hover:border-emerald-500 group-hover:-translate-y-1 overflow-hidden ${tag.image ? '' : 'p-3'}`}>
+                                                <div className={`w-full aspect-square bg-white border border-gray-200 rounded-xl flex items-center justify-center shadow-sm transition-all duration-200 group-hover:shadow-md group-hover:border-emerald-500 group-hover:-translate-y-1 overflow-hidden ${tag.image ? '' : 'p-2 sm:p-3'}`}>
                                                     {tag.image ? (
                                                         <img
                                                             src={tag.image_url || tag.image}
@@ -1027,12 +1028,12 @@ export default function Home() {
                                                             decoding={index < 8 ? "sync" : "async"}
                                                         />
                                                     ) : (
-                                                        <Tag className="w-8 h-8 text-emerald-600 group-hover:scale-110 transition-transform duration-200" />
+                                                        <Tag className="w-7 h-7 sm:w-8 sm:h-8 text-emerald-600 group-hover:scale-110 transition-transform duration-200" />
                                                     )}
                                                 </div>
                                                 {/* TEXT LABEL */}
-                                                <div className="mt-2 w-full px-1 text-center">
-                                                    <span className="text-xs sm:text-sm font-semibold text-gray-800 line-clamp-2 leading-tight group-hover:text-emerald-700 transition-colors">
+                                                <div className="mt-1.5 sm:mt-2 w-full px-0.5 text-center">
+                                                    <span className="text-[11px] sm:text-xs font-semibold text-gray-800 line-clamp-2 leading-tight group-hover:text-emerald-700 transition-colors">
                                                         {tag.name}
                                                     </span>
                                                 </div>

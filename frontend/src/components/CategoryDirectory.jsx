@@ -78,7 +78,10 @@ const CategoryDirectory = ({ categories, onSelectCategory, layout = 'grid', sele
                 </h3>
             </div>
 
-            <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 gap-3 sm:gap-4">
+            {/* 10 tiles per row on desktop, matching Zepto. Tiles are fluid
+                (aspect-square + w-full) so they shrink with the column instead
+                of overflowing at the 1024px breakpoint. */}
+            <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-10 gap-2.5 sm:gap-3 lg:gap-2.5 xl:gap-3">
                 {categories.map((category, index) => {
                     const Icon = getCategoryIcon(category.name);
 
@@ -86,15 +89,15 @@ const CategoryDirectory = ({ categories, onSelectCategory, layout = 'grid', sele
                         <div
                             key={category.id}
                             onClick={() => onSelectCategory(category.id)}
-                            className="group flex flex-col items-center cursor-pointer"
+                            className="group flex flex-col items-center cursor-pointer min-w-0"
                         >
                             {/* SQUARE CONTAINER */}
-                            <div className={`w-20 h-20 sm:w-24 sm:h-24 bg-white border border-gray-200 rounded-xl flex items-center justify-center shadow-sm transition-all duration-200 group-hover:shadow-md group-hover:border-emerald-500 group-hover:-translate-y-1 overflow-hidden ${category.image ? '' : 'p-3'}`}>
+                            <div className={`w-full aspect-square bg-white border border-gray-200 rounded-xl flex items-center justify-center shadow-sm transition-all duration-200 group-hover:shadow-md group-hover:border-emerald-500 group-hover:-translate-y-1 overflow-hidden ${category.image ? '' : 'p-2 sm:p-3'}`}>
                                 {category.image ? (
                                     <img
                                         src={getOptimizedImageUrl(category.image, { width: 192 })}
                                         srcSet={getImageSrcSet(category.image, [96, 160, 192])}
-                                        sizes="(min-width: 640px) 96px, 80px"
+                                        sizes="(min-width: 1024px) 110px, (min-width: 640px) 96px, 80px"
                                         alt={category.name}
                                         width="192"
                                         height="192"
@@ -104,12 +107,12 @@ const CategoryDirectory = ({ categories, onSelectCategory, layout = 'grid', sele
                                         decoding={index < 12 ? "sync" : "async"}
                                     />
                                 ) : (
-                                    <Icon className="w-8 h-8 sm:w-10 sm:h-10 text-emerald-600 group-hover:scale-110 transition-transform" />
+                                    <Icon className="w-7 h-7 sm:w-8 sm:h-8 lg:w-7 lg:h-7 text-emerald-600 group-hover:scale-110 transition-transform" />
                                 )}
                             </div>
 
                             {/* Category Name */}
-                            <span className="mt-2 text-[10px] sm:text-xs font-medium text-gray-600 text-center w-full px-1 group-hover:text-emerald-700 line-clamp-2">
+                            <span className="mt-1.5 sm:mt-2 text-[10px] sm:text-xs font-medium text-gray-600 text-center w-full px-0.5 group-hover:text-emerald-700 line-clamp-2 leading-tight">
                                 {category.short_name || category.name}
                             </span>
                         </div>
