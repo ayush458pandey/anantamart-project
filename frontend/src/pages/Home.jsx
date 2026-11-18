@@ -1002,8 +1002,8 @@ export default function Home() {
                                             Shop by Business
                                         </h2>
                                     </div>
-                                    {/* 10 tiles per row on desktop, matching Shop by Category. */}
-                                    <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-10 gap-2.5 sm:gap-3 lg:gap-2.5 xl:gap-3">
+                                    {/* 9 tiles per row on desktop, matching Shop by Category. */}
+                                    <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-9 gap-2.5 sm:gap-3 lg:gap-3 xl:gap-4">
                                         {businessTags.map((tag, index) => (
                                             <div
                                                 key={tag.id}

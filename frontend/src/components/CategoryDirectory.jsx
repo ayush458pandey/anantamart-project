@@ -78,10 +78,10 @@ const CategoryDirectory = ({ categories, onSelectCategory, layout = 'grid', sele
                 </h3>
             </div>
 
-            {/* 10 tiles per row on desktop, matching Zepto. Tiles are fluid
-                (aspect-square + w-full) so they shrink with the column instead
-                of overflowing at the 1024px breakpoint. */}
-            <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-10 gap-2.5 sm:gap-3 lg:gap-2.5 xl:gap-3">
+            {/* 9 tiles per row on desktop. Tiles are fluid (aspect-square +
+                w-full) so they shrink with the column instead of overflowing
+                at the 1024px breakpoint. */}
+            <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-9 gap-2.5 sm:gap-3 lg:gap-3 xl:gap-4">
                 {categories.map((category, index) => {
                     const Icon = getCategoryIcon(category.name);
 
