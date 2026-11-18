@@ -9,6 +9,7 @@ import { orderService } from '../api/services/orderService';
 import { addressService } from '../api/services/addressService';
 import { cartService } from '../api/services/cartService';
 import { getTaxFromInclusive } from '../utils/priceUtils';
+import { cartLineTotal, cartSubtotal } from '../utils/cartPricing';
 
 // Lazy-load InvoiceGenerator (pulls in heavy jsPDF/html2canvas libs)
 const InvoiceGenerator = lazy(() => import('./InvoiceGenerator'));
@@ -164,10 +165,10 @@ export default function AdvancedCheckout({ cart, onClose }) {
     }
   };
 
-  // Calculate pricing (base_price is already INCLUSIVE of GST)
-  // 1. Subtotal = sum of base_price * qty (already inclusive)
-  const subtotal = cart?.items?.reduce((sum, item) =>
-    sum + (parseFloat(item.product.base_price) * item.quantity), 0) || 0;
+  // Calculate pricing (prices are already INCLUSIVE of GST).
+  // Use the per-line price so a variant is charged its own amount rather than
+  // the parent product's price.
+  const subtotal = cartSubtotal(cart);
 
   // 2. Discount logic (applied on inclusive subtotal)
   const isDiscountApplicable = subtotal > 10000;
@@ -180,7 +181,7 @@ export default function AdvancedCheckout({ cart, onClose }) {
 
   // 4. Back-calculate tax from inclusive prices (for display breakdown only)
   const totalTaxAmount = cart?.items?.reduce((acc, item) => {
-    const itemTotal = parseFloat(item.product.base_price) * item.quantity;
+    const itemTotal = cartLineTotal(item);
     const taxableTotal = isDiscountApplicable ? itemTotal * 0.9 : itemTotal;
     return acc + getTaxFromInclusive(taxableTotal, item.product.gst_rate);
   }, 0) || 0;

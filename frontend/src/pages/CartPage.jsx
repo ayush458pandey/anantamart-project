@@ -3,6 +3,7 @@ import { Navigate } from 'react-router-dom';
 import { useAuth } from '../context/useAuth';
 import { useCart } from '../context/useCart';
 import { getTaxFromInclusive } from '../utils/priceUtils';
+import { cartLineTotal, cartSubtotal } from '../utils/cartPricing';
 
 // Lazy-load heavy components (PDF libs) so they don't bloat the initial bundle
 const EstimateView = lazy(() => import('../components/EstimateView'));
@@ -13,14 +14,13 @@ export default function CartPage() {
     const { cart, removeFromCart, updateQuantity } = useCart();
     const [showCheckout, setShowCheckout] = React.useState(false);
 
-    // base_price is already tax-inclusive, so subtotal = sum of base_price * qty
-    const estimateSubtotal = cart?.items?.reduce((sum, item) =>
-        sum + (parseFloat(item.product.base_price) * item.quantity), 0) || 0;
+    // Prices are tax-inclusive. Use the per-line price so a variant is charged
+    // its own amount rather than the parent product's price.
+    const estimateSubtotal = cartSubtotal(cart);
 
     // Back-calculate tax from inclusive prices (for display breakdown only)
     const totalTaxAmount = cart?.items?.reduce((total, item) => {
-        const itemTotal = parseFloat(item.product.base_price) * item.quantity;
-        return total + getTaxFromInclusive(itemTotal, item.product.gst_rate);
+        return total + getTaxFromInclusive(cartLineTotal(item), item.product.gst_rate);
     }, 0) || 0;
 
     const cgst = totalTaxAmount / 2;

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { FileText, Package, Plus, Minus, ShoppingCart, Download, X, Loader } from 'lucide-react';
 import { generateInvoicePDF } from '../utils/invoicePDF';
+import { cartLineUnitPrice, cartLineTotal } from '../utils/cartPricing';
 
 const INDIAN_STATES = [
     "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh", "Goa", "Gujarat", "Haryana", "Himachal Pradesh", "Jharkhand", "Karnataka", "Kerala", "Madhya Pradesh", "Maharashtra", "Manipur", "Meghalaya", "Mizoram", "Nagaland", "Odisha", "Punjab", "Rajasthan", "Sikkim", "Tamil Nadu", "Telangana", "Tripura", "Uttar Pradesh", "Uttarakhand", "West Bengal", "Andaman and Nicobar Islands", "Chandigarh", "Dadra and Nagar Haveli and Daman and Diu", "Delhi", "Lakshadweep", "Puducherry"
@@ -107,7 +108,7 @@ export default function EstimateView({ cart, removeFromCart, updateQuantity, sub
                                     <p className="text-xs sm:text-sm text-gray-500">SKU: {item.product.sku}</p>
                                     <p className="text-xs sm:text-sm text-gray-600 mt-0.5 sm:mt-1">MOQ: {item.product.moq === 1 ? (item.product.unit || 'unit') : `${item.product.moq} ${item.product.unit || 'units'}`}</p>
                                     <p className="font-bold text-emerald-600 mt-1 text-sm sm:text-base">
-                                        ₹{parseFloat(item.product.base_price).toFixed(2)}
+                                        ₹{cartLineUnitPrice(item).toFixed(2)}
                                         <span className="text-[9px] text-gray-400 font-normal ml-1">(incl. GST)</span>
                                     </p>
                                 </div>
@@ -123,7 +124,7 @@ export default function EstimateView({ cart, removeFromCart, updateQuantity, sub
                                     </button>
                                 </div>
                                 <div className="text-right sm:text-left">
-                                    <p className="font-bold text-base sm:text-lg">₹{(parseFloat(item.product.base_price) * item.quantity).toFixed(2)}</p>
+                                    <p className="font-bold text-base sm:text-lg">₹{cartLineTotal(item).toFixed(2)}</p>
                                     <button onClick={() => removeFromCart(item.id)} className="text-red-600 text-xs sm:text-sm hover:underline active:text-red-700 mt-1 font-medium touch-manipulation">Remove</button>
                                 </div>
                             </div>
