@@ -1,5 +1,6 @@
-from rest_framework import viewsets, filters
+from rest_framework import viewsets, filters, status
 from rest_framework.decorators import action
+from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
 from django_filters.rest_framework import DjangoFilterBackend
@@ -7,7 +8,9 @@ from django.db.models import Count, Q
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
 from core.permissions import IsAdminOrReadOnly
-from .models import Product, Category, Subcategory, Brand, TagGroup, ProductTag
+from apps.ai_access.images import ImageRejected, process_upload
+from .draft_serializers import DraftImageSerializer
+from .models import Product, Category, Subcategory, Brand, TagGroup, ProductTag, ProductImage
 from .serializers import ProductSerializer, CategorySerializer, SubcategorySerializer, BrandSerializer, TagGroupSerializer
 
 
@@ -90,9 +93,132 @@ class ProductViewSet(viewsets.ModelViewSet):
             return Response({'error': 'Product not found'}, status=404)
         serializer = self.get_serializer(product)
         return Response(serializer.data)
-    
 
-    
+    # --- Image management for LIVE products ---------------------------------
+    # The draft endpoints only accept pending drafts, so there was no way to
+    # attach an image to a product that is already published. These three
+    # actions close that gap. They reuse apps.ai_access.images.process_upload so
+    # the catalogue rules match the AI and draft paths exactly: JPEG/PNG/WebP
+    # in, 1120x1400 WebP under 200 KB out, EXIF stripped, padded onto white.
+
+    def _staff_only(self, request):
+        """Return an error Response unless the caller is staff."""
+        if not (request.user and request.user.is_authenticated and request.user.is_staff):
+            return Response(
+                {'error': 'Only staff can manage product images.'},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+        return None
+
+    @action(
+        detail=True, methods=['post'], url_path='images',
+        parser_classes=[MultiPartParser, FormParser],
+    )
+    def upload_image(self, request, pk=None):
+        """POST /api/products/<id>/images/ -- append an image to a live product.
+
+        Accepts a multipart ``file`` field plus optional ``alt_text`` and
+        ``is_primary``. The first image on a product is always primary.
+        """
+        denied = self._staff_only(request)
+        if denied:
+            return denied
+
+        product = self.get_object()
+
+        uploaded = request.FILES.get('file')
+        if uploaded is None:
+            return Response(
+                {'error': 'Send the image as a multipart "file" field.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            content, width, height, size = process_upload(uploaded)
+        except ImageRejected as exc:
+            # The product is left untouched: a bad image must never discard
+            # good product data.
+            return Response({'error': str(exc)}, status=status.HTTP_400_BAD_REQUEST)
+
+        is_primary = str(request.data.get('is_primary', '')).lower() in ('1', 'true', 'yes')
+        has_images = product.images.exists()
+
+        image = ProductImage(
+            product=product,
+            alt_text=(request.data.get('alt_text') or '')[:255],
+            source_kind=ProductImage.SOURCE_USER,
+            order=product.images.count(),
+            is_primary=is_primary or not has_images,
+        )
+        image.image.save(content.name, content, save=False)
+        image.save()
+
+        return Response(
+            {
+                'image': DraftImageSerializer(image, context={'request': request}).data,
+                'width': width,
+                'height': height,
+                'bytes': size,
+            },
+            status=status.HTTP_201_CREATED,
+        )
+
+    @action(
+        detail=True, methods=['post'], url_path=r'images/(?P<image_id>\d+)/primary',
+    )
+    def set_primary_image(self, request, pk=None, image_id=None):
+        """POST /api/products/<id>/images/<image_id>/primary/ -- make one image primary."""
+        denied = self._staff_only(request)
+        if denied:
+            return denied
+
+        product = self.get_object()
+        image = product.images.filter(pk=image_id).first()
+        if image is None:
+            return Response(
+                {'error': 'Image not found on this product.'},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        # Exactly one primary per product.
+        product.images.exclude(pk=image.pk).update(is_primary=False)
+        image.is_primary = True
+        image.save(update_fields=['is_primary'])
+
+        return Response(
+            DraftImageSerializer(image, context={'request': request}).data,
+            status=status.HTTP_200_OK,
+        )
+
+    @action(
+        detail=True, methods=['delete'], url_path=r'images/(?P<image_id>\d+)',
+    )
+    def delete_image(self, request, pk=None, image_id=None):
+        """DELETE /api/products/<id>/images/<image_id>/ -- remove one image."""
+        denied = self._staff_only(request)
+        if denied:
+            return denied
+
+        product = self.get_object()
+        image = product.images.filter(pk=image_id).first()
+        if image is None:
+            return Response(
+                {'error': 'Image not found on this product.'},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        was_primary = image.is_primary
+        image.delete()
+
+        # Promote the next image so a product never loses its primary silently.
+        if was_primary:
+            replacement = product.images.order_by('order', 'id').first()
+            if replacement:
+                replacement.is_primary = True
+                replacement.save(update_fields=['is_primary'])
+
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
     @action(detail=False, methods=['get'])
     def filter_options(self, request):
         """
