@@ -225,12 +225,29 @@ class ProductSerializer(OptimizedImageMixin, serializers.ModelSerializer):
         return []
     
     def get_image_url(self, obj):
-        if obj.image:
-            request = self.context.get('request')
-            if request:
-                return request.build_absolute_uri(obj.image.url)
-            return obj.image.url if obj.image else None
-        return None
+        """Primary image URL.
+
+        Prefers the legacy single `image` field, then falls back to the gallery:
+        the primary ProductImage, else the first by display order. Without this
+        fallback a product whose images were all uploaded to the gallery (the
+        normal path for bulk imports) reports no image at all, so the storefront
+        shows a placeholder even though the images exist.
+        """
+        image = obj.image
+        if not image:
+            gallery = list(obj.images.all())
+            if gallery:
+                primary = next((i for i in gallery if i.is_primary), None)
+                chosen = primary or min(gallery, key=lambda i: (i.order, i.id))
+                image = chosen.image
+
+        if not image:
+            return None
+
+        request = self.context.get('request')
+        if request:
+            return request.build_absolute_uri(image.url)
+        return image.url
 
 
 # =============================================================================
